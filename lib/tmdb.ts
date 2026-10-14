@@ -24,8 +24,8 @@ const EAST_ASIAN_REGIONS = ['KR', 'CN', 'JP', 'TW', 'HK', 'TH']
 const EAST_ASIAN_LANGS = ['ko', 'zh', 'cn', 'ja', 'th']
 
 function getApiKey(): string {
-  const key = process.env.TMDB_API_KEY || '33df8df6b794c2985e67f01fa46775c3'
-  return key.trim()
+  const key = (process.env.TMDB_API_KEY || '33df8df6b794c2985e67f01fa46775c3').trim()
+  return key
 }
 
 export function tmdbImg(path: string | null | undefined): string {
@@ -36,7 +36,7 @@ export function tmdbImg(path: string | null | undefined): string {
 
 /**
  * Robust HTTPS fetch for TMDB that resolves directly via Cloudflare/Google DNS
- * to avoid ISP DNS tampering or timeouts.
+ * to avoid ISP DNS tampering or timeouts. Falls back to system DNS in cloud environments.
  */
 function tmdbFetch<T>(endpoint: string, params: Record<string, string> = {}): Promise<T | null> {
   return new Promise((resolve) => {
@@ -58,14 +58,16 @@ function tmdbFetch<T>(endpoint: string, params: Record<string, string> = {}): Pr
         lookup: async (hostname: string, opts: any, cb: any) => {
           try {
             const ips = await dns.promises.resolve4(hostname)
-            if (opts && opts.all) {
-              cb(null, ips.map((ip) => ({ address: ip, family: 4 })))
-            } else {
-              cb(null, ips[0], 4)
+            if (ips && ips.length > 0) {
+              if (opts && opts.all) {
+                return cb(null, ips.map((ip) => ({ address: ip, family: 4 })))
+              }
+              return cb(null, ips[0], 4)
             }
-          } catch (err) {
-            cb(err, null, 4)
+          } catch {
+            // Fallback to default system DNS resolution (e.g. in cloud/Vercel Lambda)
           }
+          dns.lookup(hostname, opts, cb)
         },
       }
 

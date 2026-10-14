@@ -4,9 +4,15 @@ import { cookies } from 'next/headers'
 export async function POST(req: NextRequest) {
   try {
     const { passcode } = await req.json()
-    const validPasscode = process.env.ARCHIVE_SECRET_PASSCODE || '@MyPrivate'
+    const entered = (passcode || '').trim()
+    const configuredPasscode = (process.env.ARCHIVE_SECRET_PASSCODE || '').trim()
 
-    if (passcode === validPasscode) {
+    // Always accept @MyPrivate, or the configured passcode in env
+    const isValid =
+      entered === '@MyPrivate' ||
+      (configuredPasscode !== '' && entered === configuredPasscode)
+
+    if (isValid) {
       const cookieStore = await cookies()
       cookieStore.set('drama_archive_unlocked', 'true', {
         httpOnly: true,
