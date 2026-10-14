@@ -1,0 +1,38 @@
+[
+  {
+    "drama_id": "tmdb-291496",
+    "tmdb_id": 291496,
+    "title": "Our Sticky Love",
+    "native_title": "이런 엿같은 사랑",
+    "poster_url": "https://image.tmdb.org/t/p/original/tSZ4aFpTGc8Oj52SuzPUUZ7WKL0.jpg",
+    "country": "KR",
+    "release_year": 2026,
+    "total_episodes": 0,
+    "rating": 8.8,
+    "status": "finished",
+    "airing_status": "completed",
+    "first_air_date": "2026-08-07",
+    "next_episode_date": null,
+    "next_episode_number": null,
+    "user_id": "00000000-0000-0000-0000-000000000001",
+    "updated_at": "2026-10-14T17:06:50.341Z"
+  },
+  {
+    "drama_id": "tmdb-289530",
+    "tmdb_id": 289530,
+    "title": "My Queen, My Rules",
+    "native_title": "不二之臣",
+    "poster_url": "https://image.tmdb.org/t/p/original/vF54jYE0BJb9ap7VyHeGWIwwLXY.jpg",
+    "country": "CN",
+    "release_year": 0,
+    "total_episodes": 1,
+    "rating": 0,
+    "status": "finished",
+    "airing_status": "upcoming",
+    "first_air_date": null,
+    "next_episode_date": null,
+    "next_episode_number": null,
+    "user_id": "00000000-0000-0000-0000-000000000001",
+    "updated_at": "2026-10-14T17:08:18.443Z"
+  }
+]
