@@ -1,6 +1,6 @@
 'use client'
 
-import { getUserDramas, moveDrama, removeDrama, UserDrama } from '@/lib/supabase/archive'
+import { getUserDramas, moveDrama, removeDrama, onArchiveSync, UserDrama } from '@/lib/supabase/archive'
 import { Bookmark, Play, CheckCircle, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import DramaCard from '@/components/drama/DramaCard'
@@ -15,25 +15,29 @@ export default function WatchlistTab() {
   const [, setSelectedPersonName] = useState('')
 
   async function load() {
-    setLoading(true)
     const data = await getUserDramas('watchlist')
     setDramas(data)
     setLoading(false)
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    load()
+    // Subscribe to instant optimistic sync events across all tabs
+    const unsubscribe = onArchiveSync((allDramas) => {
+      setDramas(allDramas.filter((d) => d.status === 'watchlist'))
+    })
+    return () => unsubscribe()
+  }, [])
 
   async function handleMove(dramaId: string, status: 'watching' | 'finished') {
     await moveDrama(dramaId, status)
-    load()
   }
 
   async function handleRemove(dramaId: string) {
     await removeDrama(dramaId)
-    load()
   }
 
-  if (loading) {
+  if (loading && dramas.length === 0) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="h-9 w-9 animate-spin rounded-full border-2 border-white/20 border-t-sky-400" />
@@ -41,12 +45,10 @@ export default function WatchlistTab() {
     )
   }
 
-  const featuredPoster = dramas.find(d => d.poster_url)?.poster_url
-
   if (dramas.length === 0) {
     return (
       <div className="relative flex min-h-[75vh] flex-col items-center justify-center px-6 pt-16 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-white/[0.14] bg-white/[0.06] shadow-xl backdrop-blur-2xl mb-4">
+        <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-white/[0.14] bg-white/[0.06] shadow-xl backdrop-blur-md mb-4">
           <Bookmark size={32} className="text-sky-400/70" />
         </div>
         <h3 className="text-lg font-bold text-white tracking-tight">Your Watchlist is Empty</h3>
@@ -59,25 +61,15 @@ export default function WatchlistTab() {
 
   return (
     <div className="relative min-h-screen px-4 pb-36 pt-20 max-w-7xl mx-auto">
-      {/* Ambient Poster Glow Layer */}
-      {featuredPoster && (
-        <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
-          <div
-            className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[140%] h-[75vh] rounded-full blur-[130px] saturate-200 opacity-25 scale-125"
-            style={{
-              backgroundImage: `url(${featuredPoster})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/80 to-black" />
-        </div>
-      )}
+      {/* Zero-cost hardware-accelerated radial ambient gradient (60 FPS on mobile GPUs) */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(56,189,248,0.18),_transparent_65%)]" />
+      </div>
 
       {/* Header Bar */}
       <div className="relative z-10 mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-sky-400/30 bg-sky-500/15 text-sky-400 shadow-lg shadow-sky-500/20 backdrop-blur-xl">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-sky-400/30 bg-sky-500/15 text-sky-400 shadow-lg shadow-sky-500/20 backdrop-blur-md">
             <Bookmark size={18} className="fill-sky-400" />
           </div>
           <div>
@@ -85,7 +77,7 @@ export default function WatchlistTab() {
             <p className="text-xs text-white/40">Dramas you plan to watch</p>
           </div>
         </div>
-        <span className="rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-1 text-xs font-semibold text-white/70 backdrop-blur-xl">
+        <span className="rounded-full border border-white/10 bg-white/[0.06] px-3.5 py-1 text-xs font-semibold text-white/70 backdrop-blur-md">
           {dramas.length} {dramas.length === 1 ? 'drama' : 'dramas'}
         </span>
       </div>
@@ -102,7 +94,7 @@ export default function WatchlistTab() {
                 <button
                   title="Start Watching"
                   onClick={() => handleMove(drama.drama_id, 'watching')}
-                  className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-full border border-purple-500/30 bg-purple-500/15 text-purple-200 hover:bg-purple-500/30 active:scale-95 transition text-[11px] font-semibold"
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-full border border-purple-500/30 bg-purple-500/15 text-purple-200 hover:bg-purple-500/30 active:scale-95 transition text-[11px] font-semibold cursor-pointer"
                 >
                   <Play size={11} className="fill-purple-300 text-purple-300" />
                   <span>Watch</span>
@@ -110,14 +102,14 @@ export default function WatchlistTab() {
                 <button
                   title="Mark Finished"
                   onClick={() => handleMove(drama.drama_id, 'finished')}
-                  className="flex items-center justify-center h-7 w-7 rounded-full border border-emerald-500/30 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/30 active:scale-90 transition"
+                  className="flex items-center justify-center h-7 w-7 rounded-full border border-emerald-500/30 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/30 active:scale-90 transition cursor-pointer"
                 >
                   <CheckCircle size={13} />
                 </button>
                 <button
                   title="Remove from Watchlist"
                   onClick={() => handleRemove(drama.drama_id)}
-                  className="flex items-center justify-center h-7 w-7 rounded-full border border-rose-500/30 bg-rose-500/15 text-rose-300 hover:bg-rose-500/30 active:scale-90 transition"
+                  className="flex items-center justify-center h-7 w-7 rounded-full border border-rose-500/30 bg-rose-500/15 text-rose-300 hover:bg-rose-500/30 active:scale-90 transition cursor-pointer"
                 >
                   <Trash2 size={13} />
                 </button>

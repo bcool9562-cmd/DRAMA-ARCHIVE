@@ -2,9 +2,10 @@
 
 import { UserDrama } from '@/lib/supabase/archive'
 import Image from 'next/image'
-import { Star, CheckCircle, Play, Bookmark } from 'lucide-react'
+import { Star } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { REGION_NAMES } from './DramaDetailSheet'
+import { tmdbCard } from '@/lib/image-utils'
 
 interface DramaCardProps {
   drama: UserDrama
@@ -26,6 +27,7 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
   }
 
   const subline = [regionBadge, year, episodesText].filter(Boolean).join(' • ')
+  const posterSrc = tmdbCard(drama.poster_url)
 
   return (
     <motion.div
@@ -41,18 +43,19 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
           onOpen()
         }
       }}
-      className={`group relative flex flex-col overflow-hidden rounded-[24px] border border-white/[0.14] bg-white/[0.05] backdrop-blur-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.22),0_14px_36px_-6px_rgba(0,0,0,0.7)] transition-all duration-300 text-left ${
+      className={`group relative flex flex-col overflow-hidden rounded-[24px] border border-white/[0.12] bg-white/[0.05] backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_12px_32px_-6px_rgba(0,0,0,0.6)] transition-all duration-200 text-left ${
         onOpen ? 'cursor-pointer' : ''
       }`}
     >
       {/* Poster Image Container */}
       <div className="relative aspect-[2/3] w-full overflow-hidden bg-black/60">
-        {drama.poster_url ? (
+        {posterSrc ? (
           <Image
-            src={drama.poster_url}
+            src={posterSrc}
             alt={drama.title}
             fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
+            loading="lazy"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             priority={false}
           />
@@ -65,13 +68,13 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
         {/* Top Badges Ribbon */}
         <div className="absolute inset-x-2 top-2 z-10 flex items-center justify-between gap-1 pointer-events-none">
           {regionBadge ? (
-            <span className="rounded-full bg-black/60 border border-white/20 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md backdrop-blur-md">
+            <span className="rounded-full bg-black/70 border border-white/20 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md backdrop-blur-sm">
               {regionBadge}
             </span>
           ) : <span />}
 
           {drama.rating > 0 && (
-            <span className="flex items-center gap-1 rounded-full bg-black/60 border border-amber-400/30 px-2 py-0.5 text-[10px] font-extrabold text-amber-300 shadow-md backdrop-blur-md">
+            <span className="flex items-center gap-1 rounded-full bg-black/70 border border-amber-400/30 px-2 py-0.5 text-[10px] font-extrabold text-amber-300 shadow-md backdrop-blur-sm">
               <Star size={10} className="fill-amber-300 text-amber-300" />
               {drama.rating.toFixed(1)}
             </span>
@@ -79,11 +82,11 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
         </div>
 
         {/* Gradient shadow towards text */}
-        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
       </div>
 
       {/* Card Info & Actions Shelf */}
-      <div className="flex flex-1 flex-col justify-between p-3.5 bg-black/40 backdrop-blur-md">
+      <div className="flex flex-1 flex-col justify-between p-3.5 bg-black/50 backdrop-blur-sm">
         <div>
           <h3 className="text-sm font-bold tracking-tight text-white line-clamp-1 group-hover:text-purple-300 transition-colors">
             {drama.title}

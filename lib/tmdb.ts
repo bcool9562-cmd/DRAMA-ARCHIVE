@@ -28,11 +28,8 @@ function getApiKey(): string {
   return key
 }
 
-export function tmdbImg(path: string | null | undefined): string {
-  if (!path) return ''
-  if (path.startsWith('http')) return path
-  return `${IMG_BASE}${path}`
-}
+import { tmdbImg, tmdbThumb, tmdbCard, tmdbOriginal } from './image-utils'
+export { tmdbImg, tmdbThumb, tmdbCard, tmdbOriginal }
 
 /**
  * Robust HTTPS fetch for TMDB that resolves directly via Cloudflare/Google DNS
@@ -201,6 +198,8 @@ export interface TmdbPerson {
   }
 }
 
+export type TmdbPersonDetail = TmdbPerson
+
 export interface TmdbPersonCredit {
   id: number
   name?: string
@@ -208,6 +207,7 @@ export interface TmdbPersonCredit {
   original_name?: string
   poster_path: string | null
   vote_average: number
+  vote_count?: number
   first_air_date?: string
   release_date?: string
   character?: string

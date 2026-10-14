@@ -4,7 +4,8 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { Search, X, Bookmark, Play, CheckCircle, Loader2, Star, Sparkles } from 'lucide-react'
 import type { Drama } from '@/lib/tmdb'
-import { addDrama, getUserDramas, type DramaStatus, type UserDrama } from '@/lib/supabase/archive'
+import { tmdbThumb } from '@/lib/image-utils'
+import { addDrama, getUserDramas, onArchiveSync, type DramaStatus, type UserDrama } from '@/lib/supabase/archive'
 import DramaDetailSheet, { REGION_NAMES } from '@/components/drama/DramaDetailSheet'
 import PersonProfileSheet from '@/components/person/PersonProfileSheet'
 
@@ -32,6 +33,10 @@ export default function SearchTab() {
 
   useEffect(() => {
     refreshUserDramas()
+    const unsubscribe = onArchiveSync((allDramas) => {
+      setUserDramas(allDramas)
+    })
+    return () => unsubscribe()
   }, [refreshUserDramas])
 
   const doSearch = useCallback(async (q: string) => {
@@ -72,7 +77,6 @@ export default function SearchTab() {
       next_episode_number: drama.nextEpisodeNumber,
     })
     setAddingStatus(prev => ({ ...prev, [drama.dramaId]: status }))
-    await refreshUserDramas()
     setTimeout(() => {
       setAddingStatus(prev => {
         const copy = { ...prev }
@@ -93,28 +97,17 @@ export default function SearchTab() {
   }
 
   const showResults = query.trim().length > 0
-  const featuredPoster = results.find(d => d.posterUrl)?.posterUrl
 
   return (
     <div className="relative flex flex-col min-h-screen">
-      {/* Ambient Poster Glow Layer */}
-      {featuredPoster && (
-        <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
-          <div
-            className="absolute -top-[10%] left-1/2 -translate-x-1/2 w-[140%] h-[75vh] rounded-full blur-[130px] saturate-200 opacity-25 scale-125 transition-all duration-700"
-            style={{
-              backgroundImage: `url(${featuredPoster})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/80 to-black" />
-        </div>
-      )}
+      {/* Zero-cost hardware-accelerated radial ambient gradient */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(147,51,234,0.16),_transparent_65%)]" />
+      </div>
 
       {/* iOS Floating Search Bar */}
       <div className="sticky top-0 z-30 px-4 pt-16 pb-3 max-w-3xl mx-auto w-full">
-        <div className="relative flex items-center rounded-2xl border border-white/[0.15] bg-white/[0.08] backdrop-blur-2xl px-4 py-3 gap-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22),0_14px_36px_-6px_rgba(0,0,0,0.6)]">
+        <div className="relative flex items-center rounded-2xl border border-white/[0.14] bg-white/[0.08] backdrop-blur-md px-4 py-3 gap-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_12px_32px_-6px_rgba(0,0,0,0.6)]">
           {searching ? (
             <Loader2 size={18} className="text-purple-400 flex-shrink-0 animate-spin" />
           ) : (
@@ -134,7 +127,7 @@ export default function SearchTab() {
           {query && (
             <button
               onClick={() => { setQuery(''); setResults([]) }}
-              className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white/50 hover:bg-white/20 hover:text-white transition active:scale-90"
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white/50 hover:bg-white/20 hover:text-white transition active:scale-90 cursor-pointer"
             >
               <X size={13} />
             </button>
@@ -147,7 +140,7 @@ export default function SearchTab() {
         <div className="relative z-10 flex-1 px-4 pb-36 max-w-4xl mx-auto w-full">
           {results.length === 0 && !searching && (
             <div className="flex w-full flex-col items-center justify-center py-20 px-6 gap-3 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] shadow-lg backdrop-blur-xl mb-1">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] shadow-lg backdrop-blur-md mb-1">
                 <Search size={28} className="text-white/30" />
               </div>
               <p className="text-base font-semibold text-white/70 max-w-sm leading-snug">
@@ -202,7 +195,7 @@ export default function SearchTab() {
           <div>
             <h2 className="text-2xl font-extrabold tracking-tight text-white">Find Your Next Drama</h2>
             <p className="mt-2 text-sm text-white/50 leading-relaxed">
-              Instant letter-by-letter live search powered by TMDB & MyDramaList. High-definition 4K posters & rich actor profiles.
+              Instant letter-by-letter live search powered by TMDB & MyDramaList. High-definition retina posters & rich actor profiles.
             </p>
           </div>
 
@@ -237,7 +230,7 @@ export default function SearchTab() {
   )
 }
 
-// ─── Search Result Card ───────────────────────────────────────────────────────
+// ─── Search Result Card (Optimized for 60fps Mobile Performance) ──────────────
 
 interface SearchResultCardProps {
   drama: Drama
@@ -270,23 +263,27 @@ function SearchResultCard({
     .filter(Boolean)
     .join(' • ')
 
+  // Use crisp w342 thumbnail for search results instead of heavy 10MB uncompressed original
+  const thumbSrc = tmdbThumb(drama.posterUrl)
+
   return (
     <div
       role="button"
       tabIndex={0}
       onClick={onOpen}
       onKeyDown={e => e.key === 'Enter' && onOpen()}
-      className="group relative flex gap-3.5 rounded-[22px] border border-white/[0.14] bg-white/[0.05] p-3 backdrop-blur-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_12px_32px_-6px_rgba(0,0,0,0.6)] transition-all duration-200 hover:bg-white/[0.09] hover:border-white/[0.22] active:scale-[0.99] cursor-pointer"
+      className="group relative flex gap-3.5 rounded-[22px] border border-white/[0.12] bg-white/[0.05] p-3 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.18),0_10px_28px_-6px_rgba(0,0,0,0.6)] transition-all duration-200 hover:bg-white/[0.09] active:scale-[0.99] cursor-pointer"
     >
       {/* Poster thumbnail */}
       <div className="relative h-28 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-black/60 shadow-md">
-        {drama.posterUrl ? (
+        {thumbSrc ? (
           <Image
-            src={drama.posterUrl}
+            src={thumbSrc}
             alt={drama.title}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="80px"
+            loading="lazy"
           />
         ) : (
           <div className="h-full w-full flex items-center justify-center text-white/20 text-xs">
@@ -392,7 +389,7 @@ function QuickActionPill({
     <button
       title={title}
       onClick={onClick}
-      className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition active:scale-95 ${
+      className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition active:scale-95 cursor-pointer ${
         isActive
           ? activeClass
           : 'border-white/[0.14] bg-white/[0.06] text-white/60 hover:bg-white/[0.12] hover:text-white'

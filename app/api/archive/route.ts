@@ -3,10 +3,15 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import fs from 'fs'
 import path from 'path'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export const FIXED_USER_ID = '00000000-0000-0000-0000-000000000001'
 const TABLE = 'user_dramas_v2'
+const STORAGE_BUCKET = 'drama_archive'
+const STORAGE_FILE = 'user_dramas.json'
 
-// File-backed persistence helper (serves as resilient fallback if Supabase permissions are pending)
+// Local ephemeral fallback for dev
 const DATA_DIR = path.join(process.cwd(), 'data')
 const DATA_FILE = path.join(DATA_DIR, 'user_dramas.json')
 
@@ -25,10 +30,49 @@ function writeLocalArchive(items: any[]) {
   try {
     if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true })
     fs.writeFileSync(DATA_FILE, JSON.stringify(items, null, 2), 'utf-8')
-  } catch (e) {
-    console.error('[localArchive write error]:', e)
+  } catch {
+    // Read-only filesystem in Vercel lambda is handled gracefully
   }
 }
+
+// ── Supabase Storage Cloud Sync Helpers ─────────────────────────────────────
+
+async function readFromStorage(supabase: ReturnType<typeof createAdminClient>): Promise<any[]> {
+  try {
+    const { data, error } = await supabase.storage.from(STORAGE_BUCKET).download(STORAGE_FILE)
+    if (!error && data) {
+      const text = await data.text()
+      const parsed = JSON.parse(text)
+      if (Array.isArray(parsed)) return parsed
+    }
+  } catch (e) {
+    console.error('[archive storage read error]:', e)
+  }
+  return readLocalArchive()
+}
+
+async function writeToStorage(supabase: ReturnType<typeof createAdminClient>, items: any[]): Promise<boolean> {
+  try {
+    // Also save to local memory/disk if possible
+    writeLocalArchive(items)
+
+    const content = JSON.stringify(items, null, 2)
+    const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(STORAGE_FILE, content, {
+      contentType: 'application/json',
+      upsert: true,
+    })
+    if (error) {
+      console.warn('[archive storage upload warning]:', error.message)
+      return false
+    }
+    return true
+  } catch (e) {
+    console.error('[archive storage write error]:', e)
+    return false
+  }
+}
+
+// ── GET: Read all dramas for the single profile ─────────────────────────────
 
 export async function GET(req: NextRequest) {
   try {
@@ -38,93 +82,175 @@ export async function GET(req: NextRequest) {
 
     const supabase = createAdminClient()
 
-    if (notifiable) {
-      const { data, error } = await supabase
+    // 1. Try Supabase Table user_dramas_v2 first
+    let tableData: any[] | null = null
+    try {
+      let query = supabase
         .from(TABLE)
         .select('*')
         .eq('user_id', FIXED_USER_ID)
-        .or(
-          `and(status.eq.watchlist,airing_status.eq.upcoming),` +
-          `and(status.eq.watching,airing_status.eq.ongoing,next_episode_date.not.is.null)`
-        )
+        .order('updated_at', { ascending: false })
 
-      if (!error && data) {
-        return NextResponse.json(data)
+      if (status) {
+        query = query.eq('status', status)
       }
 
-      // Local fallback
-      const local = readLocalArchive().filter(
-        d => (d.status === 'watchlist' && d.airing_status === 'upcoming') ||
-             (d.status === 'watching' && d.airing_status === 'ongoing' && d.next_episode_date)
+      const { data, error } = await query
+      if (!error && data && data.length > 0) {
+        tableData = data
+      }
+    } catch {
+      // Table query failed, fall through to cloud storage
+    }
+
+    // 2. If table returned data, use it; otherwise read from Supabase Cloud Storage
+    let results: any[] = []
+    if (tableData && tableData.length > 0) {
+      results = tableData
+    } else {
+      results = await readFromStorage(supabase)
+      if (status) {
+        results = results.filter(d => d.status === status)
+      }
+    }
+
+    // 3. Handle notifiable filter
+    if (notifiable) {
+      results = results.filter(
+        d =>
+          (d.status === 'watchlist' && d.airing_status === 'upcoming') ||
+          (d.status === 'watching' && d.airing_status === 'ongoing' && d.next_episode_date)
       )
-      return NextResponse.json(local)
     }
 
-    let query = supabase
-      .from(TABLE)
-      .select('*')
-      .eq('user_id', FIXED_USER_ID)
-      .order('updated_at', { ascending: false })
-
-    if (status) {
-      query = query.eq('status', status)
-    }
-
-    const { data, error } = await query
-    if (!error && data) {
-      return NextResponse.json(data)
-    }
-
-    // Local fallback
-    let local = readLocalArchive()
-    if (status) {
-      local = local.filter(d => d.status === status)
-    }
-    return NextResponse.json(local)
-  } catch (err) {
+    return new NextResponse(JSON.stringify(results), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+      },
+    })
+  } catch (err: any) {
     console.error('[api/archive] GET unexpected error:', err)
-    return NextResponse.json(readLocalArchive())
+    return NextResponse.json([], { status: 200 })
   }
 }
+
+// ── POST: Add or update a drama in the archive ──────────────────────────────
 
 export async function POST(req: NextRequest) {
   try {
     const drama = await req.json()
+    if (!drama || !drama.drama_id) {
+      return NextResponse.json({ error: 'Missing drama_id' }, { status: 400 })
+    }
+
     const supabase = createAdminClient()
 
-    const record = {
-      ...drama,
+    // Clean up dates and ensure types
+    const firstAirDate = drama.first_air_date && String(drama.first_air_date).trim() ? String(drama.first_air_date).trim() : null
+    const nextEpDate = drama.next_episode_date && String(drama.next_episode_date).trim() ? String(drama.next_episode_date).trim() : null
+
+    const fullRecord = {
       user_id: FIXED_USER_ID,
+      drama_id: String(drama.drama_id),
+      tmdb_id: Number(drama.tmdb_id) || null,
+      title: String(drama.title || ''),
+      native_title: String(drama.native_title || ''),
+      poster_url: String(drama.poster_url || ''),
+      country: String(drama.country || ''),
+      release_year: Number(drama.release_year) || 0,
+      total_episodes: Number(drama.total_episodes) || 0,
+      rating: Number(drama.rating) || 0,
+      status: drama.status || 'watchlist',
+      airing_status: drama.airing_status || 'completed',
+      first_air_date: firstAirDate,
+      next_episode_date: nextEpDate,
+      next_episode_number: Number(drama.next_episode_number) || null,
       updated_at: new Date().toISOString(),
     }
 
-    // Try Supabase first
-    const { data, error } = await supabase.from(TABLE).upsert(
-      record,
-      { onConflict: 'user_id,drama_id' }
-    ).select().single()
+    // Minimal guaranteed core columns in case Supabase schema lacks optional columns
+    const coreRecord = {
+      user_id: FIXED_USER_ID,
+      drama_id: String(drama.drama_id),
+      tmdb_id: Number(drama.tmdb_id) || null,
+      title: String(drama.title || ''),
+      native_title: String(drama.native_title || ''),
+      poster_url: String(drama.poster_url || ''),
+      country: String(drama.country || ''),
+      release_year: Number(drama.release_year) || 0,
+      total_episodes: Number(drama.total_episodes) || 0,
+      rating: Number(drama.rating) || 0,
+      status: drama.status || 'watchlist',
+      updated_at: new Date().toISOString(),
+    }
 
-    // Also persist to local archive for resilient dual-layer sync
-    const local = readLocalArchive()
-    const idx = local.findIndex(d => d.drama_id === drama.drama_id)
-    if (idx >= 0) {
-      local[idx] = record
+    // Step A: Attempt full upsert into user_dramas_v2
+    let tableSaved = false
+    let tableError: string | null = null
+
+    try {
+      const { error: fullErr } = await supabase.from(TABLE).upsert(fullRecord, {
+        onConflict: 'user_id,drama_id',
+      })
+
+      if (!fullErr) {
+        tableSaved = true
+      } else {
+        tableError = fullErr.message
+        // Step B: Auto-retry with only core columns if unknown columns were rejected
+        const { error: coreErr } = await supabase.from(TABLE).upsert(coreRecord, {
+          onConflict: 'user_id,drama_id',
+        })
+        if (!coreErr) {
+          tableSaved = true
+        } else {
+          tableError = coreErr.message
+        }
+      }
+    } catch (e: any) {
+      tableError = e?.message || 'Database error'
+    }
+
+    // Step C: ALWAYS sync to Supabase Cloud Storage so data is 100% durable across devices
+    const cloudItems = await readFromStorage(supabase)
+    const existingIdx = cloudItems.findIndex((d: any) => d.drama_id === fullRecord.drama_id)
+    if (existingIdx >= 0) {
+      cloudItems[existingIdx] = fullRecord
     } else {
-      local.unshift(record)
+      cloudItems.unshift(fullRecord)
     }
-    writeLocalArchive(local)
+    const storageSaved = await writeToStorage(supabase, cloudItems)
 
-    if (error) {
-      console.warn('[api/archive] Supabase upsert note (persisted locally):', error.message)
-      return NextResponse.json({ success: true, drama: record, storage: 'local_synced' })
+    if (!tableSaved && !storageSaved) {
+      return NextResponse.json(
+        { error: tableError || 'Failed to persist drama to Supabase' },
+        { status: 500 }
+      )
     }
 
-    return NextResponse.json({ success: true, drama: data || record, storage: 'supabase' })
-  } catch (err) {
+    return new NextResponse(
+      JSON.stringify({
+        success: true,
+        drama: fullRecord,
+        storage: tableSaved ? 'table+storage' : 'cloud_storage',
+      }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+        },
+      }
+    )
+  } catch (err: any) {
     console.error('[api/archive] POST unexpected error:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 })
   }
 }
+
+// ── PATCH: Move drama status (watchlist → watching → finished) ───────────────
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -134,34 +260,42 @@ export async function PATCH(req: NextRequest) {
     }
 
     const supabase = createAdminClient()
-    const { error } = await supabase
-      .from(TABLE)
-      .update({
-        status,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('user_id', FIXED_USER_ID)
-      .eq('drama_id', drama_id)
+    const now = new Date().toISOString()
 
-    // Also update in local archive
-    const local = readLocalArchive()
-    const item = local.find(d => d.drama_id === drama_id)
+    // 1. Try updating user_dramas_v2
+    try {
+      await supabase
+        .from(TABLE)
+        .update({ status, updated_at: now })
+        .eq('user_id', FIXED_USER_ID)
+        .eq('drama_id', drama_id)
+    } catch {
+      // Ignore if table permissions restricted
+    }
+
+    // 2. Update Supabase Cloud Storage
+    const cloudItems = await readFromStorage(supabase)
+    const item = cloudItems.find((d: any) => d.drama_id === drama_id)
     if (item) {
       item.status = status
-      item.updated_at = new Date().toISOString()
-      writeLocalArchive(local)
+      item.updated_at = now
+      await writeToStorage(supabase, cloudItems)
     }
 
-    if (error) {
-      console.warn('[api/archive] Supabase update note (persisted locally):', error.message)
-    }
-
-    return NextResponse.json({ success: true })
-  } catch (err) {
+    return new NextResponse(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+      },
+    })
+  } catch (err: any) {
     console.error('[api/archive] PATCH unexpected error:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 })
   }
 }
+
+// ── DELETE: Remove drama from archive ───────────────────────────────────────
 
 export async function DELETE(req: NextRequest) {
   try {
@@ -172,23 +306,32 @@ export async function DELETE(req: NextRequest) {
     }
 
     const supabase = createAdminClient()
-    const { error } = await supabase
-      .from(TABLE)
-      .delete()
-      .eq('user_id', FIXED_USER_ID)
-      .eq('drama_id', drama_id)
 
-    // Also remove from local archive
-    const local = readLocalArchive().filter(d => d.drama_id !== drama_id)
-    writeLocalArchive(local)
-
-    if (error) {
-      console.warn('[api/archive] Supabase delete note (persisted locally):', error.message)
+    // 1. Try deleting from user_dramas_v2
+    try {
+      await supabase
+        .from(TABLE)
+        .delete()
+        .eq('user_id', FIXED_USER_ID)
+        .eq('drama_id', drama_id)
+    } catch {
+      // Ignore if table permissions restricted
     }
 
-    return NextResponse.json({ success: true })
-  } catch (err) {
+    // 2. Delete from Supabase Cloud Storage
+    const cloudItems = await readFromStorage(supabase)
+    const updated = cloudItems.filter((d: any) => d.drama_id !== drama_id)
+    await writeToStorage(supabase, updated)
+
+    return new NextResponse(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+      },
+    })
+  } catch (err: any) {
     console.error('[api/archive] DELETE unexpected error:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ error: err.message || 'Internal server error' }, { status: 500 })
   }
 }

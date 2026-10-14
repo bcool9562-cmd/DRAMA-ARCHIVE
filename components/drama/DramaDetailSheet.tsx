@@ -61,6 +61,7 @@ export default function DramaDetailSheet({ tmdbId, onClose, onPersonClick }: Dra
 
   async function setStatus(status: DramaStatus) {
     if (!drama) return
+    setCurrentStatus(status)
     setStatusLoading(true)
     if (currentStatus) {
       await moveDrama(drama.dramaId, status)
@@ -82,7 +83,6 @@ export default function DramaDetailSheet({ tmdbId, onClose, onPersonClick }: Dra
         next_episode_number: drama.nextEpisodeNumber,
       })
     }
-    setCurrentStatus(status)
     setStatusLoading(false)
   }
 
@@ -139,24 +139,13 @@ export default function DramaDetailSheet({ tmdbId, onClose, onPersonClick }: Dra
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
-        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-        className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#07070a] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)]"
+        className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#07070a] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] will-change-transform"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Ambient Poster Glow Layer */}
-        {drama && (drama.posterUrl || drama.backdropUrl) && (
-          <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
-            <div
-              className="absolute -top-32 -left-32 h-[680px] w-[680px] rounded-full blur-[120px] saturate-200 opacity-30 scale-125"
-              style={{
-                backgroundImage: `url(${drama.backdropUrl || drama.posterUrl})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#07070a]/70 to-[#07070a]" />
-          </div>
-        )}
+        {/* Hardware-accelerated radial ambient layer (60 FPS on mobile GPUs) */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(88,28,135,0.28),_transparent_70%)]" />
+        </div>
 
         {/* Drag handle */}
         <div className="relative z-10 flex justify-center pt-3 pb-1">
@@ -400,9 +389,10 @@ export default function DramaDetailSheet({ tmdbId, onClose, onPersonClick }: Dra
                       className="group relative h-36 w-26 flex-shrink-0 overflow-hidden rounded-[20px] border border-white/[0.14] bg-white/[0.05] shadow-lg transition duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer"
                     >
                       <Image
-                        src={`https://image.tmdb.org/t/p/original${img.file_path}`}
+                        src={`https://image.tmdb.org/t/p/w780${img.file_path}`}
                         alt="Drama Still"
                         fill
+                        loading="lazy"
                         className="object-cover"
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition group-hover:bg-black/30">
@@ -433,9 +423,10 @@ export default function DramaDetailSheet({ tmdbId, onClose, onPersonClick }: Dra
                       {d.profile_path ? (
                         <div className="relative h-6 w-6 overflow-hidden rounded-full border border-white/20">
                           <Image
-                            src={`https://image.tmdb.org/t/p/original${d.profile_path}`}
+                            src={`https://image.tmdb.org/t/p/w342${d.profile_path}`}
                             alt={d.name}
                             fill
+                            loading="lazy"
                             className="object-cover"
                           />
                         </div>
@@ -467,9 +458,10 @@ export default function DramaDetailSheet({ tmdbId, onClose, onPersonClick }: Dra
                       <div className="relative h-22 w-22 overflow-hidden rounded-[22px] border border-white/[0.16] bg-white/[0.05] shadow-lg transition duration-200 group-hover:border-white/40 group-hover:scale-[1.03]">
                         {c.profile_path ? (
                           <Image
-                            src={`https://image.tmdb.org/t/p/original${c.profile_path}`}
+                            src={`https://image.tmdb.org/t/p/w342${c.profile_path}`}
                             alt={c.name}
                             fill
+                            loading="lazy"
                             className="object-cover"
                           />
                         ) : (

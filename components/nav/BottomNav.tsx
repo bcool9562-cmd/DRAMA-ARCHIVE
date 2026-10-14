@@ -92,7 +92,7 @@ export default function BottomNav({
             pointer-events-auto flex items-center gap-1
             rounded-full border border-white/[0.15]
             bg-black/60 px-3 py-2 shadow-2xl shadow-black/60
-            backdrop-blur-2xl
+            backdrop-blur-2xl will-change-transform
           "
         >
           {TABS.map(({ id, label, icon: Icon }) => {

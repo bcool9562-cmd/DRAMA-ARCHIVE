@@ -10,6 +10,7 @@ import FinishedTab from '@/components/tabs/FinishedTab'
 import NotificationSheet from '@/components/notifications/NotificationSheet'
 import DramaDetailSheet from '@/components/drama/DramaDetailSheet'
 import PersonProfileSheet from '@/components/person/PersonProfileSheet'
+import ToastContainer from '@/components/Toast'
 
 export default function AppShell() {
   const [isUnlocked, setIsUnlocked] = useState(false)
@@ -64,6 +65,7 @@ export default function AppShell() {
   // ── Authenticated App ───────────────────────────────────────────────────
   return (
     <div className="relative min-h-screen bg-black">
+      <ToastContainer />
       {/* Safe-area top padding */}
       <main className="pt-[env(safe-area-inset-top,0px)]">
         {activeTab === 'search' && <SearchTab />}
