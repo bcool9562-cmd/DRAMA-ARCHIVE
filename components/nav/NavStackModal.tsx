@@ -20,6 +20,7 @@ import {
   Maximize2, Loader2, Calendar, Images, Users, ChevronRight, Plus, Minus,
 } from 'lucide-react'
 import type { Drama, TmdbPersonDetail, TmdbPersonCredit, TmdbImage, TmdbCastMember, TmdbCrewMember } from '@/lib/tmdb'
+import VibeChart from '@/components/vibe/VibeChart'
 import {
   addDrama, moveDrama, removeDrama, getUserDramas,
   getSavedDramasSync, onArchiveSync, updateWatchedEpisodes,
@@ -377,10 +378,30 @@ function DramaPage({
   const regionBadge = drama?.country ? REGION_NAMES[drama.country]?.badge || drama.country : null
   const episodesLabel = drama?.totalEpisodes ? `${drama.totalEpisodes} Episodes` : 'Episodes TBA'
 
-  const pills: { status: DramaStatus; label: string; icon: typeof Bookmark; dotColor: string }[] = [
-    { status: 'watchlist', label: 'Watchlist', icon: Bookmark, dotColor: 'bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]' },
-    { status: 'watching', label: 'Watching', icon: Play, dotColor: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]' },
-    { status: 'finished', label: 'Finished', icon: CheckCircle, dotColor: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' },
+  const pills: {
+    status: DramaStatus
+    label: string
+    icon: typeof Bookmark
+    activeGradient: string
+  }[] = [
+    {
+      status: 'watchlist',
+      label: 'Watchlist',
+      icon: Bookmark,
+      activeGradient: 'bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-lg shadow-blue-500/35 border-sky-300/40',
+    },
+    {
+      status: 'watching',
+      label: 'Watching',
+      icon: Play,
+      activeGradient: 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg shadow-purple-500/35 border-purple-300/40',
+    },
+    {
+      status: 'finished',
+      label: 'Finished',
+      icon: CheckCircle,
+      activeGradient: 'bg-gradient-to-r from-emerald-400 to-teal-600 text-white shadow-lg shadow-emerald-500/35 border-emerald-300/40',
+    },
   ]
 
   // Image limits for smooth mobile performance
@@ -483,36 +504,70 @@ function DramaPage({
 
           {/* Metadata Ribbon */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide text-xs font-semibold">
-            {regionBadge && <span className="flex-shrink-0 rounded-full bg-[#1c1c24] border border-white/[0.18] px-3.5 py-1 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">{regionBadge}</span>}
-            {drama.network && (<><span className="text-white/30">•</span><span className="flex-shrink-0 rounded-full bg-[#1c1c24] border border-white/[0.14] px-3.5 py-1 text-white/90">{drama.network}</span></>)}
-            {drama.releaseYear > 0 && (<><span className="text-white/30">•</span><span className="flex-shrink-0 rounded-full bg-[#1c1c24] border border-white/[0.12] px-3.5 py-1 text-white/80">{drama.releaseYear}</span></>)}
-            {drama.rating > 0 && (<><span className="text-white/30">•</span><span className="flex-shrink-0 flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-400/30 px-3 py-1 text-amber-300 font-bold"><Star size={11} className="fill-amber-300 text-amber-300" />{drama.rating.toFixed(1)}</span></>)}
+            {regionBadge && (
+              <span className="flex-shrink-0 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/[0.16] px-3.5 py-1 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)]">
+                {regionBadge}
+              </span>
+            )}
+            {drama.network && (
+              <>
+                <span className="text-white/30">•</span>
+                <span className="flex-shrink-0 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/[0.14] px-3.5 py-1 text-white/90">
+                  {drama.network}
+                </span>
+              </>
+            )}
+            {drama.releaseYear > 0 && (
+              <>
+                <span className="text-white/30">•</span>
+                <span className="flex-shrink-0 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/[0.12] px-3.5 py-1 text-white/80">
+                  {drama.releaseYear}
+                </span>
+              </>
+            )}
+            {drama.rating > 0 && (
+              <>
+                <span className="text-white/30">•</span>
+                <span className="flex-shrink-0 flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-500/40 px-3 py-1 text-amber-400 font-bold shadow-[0_0_10px_rgba(245,158,11,0.25)]">
+                  <Star size={11} className="fill-amber-400 text-amber-400" />
+                  {drama.rating.toFixed(1)}
+                </span>
+              </>
+            )}
             <span className="text-white/30">•</span>
-            <span className="flex-shrink-0 rounded-full bg-[#1c1c24] border border-white/[0.12] px-3.5 py-1 text-white/80">{episodesLabel}</span>
-            {drama.runtime && (<><span className="text-white/30">•</span><span className="flex-shrink-0 rounded-full bg-[#1c1c24] px-3 py-1 text-white/60">{drama.runtime} min/ep</span></>)}
+            <span className="flex-shrink-0 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/[0.12] px-3.5 py-1 text-white/80">
+              {episodesLabel}
+            </span>
+            {drama.runtime && (
+              <>
+                <span className="text-white/30">•</span>
+                <span className="flex-shrink-0 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/[0.10] px-3 py-1 text-white/60">
+                  {drama.runtime} min/ep
+                </span>
+              </>
+            )}
           </div>
 
           {/* Segmented Status Pill Bar */}
           <div className="mb-6">
-            <div className="relative rounded-full bg-black/35 backdrop-blur-3xl border border-white/20 p-1.5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)] flex items-center gap-1 touch-manipulation select-none">
-              {pills.map(({ status, label, icon: Icon, dotColor }) => {
+            <div className="relative rounded-full bg-white/[0.06] backdrop-blur-2xl border border-white/[0.14] p-1.5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] flex items-center gap-1.5 touch-manipulation select-none">
+              {pills.map(({ status, label, icon: Icon, activeGradient }) => {
                 const isActive = currentStatus === status
                 return (
                   <button
                     key={status}
                     type="button"
                     onClick={() => handleStatusToggle(status)}
-                    className={`relative flex flex-1 items-center justify-center gap-2 rounded-full py-2.5 px-3 text-xs font-semibold tracking-wide transition-colors duration-150 cursor-pointer touch-manipulation select-none active:scale-95 ${isActive ? 'text-white' : 'text-white/45 hover:text-white/80'}`}
+                    className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 px-3 text-xs font-semibold tracking-wide transition-colors duration-150 cursor-pointer touch-manipulation select-none active:scale-95 ${isActive ? 'text-white' : 'text-white/50 hover:text-white/80'}`}
                   >
                     {isActive && (
                       <motion.div
                         layoutId={`activeStatusPill-${tmdbId}`}
-                        className="absolute inset-0 rounded-full bg-white/[0.22] backdrop-blur-2xl border border-white/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),0_6px_20px_rgba(0,0,0,0.35)]"
+                        className={`absolute inset-0 rounded-full ${activeGradient} border`}
                         transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                       />
                     )}
                     <span className="relative z-10 flex items-center gap-1.5">
-                      {isActive && <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />}
                       <Icon size={13} strokeWidth={isActive ? 2.4 : 1.8} />
                       <span>{label}</span>
                     </span>
@@ -640,6 +695,11 @@ function DramaPage({
               </div>
             </div>
           )}
+
+          {/* Drama Vibe Chart (Moctale Aesthetic) */}
+          <div className="mb-7">
+            <VibeChart drama={drama} title="Drama Vibe Breakdown" subtitle="Aesthetic & Emotional Spectrum" />
+          </div>
 
           {/* Gallery — Stills & Posters */}
           {allImages.length > 0 && (

@@ -90,3 +90,33 @@ body {
 .pt-safe {
   padding-top: env(safe-area-inset-top, 16px);
 }
+
+/* Moving Poster Wall Animations (Hardware-accelerated 60fps) */
+@keyframes scrollUpInfinite {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, -50%, 0);
+  }
+}
+
+@keyframes scrollDownInfinite {
+  0% {
+    transform: translate3d(0, -50%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-scroll-up {
+  animation: scrollUpInfinite 42s linear infinite;
+  will-change: transform;
+}
+
+.animate-scroll-down {
+  animation: scrollDownInfinite 42s linear infinite;
+  will-change: transform;
+}
+
