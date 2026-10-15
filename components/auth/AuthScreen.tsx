@@ -51,16 +51,16 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-4">
       {/* Moving Poster Wall Background */}
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-30 scale-105">
-        <MovingPosterWall interactive={false} speedSeconds={55} className="h-full w-full" />
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-85 scale-105">
+        <MovingPosterWall interactive={false} speedSeconds={50} className="h-full w-full" />
       </div>
 
-      {/* Dark Vignette + Ambient iOS gradient glows */}
-      <div className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-black/60 via-black/80 to-black/95" />
+      {/* Dark Dimmer reduced from pitch black to bg-black/55 so posters are clearly visible */}
+      <div className="pointer-events-none absolute inset-0 z-0 bg-black/55 backdrop-blur-[1px]" />
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-purple-900/30 blur-[140px]" />
-        <div className="absolute -bottom-40 -right-20 h-[500px] w-[500px] rounded-full bg-pink-900/20 blur-[140px]" />
-        <div className="absolute top-1/2 left-1/2 h-[450px] w-[450px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-950/35 blur-[130px]" />
+        <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-purple-900/25 blur-[140px]" />
+        <div className="absolute -bottom-40 -right-20 h-[500px] w-[500px] rounded-full bg-pink-900/15 blur-[140px]" />
+        <div className="absolute top-1/2 left-1/2 h-[450px] w-[450px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-950/25 blur-[130px]" />
       </div>
 
       {/* Lock Card */}

@@ -42,7 +42,7 @@ const VIBE_CATEGORIES = [
  */
 export function calculateDramaVibes(drama: Partial<Drama>): VibeItem[] {
   const scores: Record<string, number> = {}
-  VIBE_CATEGORIES.forEach(v => { scores[v.name] = 10 }) // base floor
+  VIBE_CATEGORIES.forEach(v => { scores[v.name] = 10 })
 
   const textToScan = [
     drama.title || '',
@@ -59,7 +59,6 @@ export function calculateDramaVibes(drama: Partial<Drama>): VibeItem[] {
     })
   })
 
-  // Pick top 5
   const sorted = Object.entries(scores)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
@@ -73,8 +72,8 @@ export function calculateDramaVibes(drama: Partial<Drama>): VibeItem[] {
       pct = Math.max(5, 100 - allocated)
     } else {
       pct = Math.max(10, pct)
-      allocated += pct
     }
+    allocated += pct
     return {
       name,
       pct,
@@ -82,7 +81,6 @@ export function calculateDramaVibes(drama: Partial<Drama>): VibeItem[] {
     }
   })
 
-  // Ensure exact 100%
   const sum = items.reduce((acc, it) => acc + it.pct, 0)
   if (sum !== 100) {
     items[0].pct += (100 - sum)
@@ -96,13 +94,7 @@ export function calculateDramaVibes(drama: Partial<Drama>): VibeItem[] {
  */
 export function calculateArchiveVibes(savedDramas: UserDrama[]): VibeItem[] {
   if (!savedDramas || savedDramas.length === 0) {
-    return [
-      { name: 'Romance', pct: 32, color: MOCTALE_PALETTE[0] },
-      { name: 'Melodrama', pct: 24, color: MOCTALE_PALETTE[1] },
-      { name: 'Thriller', pct: 20, color: MOCTALE_PALETTE[2] },
-      { name: 'Youth', pct: 14, color: MOCTALE_PALETTE[3] },
-      { name: 'Historical', pct: 10, color: MOCTALE_PALETTE[4] },
-    ]
+    return DEFAULT_VIBES
   }
 
   const scores: Record<string, number> = {
@@ -140,8 +132,8 @@ export function calculateArchiveVibes(savedDramas: UserDrama[]): VibeItem[] {
       pct = Math.max(5, 100 - allocated)
     } else {
       pct = Math.max(10, pct)
-      allocated += pct
     }
+    allocated += pct
     return {
       name,
       pct,
@@ -166,6 +158,7 @@ interface VibeChartProps {
   onSelectVibe?: (vibeName: string) => void
   selectedVibe?: string | null
   className?: string
+  borderless?: boolean
 }
 
 export default function VibeChart({
@@ -177,6 +170,7 @@ export default function VibeChart({
   onSelectVibe,
   selectedVibe,
   className = '',
+  borderless = false,
 }: VibeChartProps) {
   const chartVibes = React.useMemo(() => {
     if (vibes && vibes.length > 0) return vibes
@@ -193,13 +187,13 @@ export default function VibeChart({
     : (selectedVibe ? chartVibes.findIndex(v => v.name.toLowerCase() === selectedVibe.toLowerCase()) : 0)
   const activeItem = chartVibes[activeIdx >= 0 ? activeIdx : 0] || chartVibes[0]
 
-  // SVG Donut geometry
-  const size = 220
-  const center = size / 2 // 110
-  const radius = 76
-  const strokeWidth = 24
-  const circumference = 2 * Math.PI * radius // ~477.52
-  const gap = 8 // pixel gap between arcs
+  // Scaled SVG Donut geometry (w-48 h-48 = 192px)
+  const size = 192
+  const center = size / 2 // 96
+  const radius = 66
+  const strokeWidth = 20
+  const circumference = 2 * Math.PI * radius // ~414.69
+  const gap = 7
 
   let currentOffset = 0
   const segments = chartVibes.map((item, idx) => {
@@ -220,20 +214,22 @@ export default function VibeChart({
     }
   })
 
+  const containerClasses = borderless
+    ? `w-full h-full flex flex-col justify-between ${className}`
+    : `rounded-[28px] bg-[#101016]/85 backdrop-blur-2xl border border-white/[0.08] p-6 shadow-2xl transition-all duration-200 ${className}`
+
   return (
-    <div
-      className={`rounded-[26px] bg-[#101016]/85 backdrop-blur-2xl border border-white/[0.1] p-6 shadow-2xl transition-all duration-200 ${className}`}
-    >
+    <div className={containerClasses}>
       {/* Top Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-bold text-white tracking-tight leading-tight">{title}</h3>
           {subtitle && <p className="text-xs text-white/50 mt-0.5">{subtitle}</p>}
         </div>
       </div>
 
-      {/* Donut Ring with Center Readout */}
-      <div className="relative mx-auto my-2 flex items-center justify-center" style={{ width: size, height: size }}>
+      {/* Scaled Donut Ring (w-48 h-48) with Center Readout */}
+      <div className="relative mx-auto my-1 flex items-center justify-center w-48 h-48">
         <svg
           viewBox={`0 0 ${size} ${size}`}
           className="w-full h-full -rotate-90 transform-gpu"
@@ -269,17 +265,17 @@ export default function VibeChart({
         <div
           className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center select-none"
         >
-          <span className="text-sm font-semibold tracking-tight text-white/90 drop-shadow-sm">
+          <span className="text-xs font-semibold tracking-tight text-white/90 drop-shadow-sm truncate max-w-[110px] px-2">
             {activeItem.name}
           </span>
-          <span className="text-3xl font-black text-white tracking-tight drop-shadow-md mt-0.5">
+          <span className="text-2xl font-black text-white tracking-tight drop-shadow-md mt-0.5">
             {activeItem.pct}%
           </span>
         </div>
       </div>
 
-      {/* Legend List Below */}
-      <div className="mt-6 flex flex-col gap-2.5">
+      {/* Legend List (Clean, compact rows to fit h-[460px] naturally) */}
+      <div className="flex flex-col gap-1.5 mt-2">
         {chartVibes.map((item, idx) => {
           const isSelected = (hoveredIdx === idx) || (selectedVibe && item.name.toLowerCase() === selectedVibe.toLowerCase())
           return (
@@ -292,26 +288,26 @@ export default function VibeChart({
                 setHoveredIdx(idx)
                 onSelectVibe?.(item.name)
               }}
-              className={`flex items-center justify-between py-2 px-3 rounded-xl transition-all duration-150 cursor-pointer touch-manipulation select-none ${
+              className={`flex items-center justify-between py-1.5 px-3 rounded-xl transition-all duration-150 cursor-pointer touch-manipulation select-none ${
                 isSelected
                   ? 'bg-white/[0.12] border border-white/20 shadow-sm'
                   : 'hover:bg-white/[0.06] border border-transparent'
               }`}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2.5">
                 <span
-                  className="w-3.5 h-3.5 rounded-full flex-shrink-0 shadow-sm transition-transform duration-200"
+                  className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm transition-transform duration-200"
                   style={{
                     backgroundColor: item.color,
                     transform: isSelected ? 'scale(1.2)' : 'scale(1)',
-                    boxShadow: isSelected ? `0 0 10px ${item.color}` : undefined,
+                    boxShadow: isSelected ? `0 0 8px ${item.color}` : undefined,
                   }}
                 />
-                <span className={`text-sm font-medium tracking-tight ${isSelected ? 'text-white font-bold' : 'text-white/80'}`}>
+                <span className={`text-xs font-medium tracking-tight ${isSelected ? 'text-white font-bold' : 'text-white/80'}`}>
                   {item.name}
                 </span>
               </div>
-              <span className="text-sm font-bold text-white tabular-nums">
+              <span className="text-xs font-bold text-white tabular-nums">
                 {item.pct}%
               </span>
             </button>
