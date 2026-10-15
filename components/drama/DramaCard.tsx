@@ -29,7 +29,7 @@ export default function DramaCard({ drama, actions, onOpen, staggerIndex }: Dram
   const subline = [regionBadge, year, episodesText].filter(Boolean).join(' · ')
   const posterSrc = tmdbCard(drama.poster_url)
 
-  // Episode tracking calculation with smart visual denominator (Fix for "The Early Spring" & missing total_episodes)
+  // Episode tracking calculation with smart visual denominator
   const watchedEp = Number(drama.watched_episodes ?? drama.next_episode_number) || 0
   const totalEp = Number(drama.total_episodes) || 0
   const effectiveTotal = totalEp > 1 ? totalEp : Math.max(watchedEp + 5, 16)
@@ -60,111 +60,109 @@ export default function DramaCard({ drama, actions, onOpen, staggerIndex }: Dram
           ? { animationDelay: `${Math.min(staggerIndex * 35, 350)}ms` }
           : undefined
       }
-      className={`group relative flex flex-col overflow-hidden rounded-[24px] border border-white/[0.14] bg-[#111118] shadow-lg transition-all duration-200 text-left touch-manipulation select-none active:scale-[0.98] transform-gpu ${
+      className={`group relative aspect-[2/3] w-full rounded-[24px] overflow-hidden border border-white/[0.18] shadow-[0_16px_36px_-6px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.25)] transition-all duration-200 text-left touch-manipulation select-none active:scale-[0.98] transform-gpu ${
         staggerIndex !== undefined ? 'ios-stagger-card' : ''
       } ${onOpen ? 'cursor-pointer' : ''}`}
     >
-      {/* 1. Poster at top */}
-      <div className="relative aspect-[2/3] w-full overflow-hidden bg-black/60">
-        {posterSrc ? (
-          <Image
-            src={posterSrc}
-            alt={drama.title}
-            fill
-            sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 22vw"
-            loading="lazy"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            priority={false}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-black/70 text-white/25 text-xs font-medium">
-            No Poster
-          </div>
-        )}
-
-        {/* Top Floating Glass Badges */}
-        <div className="absolute inset-x-2.5 top-2.5 z-10 flex items-center justify-between gap-1 pointer-events-none">
-          {regionBadge ? (
-            <span className="rounded-full bg-black/60 backdrop-blur-md border border-white/20 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md">
-              {regionBadge}
-            </span>
-          ) : <span />}
-
-          {drama.rating > 0 && (
-            <span className="flex items-center gap-1 rounded-full bg-black/60 backdrop-blur-md border border-amber-400/30 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-300 shadow-md">
-              <Star size={10} className="fill-amber-300 text-amber-300" />
-              {drama.rating.toFixed(1)}
-            </span>
-          )}
+      {/* 1. Full-Bleed 100% Poster Image */}
+      {posterSrc ? (
+        <Image
+          src={posterSrc}
+          alt={drama.title}
+          fill
+          sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 22vw"
+          loading="lazy"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          priority={false}
+        />
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-black/70 text-white/25 text-xs font-medium">
+          No Poster
         </div>
+      )}
+
+      {/* Top Floating Glass Badges */}
+      <div className="absolute inset-x-2.5 top-2.5 z-10 flex items-center justify-between gap-1 pointer-events-none">
+        {regionBadge ? (
+          <span className="rounded-full bg-black/45 backdrop-blur-xl border border-white/25 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md">
+            {regionBadge}
+          </span>
+        ) : <span />}
+
+        {drama.rating > 0 && (
+          <span className="flex items-center gap-1 rounded-full bg-black/45 backdrop-blur-xl border border-amber-400/35 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-300 shadow-md">
+            <Star size={10} className="fill-amber-300 text-amber-300" />
+            {drama.rating.toFixed(1)}
+          </span>
+        )}
       </div>
 
-      {/* 2. Info / Action Section sits FLUSH below the poster */}
-      <div className="flex flex-1 flex-col justify-between bg-[#111118] p-3.5 border-t border-white/[0.06]">
-        <div>
-          <h3 className="text-[15px] font-bold text-white truncate leading-tight group-hover:text-purple-300 transition-colors">
+      {/* 2. Photo 1 Colorless Gaussian-Blurred Glass Overlay Box */}
+      <div className="absolute inset-x-2.5 bottom-2.5 z-10 rounded-[18px] bg-black/35 backdrop-blur-xl border border-white/[0.18] p-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_8px_24px_rgba(0,0,0,0.45)] flex flex-col gap-2">
+        <div className="flex flex-col min-w-0">
+          <h3 className="text-[13px] sm:text-[14px] font-bold tracking-tight text-white truncate leading-tight group-hover:text-white/90">
             {drama.title}
           </h3>
           {subline && (
-            <p className="text-xs text-white/50 truncate mt-1">
+            <p className="text-[11px] font-medium text-white/60 truncate mt-0.5">
               {subline}
             </p>
           )}
-
-          {/* On Watching cards: Always visible Episode Tracker with steppers & progress bar */}
-          {drama.status === 'watching' && (
-            <div
-              className="mt-2.5 flex flex-col gap-1.5 rounded-[14px] bg-white/[0.06] border border-white/[0.10] p-2 backdrop-blur-md"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold tracking-tight text-white/90">
-                  EP {watchedEp}{totalEp > 1 ? ` / ${totalEp}` : ''}
-                  {totalEp > 1 && (
-                    <span className="text-purple-300 font-semibold text-[10px] ml-1.5">
-                      ({progressPct}%)
-                    </span>
-                  )}
-                </span>
-
-                {/* Steppers */}
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    title="Previous Episode"
-                    onClick={(e) => handleStep(-1, e)}
-                    disabled={watchedEp <= 0}
-                    className="w-6 h-6 rounded-full bg-white/[0.12] hover:bg-white/[0.22] text-white flex items-center justify-center border border-white/[0.12] active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                  >
-                    <Minus size={11} strokeWidth={2.5} />
-                  </button>
-                  <button
-                    type="button"
-                    title="Next Episode (+1)"
-                    onClick={(e) => handleStep(1, e)}
-                    className="h-6 px-2.5 rounded-full bg-purple-500 hover:bg-purple-400 text-white font-bold text-[10px] flex items-center gap-0.5 shadow-[0_0_10px_rgba(168,85,247,0.5)] active:scale-90 transition cursor-pointer"
-                  >
-                    <Plus size={10} strokeWidth={3} />
-                    <span>1</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Progress Bar (Always visible on watching) */}
-              <div className="relative h-1.5 w-full rounded-full bg-black/50 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-purple-500 via-fuchsia-400 to-sky-400 shadow-[0_0_8px_rgba(168,85,247,0.7)] transition-all duration-300"
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* 1-Tap Action Buttons Shelf */}
+        {/* On Watching cards: Colorless Frosted Glass Steppers + Progress Bar */}
+        {drama.status === 'watching' && (
+          <div
+            className="flex flex-col gap-1.5 rounded-[14px] bg-white/[0.08] border border-white/[0.14] p-2 backdrop-blur-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] sm:text-[11px] font-bold tracking-tight text-white/90">
+                EP {watchedEp}{totalEp > 1 ? ` / ${totalEp}` : ''}
+                {totalEp > 1 && (
+                  <span className="text-white/60 font-medium text-[10px] ml-1">
+                    ({progressPct}%)
+                  </span>
+                )}
+              </span>
+
+              {/* Colorless Frosted Glass Steppers */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  title="Previous Episode"
+                  onClick={(e) => handleStep(-1, e)}
+                  disabled={watchedEp <= 0}
+                  className="w-7 h-7 rounded-full bg-white/[0.12] hover:bg-white/[0.24] border border-white/[0.2] text-white/90 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-90 disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                >
+                  <Minus size={11} strokeWidth={2.5} />
+                </button>
+                <button
+                  type="button"
+                  title="Next Episode (+1)"
+                  onClick={(e) => handleStep(1, e)}
+                  className="h-7 px-2.5 rounded-full bg-white/[0.16] hover:bg-white/[0.26] border border-white/[0.22] text-white text-[11px] font-semibold flex items-center gap-0.5 transition-all duration-200 active:scale-90 cursor-pointer shadow-sm"
+                >
+                  <Plus size={11} strokeWidth={2.5} />
+                  <span>1</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Clean Frosted Progress Bar */}
+            <div className="relative h-1.5 w-full rounded-full bg-black/40 overflow-hidden border border-white/[0.10]">
+              <div
+                className="h-full rounded-full bg-white/90 shadow-[0_0_8px_rgba(255,255,255,0.7)] transition-all duration-300"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Action buttons shelf */}
         {actions && (
           <div
-            className="mt-3 pt-2.5 border-t border-white/[0.06]"
+            className="pt-1.5 border-t border-white/[0.12]"
             onClick={(e) => e.stopPropagation()}
           >
             {actions}

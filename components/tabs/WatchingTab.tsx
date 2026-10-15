@@ -98,17 +98,17 @@ export default function WatchingTab({ onOpenDrama }: WatchingTabProps) {
                 <button
                   title="Mark as Finished"
                   onClick={() => handleMarkFinished(drama.drama_id)}
-                  className="flex-1 h-9 rounded-full bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/35 text-purple-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer touch-manipulation select-none"
+                  className="flex-1 h-8 rounded-full bg-white/[0.16] hover:bg-white/[0.26] border border-white/[0.22] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation select-none"
                 >
-                  <CheckCircle size={14} />
+                  <CheckCircle size={13} />
                   <span>Finish</span>
                 </button>
                 <button
                   title="Remove from Watching"
                   onClick={() => handleRemove(drama.drama_id)}
-                  className="h-9 w-9 rounded-full bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 flex items-center justify-center transition active:scale-90 cursor-pointer touch-manipulation select-none"
+                  className="w-8 h-8 rounded-full bg-white/[0.12] hover:bg-white/[0.24] border border-white/[0.2] text-white/90 hover:text-white flex items-center justify-center transition-all duration-200 active:scale-90 cursor-pointer touch-manipulation select-none"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={13} />
                 </button>
               </div>
             }

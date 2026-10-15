@@ -1,6 +1,6 @@
 'use client'
 
-import { Bell, Search, Bookmark, Play, CheckCircle, Lock } from 'lucide-react'
+import { Bell, Search, Bookmark, Play, CheckCircle } from 'lucide-react'
 import { getNotifiableDramas } from '@/lib/supabase/archive'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
@@ -28,67 +28,155 @@ export default function BottomNav({
   onLockClick,
 }: BottomNavProps) {
   const [notifCount, setNotifCount] = useState(0)
+  const [logoTilt, setLogoTilt] = useState<{ x: number; y: number; mouseX: number; active: boolean }>({
+    x: 0,
+    y: 0,
+    mouseX: 0,
+    active: false,
+  })
 
   useEffect(() => {
     getNotifiableDramas().then((dramas) => setNotifCount(dramas.length))
   }, [])
 
+  function handleLogoMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const mouseX = e.clientX - rect.left
+    const normX = mouseX / rect.width - 0.5
+    const normY = (e.clientY - rect.top) / rect.height - 0.5
+    setLogoTilt({
+      x: normX,
+      y: normY,
+      mouseX,
+      active: true,
+    })
+  }
+
+  function handleLogoMouseLeave() {
+    setLogoTilt({ x: 0, y: 0, mouseX: 0, active: false })
+  }
+
   return (
     <>
       {/* Top Header Bar — floating glass bar with comfortable breathing room from screen top */}
       <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between pt-4 sm:pt-5 pb-3 px-5 sm:px-8 mt-[env(safe-area-inset-top,0px)]">
-        {/* Official Drama Archive Brand Mark: Matching Explore. Header Style */}
-        <div className="pointer-events-auto flex items-center gap-2.5 touch-manipulation select-none">
-          {/* Left Badge: Sleek circular gradient badge with thin white inner ring and spark/diamond center */}
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-rose-500 flex items-center justify-center shadow-[0_0_16px_rgba(168,85,247,0.4)] flex-shrink-0">
-            <div className="w-5 h-5 rounded-full border-[1.75px] border-white/90 flex items-center justify-center">
-              <div className="w-1.5 h-1.5 rotate-45 bg-white rounded-[1px] shadow-[0_0_6px_#fff]" />
+        {/* Official Drama Archive Brand Mark: Magnetic 3D Cursor Tilt & Interactive Shimmer */}
+        <div
+          onMouseMove={handleLogoMouseMove}
+          onMouseLeave={handleLogoMouseLeave}
+          style={{
+            transform: logoTilt.active
+              ? `perspective(600px) rotateX(${-logoTilt.y * 18}deg) rotateY(${logoTilt.x * 20}deg) translate3d(${logoTilt.x * 8}px, ${logoTilt.y * 6}px, 0)`
+              : 'perspective(600px) rotateX(0deg) rotateY(0deg) translate3d(0, 0, 0)',
+            transition: logoTilt.active ? 'transform 0.08s ease-out' : 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
+            transformStyle: 'preserve-3d',
+          }}
+          className="pointer-events-auto flex items-center gap-2.5 touch-manipulation select-none cursor-pointer group py-1"
+        >
+          {/* Left Badge: Interactive Spinning Prism Emblem */}
+          <div className="relative w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-rose-500 flex items-center justify-center shadow-[0_0_16px_rgba(168,85,247,0.4)] group-hover:shadow-[0_0_24px_rgba(168,85,247,0.75)] group-hover:scale-105 transition-all duration-500 flex-shrink-0">
+            {/* Rotating inner white ring */}
+            <div className="w-5 h-5 rounded-full border-[1.75px] border-white/90 flex items-center justify-center group-hover:rotate-180 transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]">
+              {/* Counter-rotating and scaling center diamond spark */}
+              <div className="w-1.5 h-1.5 rotate-45 bg-white rounded-[1px] shadow-[0_0_6px_#fff] group-hover:-rotate-90 group-hover:scale-125 transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]" />
             </div>
           </div>
 
-          {/* Title Text: Bold typography with round glowing rose dot */}
+          {/* Title Text: Cursor-Following Shimmer + Bouncing Dot */}
           <div className="text-[24px] font-black tracking-tight text-white flex items-baseline leading-none">
-            <span>Drama Archive</span>
-            <span className="w-2 h-2 rounded-full bg-rose-500 inline-block ml-1 mb-0.5 shadow-[0_0_8px_rgba(244,63,94,0.7)]" />
+            <span
+              className="transition-all duration-200"
+              style={
+                logoTilt.active
+                  ? {
+                      background: `radial-gradient(130px circle at ${logoTilt.mouseX - 40}px 50%, rgba(255,255,255,1) 0%, rgba(255,255,255,0.75) 60%, rgba(255,255,255,0.5) 100%)`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      textShadow: '0 0 20px rgba(255,255,255,0.35)',
+                    }
+                  : undefined
+              }
+            >
+              Drama Archive
+            </span>
+            <span className="w-2 h-2 rounded-full bg-rose-500 inline-block ml-1 mb-0.5 shadow-[0_0_8px_rgba(244,63,94,0.7)] group-hover:-translate-y-1.5 group-hover:scale-125 group-hover:shadow-[0_0_14px_#f43f5e] transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]" />
           </div>
         </div>
 
-        {/* Right Controls: Clean, compact frosted dark-glass pills */}
+        {/* Right Controls: Rich Interactive Hover & Tap Animations (Photo 3) */}
         <div className="pointer-events-auto relative flex items-center gap-2">
-          {/* Notification Capsule */}
+          {/* Notification Capsule: Pendulum Bell Ring + Spring Lift + Diagonal Sheen */}
           <button
             onClick={onNotificationsClick}
             className="
               relative h-9 px-3.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14]
-              backdrop-blur-xl border border-white/[0.14]
-              text-white/90 flex items-center gap-2 text-xs font-semibold
-              transition active:scale-95 cursor-pointer touch-manipulation select-none
+              backdrop-blur-xl border border-white/[0.14] text-white/90
+              flex items-center gap-2 text-xs font-semibold
+              overflow-hidden cursor-pointer touch-manipulation select-none group
+              hover:-translate-y-0.5 hover:scale-[1.04] active:scale-95
+              transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
+              before:absolute before:inset-0 before:-translate-x-full hover:before:translate-x-full
+              before:transition-transform before:duration-700
+              before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent
             "
             aria-label="Airing Alerts"
           >
-            <Bell size={14} strokeWidth={2} className="text-white/90" />
-            <span>Alerts</span>
+            <div className="relative flex items-center justify-center">
+              <Bell
+                size={14}
+                strokeWidth={2}
+                className="text-white/90 origin-top group-hover:animate-bell-ring transition-transform"
+              />
+            </div>
+            <span className="relative z-10">Alerts</span>
             {notifCount > 0 && (
-              <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none">
+              <span className="relative z-10 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none group-hover:scale-110 group-hover:shadow-[0_0_12px_rgba(244,63,94,0.8)] transition-all duration-300">
                 {notifCount > 9 ? '9+' : notifCount}
               </span>
             )}
           </button>
 
-          {/* Lock Capsule */}
+          {/* Lock Capsule: Animated Unlatching Shackle + Spring Lift + Diagonal Sheen */}
           <button
             onClick={onLockClick}
             title="Lock Archive"
             className="
               relative h-9 px-3.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14]
-              backdrop-blur-xl border border-white/[0.14]
-              text-white/90 flex items-center gap-2 text-xs font-semibold
-              transition active:scale-95 cursor-pointer touch-manipulation select-none
+              backdrop-blur-xl border border-white/[0.14] text-white/90
+              flex items-center gap-2 text-xs font-semibold
+              overflow-hidden cursor-pointer touch-manipulation select-none group
+              hover:-translate-y-0.5 hover:scale-[1.04] active:scale-95
+              transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
+              before:absolute before:inset-0 before:-translate-x-full hover:before:translate-x-full
+              before:transition-transform before:duration-700
+              before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent
             "
             aria-label="Lock Archive"
           >
-            <Lock size={13} strokeWidth={2} className="text-white/90" />
-            <span>Lock</span>
+            <svg
+              viewBox="0 0 24 24"
+              className="w-3.5 h-3.5 text-white/90 overflow-visible relative z-10"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path
+                d="M7 11V7a5 5 0 0 1 10 0v4"
+                className="origin-bottom-left transition-transform duration-300 ease-out group-hover:-translate-y-[2.5px] group-hover:rotate-[-10deg]"
+              />
+              <rect
+                x="3"
+                y="11"
+                width="18"
+                height="11"
+                rx="2"
+                ry="2"
+                className="group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.6)] transition-all duration-300"
+              />
+            </svg>
+            <span className="relative z-10">Lock</span>
           </button>
         </div>
       </header>

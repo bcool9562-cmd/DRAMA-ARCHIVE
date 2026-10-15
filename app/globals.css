@@ -120,3 +120,17 @@ body {
   will-change: transform;
 }
 
+@keyframes bellRing {
+  0% { transform: rotate(0); }
+  20% { transform: rotate(18deg); }
+  40% { transform: rotate(-16deg); }
+  60% { transform: rotate(12deg); }
+  80% { transform: rotate(-8deg); }
+  100% { transform: rotate(0); }
+}
+
+.animate-bell-ring {
+  animation: bellRing 0.65s ease-in-out;
+  transform-origin: top center;
+}
+
