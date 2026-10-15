@@ -414,14 +414,14 @@ export default function DramaDetailSheet({
               const progressPct = Math.min(94, Math.max(6, Math.round(((watchedEp || 1) / effectiveTotal) * 100)))
 
               return (
-                <div className="relative overflow-hidden rounded-[26px] bg-[#0c0c14]/90 backdrop-blur-2xl border border-white/[0.16] p-5 mb-7 shadow-[0_16px_40px_rgba(0,0,0,0.6),inset_0_1px_1px_rgba(255,255,255,0.25)] flex flex-col gap-4">
-                  {/* Photo 3 Signature Bottom-Edge Horizon Underglow */}
-                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(110%_85%_at_50%_108%,rgba(139,92,246,0.52)_0%,rgba(56,189,248,0.25)_45%,transparent_75%)]" />
+                <div className="relative overflow-hidden rounded-[24px] bg-[#12101e]/90 border border-purple-500/25 p-5 mb-7 shadow-[0_12px_32px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4">
+                  {/* Purple-indigo internal ambient glow */}
+                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(100%_90%_at_50%_100%,rgba(147,51,234,0.35)_0%,rgba(59,130,246,0.15)_50%,transparent_80%)]" />
 
                   <div className="relative z-10 flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-[#38bdf8] shadow-[0_0_8px_#38bdf8]" />
+                        <span className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
                         <span className="text-xs font-bold uppercase tracking-wider text-white/80">Episode Tracker</span>
                       </div>
                       <p className="text-[12px] text-white/50 mt-0.5">
@@ -429,9 +429,9 @@ export default function DramaDetailSheet({
                       </p>
                     </div>
 
-                    {/* Photo 3 Action Orbs + Big Tabular Episode Display */}
-                    <div className="flex items-center gap-3">
-                      {/* Frosted Translucent Minus Orb */}
+                    {/* Stepper controls */}
+                    <div className="flex items-center gap-2.5">
+                      {/* Frosted Translucent Minus Button */}
                       <button
                         type="button"
                         onClick={async () => {
@@ -439,19 +439,19 @@ export default function DramaDetailSheet({
                           await updateWatchedEpisodes(String(drama.dramaId || drama.tmdbId), nextVal)
                         }}
                         disabled={watchedEp <= 0}
-                        className="w-10 h-10 rounded-full bg-white/[0.14] hover:bg-white/[0.22] text-white flex items-center justify-center border border-white/[0.15] active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                        className="w-8 h-8 rounded-full bg-white/[0.12] hover:bg-white/[0.22] text-white flex items-center justify-center border border-white/[0.15] active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                         title="Previous Episode"
                       >
-                        <Minus size={16} strokeWidth={2.8} />
+                        <Minus size={14} strokeWidth={2.5} />
                       </button>
 
-                      {/* Glowing Tabular EP Number */}
-                      <div className="flex items-baseline px-2 font-black text-white text-lg tracking-tight tabular-nums">
+                      {/* Tabular EP Number */}
+                      <div className="flex items-baseline px-1 font-black text-white text-base tracking-tight tabular-nums">
                         <span>EP {watchedEp}</span>
                         {totalEp > 1 && <span className="text-white/40 text-xs ml-1 font-semibold">/ {totalEp}</span>}
                       </div>
 
-                      {/* Solid Electric Sky-Blue Plus Orb */}
+                      {/* Glowing Purple Plus Button */}
                       <button
                         type="button"
                         onClick={async () => {
@@ -461,23 +461,23 @@ export default function DramaDetailSheet({
                             await moveDrama(String(drama.dramaId || drama.tmdbId), 'finished')
                           }
                         }}
-                        className="w-10 h-10 rounded-full bg-[#38bdf8] text-[#05101a] font-black flex items-center justify-center shadow-[0_0_20px_rgba(56,189,248,0.6)] active:scale-90 transition cursor-pointer"
+                        className="w-8 h-8 rounded-full bg-purple-500 hover:bg-purple-400 text-white font-bold flex items-center justify-center shadow-[0_0_14px_rgba(168,85,247,0.6)] active:scale-90 transition cursor-pointer"
                         title="Next Episode (+1)"
                       >
-                        <Plus size={18} strokeWidth={3} />
+                        <Plus size={15} strokeWidth={2.8} />
                       </button>
                     </div>
                   </div>
 
-                  {/* Photo 3 "Cornfield Chase" Laser-Flare Progress Bar */}
+                  {/* Cornfield Chase Laser-Flare Progress Bar */}
                   <div className="relative z-10 pt-1">
-                    <div className="relative h-[4px] w-full rounded-full bg-white/[0.14] overflow-visible">
+                    <div className="relative h-[5px] w-full rounded-full bg-white/[0.12] overflow-visible">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-[#38bdf8] via-[#bae6fd] to-white shadow-[0_0_12px_rgba(56,189,248,0.85)] relative transition-all duration-300"
+                        className="h-full rounded-full bg-gradient-to-r from-purple-500 via-sky-400 to-white shadow-[0_0_14px_rgba(168,85,247,0.8)] relative transition-all duration-300"
                         style={{ width: `${Math.min(96, Math.max(5, progressPct))}%` }}
                       >
-                        <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-8 h-3.5 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,1)_0%,rgba(125,211,252,0.85)_40%,rgba(56,189,248,0)_80%)] blur-[2px] pointer-events-none" />
-                        <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-1 rounded-full bg-white shadow-[0_0_10px_2px_#fff] pointer-events-none" />
+                        <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-8 h-3.5 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,1)_0%,rgba(192,132,252,0.85)_45%,transparent_80%)] blur-[2px] pointer-events-none" />
+                        <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-1.5 rounded-full bg-white shadow-[0_0_10px_2px_#fff] pointer-events-none" />
                       </div>
                     </div>
                   </div>

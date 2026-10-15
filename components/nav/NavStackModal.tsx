@@ -612,89 +612,104 @@ function DramaPage({
           </div>
 
           {/* Episode Progress Tracker (Visible when Watching) */}
-          {currentStatus === 'watching' && (
-            <div className="mb-7 rounded-[24px] bg-black/35 backdrop-blur-3xl border border-white/20 p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_12px_28px_rgba(0,0,0,0.5)] transform-gpu">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2.5">
-                  <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.14] border border-white/25 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]">
-                    <Play size={12} className="fill-white ml-0.5" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-white tracking-tight">Episode Tracker</div>
-                    <div className="text-[11px] text-white/50 font-medium">
-                      {drama.totalEpisodes > 0 ? (
-                        <span>Watched {userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0} of {drama.totalEpisodes}</span>
-                      ) : (
-                        <span>Episode {userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0}</span>
-                      )}
+          {currentStatus === 'watching' && (() => {
+            const currentWatched = Number(userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0)
+            const totalEp = Number(drama.totalEpisodes) || 0
+            const effectiveTotal = totalEp > 1 ? totalEp : Math.max(currentWatched + 5, 16)
+            const progressPct = Math.min(100, Math.max(4, Math.round(((currentWatched || 1) / effectiveTotal) * 100)))
+            const safeBeamWidth = Math.min(96, Math.max(4, progressPct))
+            const epsRemaining = Math.max(0, (totalEp > 0 ? totalEp : effectiveTotal) - currentWatched)
+
+            return (
+              <div className="relative overflow-hidden mb-7 rounded-[24px] bg-[#12101e]/90 border border-purple-500/25 p-5 shadow-[0_12px_32px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] transform-gpu">
+                {/* Purple-indigo internal ambient glow */}
+                <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(100%_90%_at_50%_100%,rgba(147,51,234,0.35)_0%,rgba(59,130,246,0.15)_50%,transparent_80%)]" />
+
+                <div className="relative z-10 flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2.5">
+                    <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-purple-500/20 border border-purple-500/35 text-purple-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]">
+                      <Play size={12} className="fill-purple-300 ml-0.5" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-white tracking-tight">Episode Tracker</div>
+                      <div className="text-[11px] text-white/50 font-medium">
+                        {totalEp > 0 ? (
+                          <span>Watched {currentWatched} of {totalEp} episodes</span>
+                        ) : (
+                          <span>Episode {currentWatched} (Ongoing)</span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Stepper buttons */}
-                <div className="flex items-center gap-1.5 bg-black/40 border border-white/20 rounded-full p-1 backdrop-blur-md">
-                  <button
-                    type="button"
-                    disabled={(userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0) <= 0}
-                    onClick={() => {
-                      const currentWatched = Number(userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0)
-                      if (currentWatched > 0) {
-                        updateWatchedEpisodes(drama.dramaId, currentWatched - 1)
-                      }
-                    }}
-                    className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.10] hover:bg-white/[0.20] active:scale-90 text-white disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer touch-manipulation"
-                  >
-                    <Minus size={13} strokeWidth={2.5} />
-                  </button>
-                  <span className="w-8 text-center text-xs font-bold tabular-nums text-white">
-                    {userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={drama.totalEpisodes > 0 && (userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0) >= drama.totalEpisodes}
-                    onClick={() => {
-                      const currentWatched = Number(userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0)
-                      const nextVal = currentWatched + 1
-                      updateWatchedEpisodes(drama.dramaId, nextVal)
-                    }}
-                    className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.25] hover:bg-white/[0.35] text-white shadow-md active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer touch-manipulation"
-                  >
-                    <Plus size={13} strokeWidth={2.5} />
-                  </button>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              {drama.totalEpisodes > 0 && (
-                <div className="space-y-1.5">
-                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/50 border border-white/15">
-                    <div
-                      className="h-full rounded-full bg-white/80 shadow-[0_0_10px_rgba(255,255,255,0.6)] transition-all duration-300"
-                      style={{
-                        width: `${Math.min(100, Math.round(((userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0) / drama.totalEpisodes) * 100))}%`
+                  {/* Stepper buttons capsule with glowing purple + button */}
+                  <div className="flex items-center gap-1.5 bg-black/40 border border-white/20 rounded-full p-1 backdrop-blur-md">
+                    <button
+                      type="button"
+                      disabled={currentWatched <= 0}
+                      onClick={() => {
+                        if (currentWatched > 0) {
+                          updateWatchedEpisodes(drama.dramaId, currentWatched - 1)
+                        }
                       }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-[10px] font-semibold text-white/40">
-                    <span>{Math.min(100, Math.round(((userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0) / drama.totalEpisodes) * 100))}% Completed</span>
-                    <span>{Math.max(0, drama.totalEpisodes - (userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0))} eps remaining</span>
+                      className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.10] hover:bg-white/[0.20] active:scale-90 text-white disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer touch-manipulation"
+                      title="Previous Episode"
+                    >
+                      <Minus size={13} strokeWidth={2.5} />
+                    </button>
+                    <span className="w-8 text-center text-xs font-bold tabular-nums text-white">
+                      {currentWatched}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={totalEp > 0 && currentWatched >= totalEp}
+                      onClick={() => {
+                        const nextVal = currentWatched + 1
+                        updateWatchedEpisodes(drama.dramaId, nextVal)
+                        if (totalEp > 0 && nextVal >= totalEp) {
+                          moveDrama(drama.dramaId, 'finished')
+                        }
+                      }}
+                      className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-500 hover:bg-purple-400 text-white shadow-[0_0_14px_rgba(168,85,247,0.6)] active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer touch-manipulation"
+                      title="Next Episode (+1)"
+                    >
+                      <Plus size={13} strokeWidth={2.5} />
+                    </button>
                   </div>
                 </div>
-              )}
 
-              {/* Auto-complete button */}
-              {drama.totalEpisodes > 0 && (userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0) >= drama.totalEpisodes && (
-                <button
-                  type="button"
-                  onClick={() => moveDrama(drama.dramaId, 'finished')}
-                  className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-full bg-white/[0.20] hover:bg-white/[0.30] border border-white/30 py-2 text-xs font-bold text-white shadow-lg active:scale-95 transition cursor-pointer touch-manipulation"
-                >
-                  <CheckCircle size={14} />
-                  <span>Completed! Move to Finished</span>
-                </button>
-              )}
-            </div>
-          )}
+                {/* Cornfield Chase Glowing Laser-Flare Progress Bar */}
+                <div className="relative z-10 space-y-1.5">
+                  <div className="relative h-[5px] w-full rounded-full bg-white/[0.12] my-3 overflow-visible">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-purple-500 via-sky-400 to-white shadow-[0_0_14px_rgba(168,85,247,0.8)] relative transition-all duration-300"
+                      style={{ width: `${safeBeamWidth}%` }}
+                    >
+                      {/* Glowing Comet Tip at the right end of the fill beam */}
+                      <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-8 h-3.5 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,1)_0%,rgba(192,132,252,0.85)_45%,transparent_80%)] blur-[2px] pointer-events-none" />
+                      <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-1.5 rounded-full bg-white shadow-[0_0_10px_2px_#fff] pointer-events-none" />
+                    </div>
+                  </div>
+                  <div className="flex justify-between text-[11px] font-semibold text-white/50">
+                    <span>{progressPct}% Completed</span>
+                    <span>{totalEp > 0 ? `${epsRemaining} eps remaining` : 'Ongoing'}</span>
+                  </div>
+                </div>
+
+                {/* Auto-complete button */}
+                {totalEp > 0 && currentWatched >= totalEp && (
+                  <button
+                    type="button"
+                    onClick={() => moveDrama(drama.dramaId, 'finished')}
+                    className="relative z-10 mt-3.5 w-full flex items-center justify-center gap-1.5 rounded-full bg-purple-500/25 hover:bg-purple-500/35 border border-purple-500/40 py-2.5 text-xs font-bold text-white shadow-lg active:scale-95 transition cursor-pointer touch-manipulation"
+                  >
+                    <CheckCircle size={14} />
+                    <span>Completed! Move to Finished</span>
+                  </button>
+                )}
+              </div>
+            )
+          })()}
 
           {/* Genres */}
           {drama.genres && drama.genres.length > 0 && (
