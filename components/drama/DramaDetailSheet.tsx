@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  X, Bookmark, Play, CheckCircle, Star, Maximize2
+  X, Bookmark, Play, CheckCircle, Star, Maximize2, Plus, Minus
 } from 'lucide-react'
 import type { Drama } from '@/lib/tmdb'
 import {
@@ -14,6 +14,7 @@ import {
   getUserDramas,
   getSavedDramasSync,
   onArchiveSync,
+  updateWatchedEpisodes,
   type DramaStatus,
   type UserDrama,
 } from '@/lib/supabase/archive'
@@ -403,6 +404,65 @@ export default function DramaDetailSheet({
                 })}
               </div>
             </div>
+
+            {/* Watching Episode Progress Tracker with ColorOS 17 Luminous Progress Bar */}
+            {currentStatus === 'watching' && (() => {
+              const savedDrama = savedDramas.find(d => String(d.drama_id) === String(drama.dramaId || drama.tmdbId))
+              const watchedEp = Number(savedDrama?.watched_episodes ?? 0)
+              const totalEp = Number(drama.totalEpisodes) || Number(savedDrama?.total_episodes) || 0
+              const progressPct = totalEp > 0 ? Math.min(100, Math.round((watchedEp / totalEp) * 100)) : 0
+
+              return (
+                <div className="mb-7 rounded-[22px] bg-white/[0.06] border border-white/[0.16] p-4 backdrop-blur-xl shadow-lg">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div>
+                      <span className="text-xs font-bold text-white/90">Episode Progress</span>
+                      <p className="text-[11px] text-white/50">
+                        Watched {watchedEp} of {totalEp > 0 ? `${totalEp} episodes` : 'ongoing'}{totalEp > 0 ? ` (${progressPct}%)` : ''}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const nextVal = Math.max(0, watchedEp - 1)
+                          await updateWatchedEpisodes(String(drama.dramaId || drama.tmdbId), nextVal)
+                        }}
+                        disabled={watchedEp <= 0}
+                        className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.12] hover:bg-white/[0.22] text-white disabled:opacity-30 disabled:pointer-events-none active:scale-90 transition cursor-pointer"
+                        title="Previous Episode"
+                      >
+                        <Minus size={13} strokeWidth={2.5} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const nextVal = watchedEp + 1
+                          await updateWatchedEpisodes(String(drama.dramaId || drama.tmdbId), nextVal)
+                          if (totalEp > 0 && nextVal >= totalEp) {
+                            await moveDrama(String(drama.dramaId || drama.tmdbId), 'finished')
+                          }
+                        }}
+                        className="flex h-7 items-center gap-1 px-3 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-400 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-purple-500/25 active:scale-90 transition cursor-pointer"
+                        title="Next Episode (+1)"
+                      >
+                        <Plus size={13} strokeWidth={2.5} />
+                        <span>Ep +1</span>
+                      </button>
+                    </div>
+                  </div>
+                  {/* Signature ColorOS 17 Luminous Progress Bar with Glowing Tip */}
+                  {totalEp > 0 && (
+                    <div className="relative h-2 w-full rounded-full bg-black/50 overflow-visible mt-2">
+                      <div
+                        className="relative h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-400 to-white transition-all duration-300 after:content-[''] after:absolute after:right-0 after:top-1/2 after:-translate-y-1/2 after:w-3 after:h-3 after:rounded-full after:bg-white after:shadow-[0_0_12px_3px_rgba(255,255,255,0.95),0_0_20px_6px_rgba(217,70,239,0.8)]"
+                        style={{ width: `${Math.max(3, progressPct)}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
 
             {/* Genres */}
             {drama.genres && drama.genres.length > 0 && (

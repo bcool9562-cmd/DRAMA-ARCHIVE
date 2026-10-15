@@ -109,38 +109,50 @@ export default function DramaCard({ drama, actions, onOpen, staggerIndex }: Dram
           )}
         </div>
 
-        {/* Watching Episode Stepper Capsule on Card */}
+        {/* Watching Episode Stepper Capsule with Luminous Effect Progress Bar */}
         {drama.status === 'watching' && (
           <div
-            className="flex items-center justify-between rounded-full bg-white/[0.14] border border-white/25 py-1 px-2.5 backdrop-blur-xl shadow-inner"
+            className="flex flex-col gap-1.5 rounded-[16px] bg-white/[0.12] border border-white/20 p-2 backdrop-blur-xl shadow-inner"
             onClick={(e) => e.stopPropagation()}
           >
-            <span className="text-[10px] font-bold tracking-wide text-white/90">
-              EP {watchedEp}{totalEp > 0 ? ` / ${totalEp}` : ''}
-              {totalEp > 0 && <span className="text-white/50 font-normal ml-1">({progressPct}%)</span>}
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold tracking-wide text-white/90">
+                EP {watchedEp}{totalEp > 0 ? ` / ${totalEp}` : ''}
+                {totalEp > 0 && <span className="text-white/50 font-normal ml-1">({progressPct}%)</span>}
+              </span>
 
-            {/* Steppers */}
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                title="Previous Episode"
-                onClick={(e) => handleStep(-1, e)}
-                disabled={watchedEp <= 0}
-                className="flex h-5 w-5 items-center justify-center rounded-full bg-white/[0.15] hover:bg-white/[0.30] active:scale-90 text-white disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
-              >
-                <Minus size={10} strokeWidth={2.5} />
-              </button>
-              <button
-                type="button"
-                title="Next Episode (+1)"
-                onClick={(e) => handleStep(1, e)}
-                className="flex h-5 items-center gap-0.5 px-2 rounded-full bg-white/[0.28] hover:bg-white/[0.45] active:scale-90 text-white font-bold text-[10px] shadow-sm transition cursor-pointer"
-              >
-                <Plus size={10} strokeWidth={3} />
-                <span>1</span>
-              </button>
+              {/* Steppers */}
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  title="Previous Episode"
+                  onClick={(e) => handleStep(-1, e)}
+                  disabled={watchedEp <= 0}
+                  className="flex h-5 w-5 items-center justify-center rounded-full bg-white/[0.15] hover:bg-white/[0.30] active:scale-90 text-white disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                >
+                  <Minus size={10} strokeWidth={2.5} />
+                </button>
+                <button
+                  type="button"
+                  title="Next Episode (+1)"
+                  onClick={(e) => handleStep(1, e)}
+                  className="flex h-5 items-center gap-0.5 px-2 rounded-full bg-white/[0.28] hover:bg-white/[0.45] active:scale-90 text-white font-bold text-[10px] shadow-sm transition cursor-pointer"
+                >
+                  <Plus size={10} strokeWidth={3} />
+                  <span>1</span>
+                </button>
+              </div>
             </div>
+
+            {/* Signature ColorOS 17 Luminous Progress Bar with Glowing Tip */}
+            {totalEp > 0 && (
+              <div className="relative h-1.5 w-full rounded-full bg-black/50 overflow-visible mt-0.5">
+                <div
+                  className="relative h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-400 to-white transition-all duration-300 after:content-[''] after:absolute after:right-0 after:top-1/2 after:-translate-y-1/2 after:w-2.5 after:h-2.5 after:rounded-full after:bg-white after:shadow-[0_0_12px_3px_rgba(255,255,255,0.95),0_0_20px_6px_rgba(217,70,239,0.8)]"
+                  style={{ width: `${Math.max(4, progressPct)}%` }}
+                />
+              </div>
+            )}
           </div>
         )}
 
