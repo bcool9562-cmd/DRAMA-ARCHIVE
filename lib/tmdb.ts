@@ -35,7 +35,7 @@ export { tmdbImg, tmdbThumb, tmdbCard, tmdbOriginal }
  * Robust HTTPS fetch for TMDB that resolves directly via Cloudflare/Google DNS
  * to avoid ISP DNS tampering or timeouts. Falls back to system DNS in cloud environments.
  */
-function tmdbFetch<T>(endpoint: string, params: Record<string, string> = {}): Promise<T | null> {
+export function tmdbFetch<T>(endpoint: string, params: Record<string, string> = {}): Promise<T | null> {
   return new Promise((resolve) => {
     try {
       const url = new URL(`${TMDB_BASE}${endpoint}`)

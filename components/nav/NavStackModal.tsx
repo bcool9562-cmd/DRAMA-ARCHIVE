@@ -6,9 +6,10 @@
  * • Only the TOP item is ever rendered (no hidden layers behind it).
  * • Every push calls window.history.pushState so Android back / iOS swipe-back
  *   pop exactly ONE page at a time.
+ * • Supports 'drama', 'person', 'photos', and 'cast' dedicated stack pages.
  * • Fetched drama/person data is cached in a client-side Map so going back is
  *   instant and never re-fetches from the network.
- * • When the stack is non-empty the bottom dock is hidden (passed via prop).
+ * • Zero-GPU-cost Apple dark glass surfaces with native iOS momentum scrolling.
  */
 
 import { useEffect, useRef, useCallback, useState, useReducer } from 'react'
@@ -16,9 +17,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import {
   X, ChevronLeft, Bookmark, Play, CheckCircle, Star,
-  Maximize2, Loader2, Calendar,
+  Maximize2, Loader2, Calendar, Images, Users, ChevronRight,
 } from 'lucide-react'
-import type { Drama, TmdbPersonDetail, TmdbPersonCredit } from '@/lib/tmdb'
+import type { Drama, TmdbPersonDetail, TmdbPersonCredit, TmdbImage, TmdbCastMember, TmdbCrewMember } from '@/lib/tmdb'
 import {
   addDrama, moveDrama, removeDrama, getUserDramas,
   getSavedDramasSync, onArchiveSync,
@@ -31,6 +32,8 @@ import { REGION_NAMES } from '@/components/drama/DramaDetailSheet'
 export type StackItem =
   | { type: 'drama'; id: number; preview?: Partial<Drama> | UserDrama | null }
   | { type: 'person'; id: number; name?: string }
+  | { type: 'photos'; id: number; dramaTitle: string; photos: TmdbImage[] }
+  | { type: 'cast'; id: number; dramaTitle: string; cast: TmdbCastMember[]; directors: TmdbCrewMember[] }
 
 interface NavStackModalProps {
   /** External initial stack items (e.g. from a list-tab card click) */
@@ -100,11 +103,6 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
   // Force re-render when cache updates (shallow ref, need a trigger)
   const [, forceUpdate] = useReducer(x => x + 1, 0)
 
-  // Gallery "show all" state per drama id
-  const [galleryExpanded, setGalleryExpanded] = useState<Record<number, boolean>>({})
-  // Cast "show all" state per drama id
-  const [castExpanded, setCastExpanded] = useState<Record<number, boolean>>({})
-
   // ── Sync saved dramas ──────────────────────────────────────────────────────
   useEffect(() => {
     const unsub = onArchiveSync(setSavedDramas)
@@ -122,7 +120,6 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
   useEffect(() => {
     if (initialStack && initialStack.length > 0) {
       setStack(initialStack)
-      // Push history entries for the initial stack
       initialStack.forEach((_, i) => {
         window.history.pushState({ navDepth: i + 1 }, '')
       })
@@ -161,6 +158,24 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
     })
   }, [])
 
+  const pushPhotos = useCallback((dramaId: number, dramaTitle: string, photos: TmdbImage[]) => {
+    (document.activeElement as HTMLElement)?.blur()
+    setStack(prev => {
+      const next: StackItem[] = [...prev, { type: 'photos', id: dramaId, dramaTitle, photos }]
+      window.history.pushState({ navDepth: next.length }, '')
+      return next
+    })
+  }, [])
+
+  const pushCast = useCallback((dramaId: number, dramaTitle: string, cast: TmdbCastMember[], directors: TmdbCrewMember[]) => {
+    (document.activeElement as HTMLElement)?.blur()
+    setStack(prev => {
+      const next: StackItem[] = [...prev, { type: 'cast', id: dramaId, dramaTitle, cast, directors }]
+      window.history.pushState({ navDepth: next.length }, '')
+      return next
+    })
+  }, [])
+
   const popOne = useCallback(() => {
     window.history.back()
   }, [])
@@ -177,7 +192,9 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
   const backLabel = prevItem
     ? prevItem.type === 'drama'
       ? ((dramaCache.current.get(prevItem.id)?.title) || 'Back')
-      : ((personCache.current.get(prevItem.id)?.name) || prevItem.name || 'Back')
+      : prevItem.type === 'person'
+      ? ((personCache.current.get(prevItem.id)?.name) || prevItem.name || 'Back')
+      : prevItem.dramaTitle || 'Back'
     : 'Close'
 
   if (!current) return null
@@ -214,12 +231,12 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 18, scale: 0.98 }}
           transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="absolute inset-0 flex items-end justify-center bg-black/80 backdrop-blur-md"
+          className="absolute inset-0 flex items-end justify-center bg-black/80 backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) popOne() }}
         >
           {current.type === 'drama' ? (
             <DramaPage
-              key={current.id}
+              key={`drama-${current.id}`}
               tmdbId={current.id}
               preview={current.preview}
               dramaCache={dramaCache.current}
@@ -229,16 +246,14 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
               onBack={popOne}
               onClose={closeAll}
               onPersonClick={pushPerson}
+              onPushPhotos={pushPhotos}
+              onPushCast={pushCast}
               onForceUpdate={forceUpdate}
               setLightboxSrc={setLightboxSrc}
-              galleryExpanded={galleryExpanded[current.id] ?? false}
-              onGalleryExpand={() => setGalleryExpanded(prev => ({ ...prev, [current.id]: true }))}
-              castExpanded={castExpanded[current.id] ?? false}
-              onCastExpand={() => setCastExpanded(prev => ({ ...prev, [current.id]: true }))}
             />
-          ) : (
+          ) : current.type === 'person' ? (
             <PersonPage
-              key={current.id}
+              key={`person-${current.id}`}
               personId={current.id}
               personCache={personCache.current}
               backLabel={backLabel}
@@ -247,6 +262,29 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
               onClose={closeAll}
               onDramaClick={(id) => pushDrama(id)}
               onForceUpdate={forceUpdate}
+            />
+          ) : current.type === 'photos' ? (
+            <PhotosGridPage
+              key={`photos-${current.id}`}
+              photos={current.photos}
+              dramaTitle={current.dramaTitle}
+              backLabel={backLabel}
+              canGoBack={stack.length > 1}
+              onBack={popOne}
+              onClose={closeAll}
+              setLightboxSrc={setLightboxSrc}
+            />
+          ) : (
+            <CastGridPage
+              key={`cast-${current.id}`}
+              cast={current.cast}
+              directors={current.directors}
+              dramaTitle={current.dramaTitle}
+              backLabel={backLabel}
+              canGoBack={stack.length > 1}
+              onBack={popOne}
+              onClose={closeAll}
+              onPersonClick={pushPerson}
             />
           )}
         </motion.div>
@@ -267,19 +305,17 @@ interface DramaPageProps {
   onBack: () => void
   onClose: () => void
   onPersonClick: (id: number, name: string) => void
+  onPushPhotos: (dramaId: number, title: string, photos: TmdbImage[]) => void
+  onPushCast: (dramaId: number, title: string, cast: TmdbCastMember[], directors: TmdbCrewMember[]) => void
   onForceUpdate: () => void
   setLightboxSrc: (src: string) => void
-  galleryExpanded: boolean
-  onGalleryExpand: () => void
-  castExpanded: boolean
-  onCastExpand: () => void
 }
 
 function DramaPage({
   tmdbId, preview, dramaCache, savedDramas,
   backLabel, canGoBack, onBack, onClose, onPersonClick,
+  onPushPhotos, onPushCast,
   onForceUpdate, setLightboxSrc,
-  galleryExpanded, onGalleryExpand, castExpanded, onCastExpand,
 }: DramaPageProps) {
   const cached = dramaCache.get(tmdbId)
   const [drama, setDrama] = useState<Drama | null>(cached ?? (() => normalizeDramaPreview(preview, tmdbId)))
@@ -298,9 +334,8 @@ function DramaPage({
       .then(r => r.json())
       .then(d => {
         if (!alive || !d) return
-        const merged: Drama = drama ? { ...drama, ...d } : d
-        dramaCache.set(tmdbId, merged)
-        setDrama(merged)
+        dramaCache.set(tmdbId, d)
+        setDrama(d)
         setLoading(false)
         onForceUpdate()
       })
@@ -309,68 +344,61 @@ function DramaPage({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tmdbId])
 
-  // Status
-  const currentStatus =
-    savedDramas.find(d => String(d.tmdb_id) === String(tmdbId) || d.drama_id === (drama?.dramaId ?? `tmdb-${tmdbId}`))?.status ?? null
+  // Single source of truth for user drama status
+  const userDrama = savedDramas.find(d => d.tmdb_id === tmdbId)
+  const currentStatus = userDrama?.status ?? null
 
-  function handleStatusToggle(targetStatus: DramaStatus) {
+  const handleStatusToggle = (target: DramaStatus) => {
     if (!drama) return
-    const dramaId = drama.dramaId || `tmdb-${tmdbId}`
-    if (currentStatus === targetStatus) {
-      removeDrama(dramaId)
+    if (currentStatus === target) {
+      removeDrama(drama.dramaId)
     } else if (currentStatus) {
-      moveDrama(dramaId, targetStatus)
+      moveDrama(drama.dramaId, target)
     } else {
       addDrama({
-        drama_id: dramaId, tmdb_id: tmdbId,
-        title: drama.title, native_title: drama.nativeTitle || '',
-        poster_url: drama.posterUrl || '', country: drama.country || 'KR',
-        release_year: drama.releaseYear || 0, total_episodes: drama.totalEpisodes || 0,
-        rating: drama.rating || 0, status: targetStatus,
-        airing_status: drama.airingStatus || 'completed',
-        first_air_date: drama.firstAirDate || null,
-        next_episode_date: drama.nextEpisodeDate || null,
-        next_episode_number: drama.nextEpisodeNumber || null,
+        drama_id: drama.dramaId,
+        tmdb_id: drama.tmdbId,
+        title: drama.title,
+        native_title: drama.nativeTitle,
+        poster_url: drama.posterUrl,
+        country: drama.country,
+        release_year: drama.releaseYear,
+        total_episodes: drama.totalEpisodes,
+        rating: drama.rating,
+        status: target,
+        airing_status: drama.airingStatus,
+        first_air_date: drama.firstAirDate,
+        next_episode_date: drama.nextEpisodeDate,
+        next_episode_number: drama.nextEpisodeNumber,
       })
     }
   }
 
+  const regionBadge = drama?.country ? REGION_NAMES[drama.country]?.badge || drama.country : null
+  const episodesLabel = drama?.totalEpisodes ? `${drama.totalEpisodes} Episodes` : 'Episodes TBA'
+
+  const pills: { status: DramaStatus; label: string; icon: typeof Bookmark; gradient: string }[] = [
+    { status: 'watchlist', label: 'Watchlist', icon: Bookmark, gradient: 'bg-gradient-to-r from-sky-500 to-blue-600' },
+    { status: 'watching', label: 'Watching', icon: Play, gradient: 'bg-gradient-to-r from-purple-500 to-indigo-600' },
+    { status: 'finished', label: 'Finished', icon: CheckCircle, gradient: 'bg-gradient-to-r from-emerald-500 to-teal-600' },
+  ]
+
+  // Image limits for smooth mobile performance
   const allImages = [...(drama?.images ?? []), ...(drama?.backdrops ?? [])]
-  const visibleImages = galleryExpanded ? allImages : allImages.slice(0, 12)
-  const visibleCast = castExpanded ? (drama?.cast ?? []) : (drama?.cast ?? []).slice(0, 15)
-
-  const regionInfo = drama?.country ? REGION_NAMES[drama.country.toUpperCase()] : null
-  const regionBadge = regionInfo?.badge || (drama?.country ? `${drama.country} Drama` : null)
-
-  let episodesLabel = 'Upcoming'
-  if (drama) {
-    if (drama.totalEpisodes && drama.totalEpisodes > 1) episodesLabel = `${drama.totalEpisodes} Episodes`
-    else if (drama.airingStatus === 'ongoing') episodesLabel = 'Ongoing Series'
-    else if (drama.airingStatus === 'completed' && drama.totalEpisodes === 1) episodesLabel = 'Special / Movie'
-  }
-
-  const pills = [
-    { status: 'watchlist' as DramaStatus, label: 'Watchlist', icon: Bookmark, gradient: 'bg-gradient-to-b from-sky-400 to-blue-600 shadow-blue-500/30' },
-    { status: 'watching' as DramaStatus, label: 'Watching', icon: Play, gradient: 'bg-gradient-to-b from-purple-500 to-indigo-600 shadow-purple-500/30' },
-    { status: 'finished' as DramaStatus, label: 'Finished', icon: CheckCircle, gradient: 'bg-gradient-to-b from-emerald-400 to-teal-600 shadow-emerald-500/30' },
-  ] as const
+  const visibleImages = allImages.slice(0, 12)
+  const visibleCast = (drama?.cast ?? []).slice(0, 15)
 
   return (
     <div
-      className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#0c0c12] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] will-change-transform touch-manipulation"
+      className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#0c0c12] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] will-change-transform transform-gpu"
       onClick={e => e.stopPropagation()}
     >
-      {/* Ambient */}
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(88,28,135,0.28),_transparent_70%)]" />
-      </div>
-
       {/* Drag handle */}
       <div className="relative z-10 flex justify-center pt-3 pb-0">
         <div className="h-1.5 w-12 rounded-full bg-white/25" />
       </div>
 
-      {/* Nav bar: Back + Close */}
+      {/* Nav bar */}
       <div className="relative z-10 flex items-center justify-between px-4 pt-2 pb-0 min-h-[40px]">
         {canGoBack ? (
           <button
@@ -385,21 +413,24 @@ function DramaPage({
         )}
         <button
           onClick={canGoBack ? onBack : onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.16] bg-black/40 text-white/70 backdrop-blur-md hover:bg-white/20 hover:text-white active:scale-90 cursor-pointer touch-manipulation"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.16] bg-black/40 text-white/70 hover:bg-white/20 hover:text-white active:scale-90 transition cursor-pointer touch-manipulation"
         >
           <X size={17} />
         </button>
       </div>
 
-      {/* Content */}
-      {loading && !drama ? (
-        <div className="relative z-10 flex flex-1 items-center justify-center">
-          <div className="h-11 w-11 animate-spin rounded-full border-2 border-white/10 border-t-purple-400" />
+      {/* Scrollable body */}
+      {loading && !drama?.title ? (
+        <div className="flex flex-1 items-center justify-center">
+          <Loader2 size={28} className="animate-spin text-purple-400" />
         </div>
       ) : !drama ? (
         <div className="relative z-10 flex flex-1 items-center justify-center text-white/40">Failed to load drama.</div>
       ) : (
-        <div className="relative z-10 flex-1 overflow-y-auto px-6 pb-36 pt-2 scrollbar-hide">
+        <div
+          className="relative z-10 flex-1 overflow-y-auto px-6 pb-36 pt-2 scrollbar-hide overscroll-y-contain will-change-scroll transform-gpu"
+          style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
+        >
           {/* Hero Backdrop */}
           {drama.backdropUrl && (
             <div className="relative -mx-6 -mt-2 mb-6 h-56 w-[calc(100%+3rem)] overflow-hidden bg-black/60">
@@ -438,7 +469,7 @@ function DramaPage({
           <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide text-xs font-semibold">
             {regionBadge && <span className="flex-shrink-0 rounded-full bg-[#1c1c24] border border-white/[0.18] px-3.5 py-1 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.2)]">{regionBadge}</span>}
             {drama.network && (<><span className="text-white/30">•</span><span className="flex-shrink-0 rounded-full bg-[#1c1c24] border border-white/[0.14] px-3.5 py-1 text-white/90">{drama.network}</span></>)}
-            {drama.releaseYear > 0 && (<><span className="text-white/30">•</span><span className="flex-shrink-0 rounded-full bg-[#1c1c24] border border-white/[0.12] px-3 py-1 text-white/80">{drama.releaseYear}</span></>)}
+            {drama.releaseYear > 0 && (<><span className="text-white/30">•</span><span className="flex-shrink-0 rounded-full bg-[#1c1c24] border border-white/[0.12] px-3.5 py-1 text-white/80">{drama.releaseYear}</span></>)}
             {drama.rating > 0 && (<><span className="text-white/30">•</span><span className="flex-shrink-0 flex items-center gap-1 rounded-full bg-amber-500/20 border border-amber-400/30 px-3 py-1 text-amber-300 font-bold"><Star size={11} className="fill-amber-300 text-amber-300" />{drama.rating.toFixed(1)}</span></>)}
             <span className="text-white/30">•</span>
             <span className="flex-shrink-0 rounded-full bg-[#1c1c24] border border-white/[0.12] px-3.5 py-1 text-white/80">{episodesLabel}</span>
@@ -508,19 +539,26 @@ function DramaPage({
             </div>
           )}
 
-          {/* Gallery — max 12 initially, w500 thumbnails, 4K on lightbox tap */}
+          {/* Gallery — Stills & Posters */}
           {allImages.length > 0 && (
             <div className="mb-7">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-white/35">Stills & Posters</h3>
-                <span className="text-xs text-white/30">{allImages.length} Photos</span>
+                <button
+                  onClick={() => onPushPhotos(tmdbId, drama.title, allImages)}
+                  className="flex items-center gap-1.5 rounded-full bg-white/[0.10] border border-white/[0.15] px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/[0.16] active:scale-95 cursor-pointer touch-manipulation select-none transition-transform duration-150"
+                >
+                  <Images size={12} />
+                  <span>{allImages.length}</span>
+                  <ChevronRight size={12} />
+                </button>
               </div>
-              <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide -mx-6 px-6">
+              <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide -mx-6 px-6" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {visibleImages.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setLightboxSrc(`https://image.tmdb.org/t/p/original${img.file_path}`)}
-                    className="group relative h-36 w-26 flex-shrink-0 overflow-hidden rounded-[20px] border border-white/[0.14] bg-[#161620] shadow-lg transition duration-200 hover:scale-[1.03] active:scale-95 cursor-pointer touch-manipulation"
+                    className="group relative h-36 w-26 flex-shrink-0 overflow-hidden rounded-[20px] border border-white/[0.14] bg-[#161620] shadow-lg transition-transform duration-150 active:scale-95 cursor-pointer touch-manipulation"
                   >
                     <Image
                       src={`https://image.tmdb.org/t/p/w500${img.file_path}`}
@@ -534,15 +572,16 @@ function DramaPage({
                     </div>
                   </button>
                 ))}
+                {allImages.length > 12 && (
+                  <button
+                    onClick={() => onPushPhotos(tmdbId, drama.title, allImages)}
+                    className="flex-shrink-0 flex flex-col items-center justify-center gap-1.5 h-36 w-24 rounded-[20px] border border-white/[0.14] bg-white/[0.06] hover:bg-white/[0.10] active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation text-white/70"
+                  >
+                    <Images size={20} />
+                    <span className="text-[11px] font-semibold">+{allImages.length - 12} more</span>
+                  </button>
+                )}
               </div>
-              {!galleryExpanded && allImages.length > 12 && (
-                <button
-                  onClick={onGalleryExpand}
-                  className="mt-2 text-xs text-purple-400 hover:text-purple-300 font-semibold cursor-pointer touch-manipulation"
-                >
-                  View All {allImages.length} Photos
-                </button>
-              )}
             </div>
           )}
 
@@ -555,7 +594,7 @@ function DramaPage({
                   <button
                     key={d.id}
                     onClick={() => onPersonClick(d.id, d.name)}
-                    className="flex items-center gap-2.5 rounded-full bg-[#181822] border border-white/[0.12] px-4 py-2 hover:bg-white/[0.12] transition active:scale-95 cursor-pointer touch-manipulation"
+                    className="flex items-center gap-2.5 rounded-full bg-[#181822] border border-white/[0.12] px-4 py-2 hover:bg-white/[0.16] transition-transform duration-150 active:scale-95 cursor-pointer touch-manipulation"
                   >
                     {d.profile_path ? (
                       <div className="relative h-6 w-6 overflow-hidden rounded-full border border-white/20">
@@ -571,18 +610,28 @@ function DramaPage({
             </div>
           )}
 
-          {/* Cast — max 15 initially, w185 thumbnails */}
+          {/* Cast */}
           {drama.cast && drama.cast.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-white/35 mb-3.5">Main & Supporting Cast</h3>
-              <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide -mx-6 px-6">
+              <div className="flex items-center justify-between mb-3.5">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white/35">Main & Supporting Cast</h3>
+                <button
+                  onClick={() => onPushCast(tmdbId, drama.title, drama.cast!, drama.directors || [])}
+                  className="flex items-center gap-1.5 rounded-full bg-white/[0.10] border border-white/[0.15] px-3 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/[0.16] active:scale-95 cursor-pointer touch-manipulation select-none transition-transform duration-150"
+                >
+                  <Users size={12} />
+                  <span>{drama.cast.length}</span>
+                  <ChevronRight size={12} />
+                </button>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide -mx-6 px-6" style={{ WebkitOverflowScrolling: 'touch' }}>
                 {visibleCast.map(c => (
                   <button
                     key={`${c.id}-${c.order}`}
                     onClick={() => onPersonClick(c.id, c.name)}
-                    className="group flex flex-col items-center gap-2 flex-shrink-0 w-22 text-center transition active:scale-95 cursor-pointer touch-manipulation select-none"
+                    className="group flex flex-col items-center gap-2 flex-shrink-0 w-22 text-center transition-transform duration-150 active:scale-95 cursor-pointer touch-manipulation select-none"
                   >
-                    <div className="relative h-22 w-22 overflow-hidden rounded-[22px] border border-white/[0.16] bg-[#161620] shadow-lg transition duration-200 group-hover:border-white/40 group-hover:scale-[1.03]">
+                    <div className="relative h-22 w-22 overflow-hidden rounded-[22px] border border-white/[0.16] bg-[#161620] shadow-lg transition duration-200 group-hover:border-white/40">
                       {c.profile_path ? (
                         <Image
                           src={`https://image.tmdb.org/t/p/w185${c.profile_path}`}
@@ -603,15 +652,16 @@ function DramaPage({
                     </div>
                   </button>
                 ))}
+                {drama.cast.length > 15 && (
+                  <button
+                    onClick={() => onPushCast(tmdbId, drama.title, drama.cast!, drama.directors || [])}
+                    className="flex-shrink-0 flex flex-col items-center justify-center gap-1.5 h-22 w-20 rounded-[22px] border border-white/[0.14] bg-white/[0.06] hover:bg-white/[0.10] active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation text-white/70"
+                  >
+                    <Users size={18} />
+                    <span className="text-[10px] font-semibold">+{drama.cast.length - 15} more</span>
+                  </button>
+                )}
               </div>
-              {!castExpanded && (drama.cast.length > 15) && (
-                <button
-                  onClick={onCastExpand}
-                  className="mt-2 text-xs text-purple-400 hover:text-purple-300 font-semibold cursor-pointer touch-manipulation"
-                >
-                  Show All {drama.cast.length} Cast Members
-                </button>
-              )}
             </div>
           )}
         </div>
@@ -675,7 +725,7 @@ function PersonPage({ personId, personCache, backLabel, canGoBack, onBack, onClo
 
   return (
     <div
-      className="relative flex h-[88dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-[32px] border-t border-white/[0.15] bg-[#0c0c10] shadow-2xl will-change-transform"
+      className="relative flex h-[88dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-[32px] border-t border-white/[0.15] bg-[#0c0c10] shadow-2xl will-change-transform transform-gpu"
       onClick={e => e.stopPropagation()}
     >
       {/* Drag handle */}
@@ -710,7 +760,10 @@ function PersonPage({ personId, personCache, backLabel, canGoBack, onBack, onClo
           <Loader2 size={24} className="animate-spin text-purple-400" />
         </div>
       ) : person ? (
-        <div className="flex-1 overflow-y-auto px-5 pb-8 pt-4 scrollbar-hide">
+        <div
+          className="flex-1 overflow-y-auto px-5 pb-8 pt-4 scrollbar-hide overscroll-y-contain will-change-scroll"
+          style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
+        >
           {/* Header */}
           <div className="flex gap-4 mb-5">
             <div className="relative h-28 w-20 flex-shrink-0 overflow-hidden rounded-2xl bg-white/[0.05] shadow-lg">
@@ -760,7 +813,10 @@ function PersonPage({ personId, personCache, backLabel, canGoBack, onBack, onClo
           {/* Other Works — w342 posters */}
           {dedupedWorks.length > 0 && (
             <div>
-              <h3 className="text-xs font-semibold uppercase tracking-widest text-white/30 mb-3">Other Works</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-white/30">Other Works</h3>
+                <span className="text-xs text-white/30">{dedupedWorks.length} Titles</span>
+              </div>
               <div className="grid grid-cols-3 gap-2.5">
                 {dedupedWorks.slice(0, 30).map(work => (
                   <PersonWorkCard key={work.id} work={work} onClick={() => onDramaClick(work.id)} />
@@ -784,11 +840,11 @@ function PersonWorkCard({ work, onClick }: { work: TmdbPersonCredit; onClick: ()
   return (
     <button
       onClick={onClick}
-      className="flex flex-col gap-1 rounded-2xl overflow-hidden border border-white/[0.08] bg-white/[0.04] hover:border-white/20 transition group text-left cursor-pointer touch-manipulation"
+      className="flex flex-col gap-1 rounded-2xl overflow-hidden border border-white/[0.08] bg-[#14141c]/95 hover:border-white/20 transition-transform duration-150 active:scale-95 group text-left cursor-pointer touch-manipulation"
     >
       <div className="relative aspect-[2/3] w-full bg-white/[0.05]">
         {posterSrc ? (
-          <Image src={posterSrc} alt={title} fill className="object-cover transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 640px) 30vw, 120px" loading="lazy" />
+          <Image src={posterSrc} alt={title} fill className="object-cover" sizes="(max-width: 640px) 30vw, 120px" loading="lazy" />
         ) : (
           <div className="h-full w-full flex items-center justify-center text-white/15 text-[10px]">No img</div>
         )}
@@ -806,5 +862,157 @@ function PersonWorkCard({ work, onClick }: { work: TmdbPersonCredit; onClick: ()
         </div>
       </div>
     </button>
+  )
+}
+
+// ─── Photos Grid Page ─────────────────────────────────────────────────────────
+
+function PhotosGridPage({
+  photos, dramaTitle, backLabel, canGoBack, onBack, onClose, setLightboxSrc
+}: {
+  photos: TmdbImage[]; dramaTitle: string; backLabel: string
+  canGoBack: boolean; onBack: () => void; onClose: () => void
+  setLightboxSrc: (src: string) => void
+}) {
+  return (
+    <div
+      className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#0c0c12] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] will-change-transform transform-gpu"
+      onClick={e => e.stopPropagation()}
+    >
+      <div className="relative z-10 flex justify-center pt-3 pb-0">
+        <div className="h-1.5 w-12 rounded-full bg-white/25" />
+      </div>
+      <div className="relative z-10 flex items-center justify-between px-4 pt-2 pb-0 min-h-[40px]">
+        {canGoBack ? (
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1 rounded-full border border-white/[0.14] bg-black/40 px-3 py-1.5 text-xs font-semibold text-white/80 backdrop-blur-md hover:bg-white/10 active:scale-95 cursor-pointer touch-manipulation select-none"
+          >
+            <ChevronLeft size={14} />
+            <span className="max-w-[120px] truncate">{backLabel}</span>
+          </button>
+        ) : <div />}
+        <button
+          onClick={canGoBack ? onBack : onClose}
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.16] bg-black/40 text-white/70 hover:bg-white/20 hover:text-white active:scale-90 cursor-pointer touch-manipulation"
+        >
+          <X size={17} />
+        </button>
+      </div>
+      <div className="px-5 pt-3 pb-2">
+        <h2 className="text-lg font-bold tracking-tight text-white">{dramaTitle}</h2>
+        <p className="text-xs text-white/40 mt-0.5">{photos.length} Stills & Posters</p>
+      </div>
+      <div
+        className="flex-1 overflow-y-auto px-4 pb-12 scrollbar-hide overscroll-y-contain will-change-scroll"
+        style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
+      >
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5">
+          {photos.map((img, i) => (
+            <button
+              key={i}
+              onClick={() => setLightboxSrc(`https://image.tmdb.org/t/p/original${img.file_path}`)}
+              className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-[#161620] border border-white/[0.10] active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation"
+            >
+              <Image
+                src={`https://image.tmdb.org/t/p/w500${img.file_path}`}
+                alt="Still"
+                fill
+                loading="lazy"
+                className="object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Cast Grid Page ───────────────────────────────────────────────────────────
+
+function CastGridPage({
+  cast, directors, dramaTitle, backLabel, canGoBack, onBack, onClose, onPersonClick
+}: {
+  cast: TmdbCastMember[]; directors: TmdbCrewMember[]; dramaTitle: string
+  backLabel: string; canGoBack: boolean; onBack: () => void; onClose: () => void
+  onPersonClick: (id: number, name: string) => void
+}) {
+  return (
+    <div
+      className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#0c0c12] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] will-change-transform transform-gpu"
+      onClick={e => e.stopPropagation()}
+    >
+      <div className="relative z-10 flex justify-center pt-3 pb-0">
+        <div className="h-1.5 w-12 rounded-full bg-white/25" />
+      </div>
+      <div className="relative z-10 flex items-center justify-between px-4 pt-2 pb-0 min-h-[40px]">
+        {canGoBack ? (
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1 rounded-full border border-white/[0.14] bg-black/40 px-3 py-1.5 text-xs font-semibold text-white/80 backdrop-blur-md hover:bg-white/10 active:scale-95 cursor-pointer touch-manipulation select-none"
+          >
+            <ChevronLeft size={14} />
+            <span className="max-w-[120px] truncate">{backLabel}</span>
+          </button>
+        ) : <div />}
+        <button
+          onClick={canGoBack ? onBack : onClose}
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.16] bg-black/40 text-white/70 hover:bg-white/20 hover:text-white active:scale-90 cursor-pointer touch-manipulation"
+        >
+          <X size={17} />
+        </button>
+      </div>
+      <div className="px-5 pt-3 pb-2">
+        <h2 className="text-lg font-bold tracking-tight text-white">{dramaTitle}</h2>
+        <p className="text-xs text-white/40 mt-0.5">{cast.length} Cast Members{directors.length > 0 ? ` · ${directors.length} Director${directors.length > 1 ? 's' : ''}` : ''}</p>
+      </div>
+      <div
+        className="flex-1 overflow-y-auto px-4 pb-12 scrollbar-hide overscroll-y-contain will-change-scroll"
+        style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
+      >
+        {directors.length > 0 && (
+          <div className="mb-5">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-white/35 mb-3">Direction</h3>
+            <div className="flex flex-wrap gap-2.5">
+              {directors.map(d => (
+                <button
+                  key={d.id}
+                  onClick={() => onPersonClick(d.id, d.name)}
+                  className="flex items-center gap-2.5 rounded-full bg-[#181822] border border-white/[0.12] px-4 py-2 active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation"
+                >
+                  {d.profile_path ? (
+                    <div className="relative h-6 w-6 overflow-hidden rounded-full border border-white/20">
+                      <Image src={`https://image.tmdb.org/t/p/w185${d.profile_path}`} alt={d.name} fill loading="lazy" className="object-cover" />
+                    </div>
+                  ) : <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-[10px] text-white/50">?</div>}
+                  <span className="text-xs font-semibold text-white/90">{d.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <h3 className="text-xs font-bold uppercase tracking-wider text-white/35 mb-3">Cast</h3>
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+          {cast.map(c => (
+            <button
+              key={`${c.id}-${c.order}`}
+              onClick={() => onPersonClick(c.id, c.name)}
+              className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation select-none text-center"
+            >
+              <div className="relative h-24 w-full overflow-hidden rounded-[18px] border border-white/[0.12] bg-[#161620]">
+                {c.profile_path ? (
+                  <Image src={`https://image.tmdb.org/t/p/w185${c.profile_path}`} alt={c.name} fill loading="lazy" className="object-cover" />
+                ) : <div className="flex h-full w-full items-center justify-center text-white/20 text-xs">?</div>}
+              </div>
+              <div className="w-full px-0.5">
+                <div className="text-[11px] font-semibold text-white/90 truncate leading-tight">{c.name}</div>
+                {c.character && <div className="text-[10px] text-white/40 truncate leading-tight mt-0.5">{c.character}</div>}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
