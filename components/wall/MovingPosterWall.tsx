@@ -12,33 +12,57 @@ interface PosterItem {
   country?: string
 }
 
-// 100% verified, live East Asian drama posters on TMDB CDN in crisp HD w780
-const FALLBACK_COL_1: PosterItem[] = [
-  { id: 293610, title: 'Doctor X: Mafia in White', posterUrl: 'https://image.tmdb.org/t/p/w780/nDDVzQfv95PGwj9nV2fJvUrkcvU.jpg', year: 2026, country: 'KR' },
-  { id: 94796, title: 'Crash Landing on You', posterUrl: 'https://image.tmdb.org/t/p/w780/fgBNLPr6mC8pxuR79ENAJY4nBmj.jpg', year: 2019, country: 'KR' },
-  { id: 293607, title: '100 Days of Deception', posterUrl: 'https://image.tmdb.org/t/p/w780/bZHEU42QynnMrHUWK1Hhvj2cdPA.jpg', year: 2026, country: 'KR' },
-  { id: 93405, title: 'Squid Game', posterUrl: 'https://image.tmdb.org/t/p/w780/1QdXdRYfktUSONkl1oD5gc6Be0s.jpg', year: 2021, country: 'KR' },
-  { id: 296206, title: 'Agent Kim Reactivated', posterUrl: 'https://image.tmdb.org/t/p/w780/mxa7YxVln3Rwnd2Va82PoclTznj.jpg', year: 2026, country: 'KR' },
-  { id: 276161, title: 'Teach You a Lesson', posterUrl: 'https://image.tmdb.org/t/p/w780/fMECSPrTmRClSViMsXFYmiYIcWP.jpg', year: 2026, country: 'KR' },
+// 100% verified, live East Asian drama posters on TMDB CDN in crisp HD w780 (strictly 2026 dramas)
+const DEFAULT_COL_1: PosterItem[] = [
+  { id: 300146, title: 'Where the Mask Ends', posterUrl: 'https://image.tmdb.org/t/p/w780/cE9Og0lCCRCP2RArarzJXmu6xEB.jpg', year: 2026, country: 'CN' },
+  { id: 279246, title: 'The Remarried Empress', posterUrl: 'https://image.tmdb.org/t/p/w780/3x6c9ybt0762idyzIifUZeTD5MZ.jpg', year: 2026, country: 'KR' },
+  { id: 316702, title: 'Final Table', posterUrl: 'https://image.tmdb.org/t/p/w780/uaMjtALuvZC7dGkYllGKKWEWW1J.jpg', year: 2026, country: 'KR' },
+  { id: 301354, title: 'Sword & Silence', posterUrl: 'https://image.tmdb.org/t/p/w780/2uHBCDBnSjBlvNgXJ5ceORgX8FL.jpg', year: 2026, country: 'KR' },
+  { id: 334517, title: 'Oh! My Guard', posterUrl: 'https://image.tmdb.org/t/p/w780/dg4IIruyBEtSgjW5fdXi46xrSzC.jpg', year: 2026, country: 'KR' },
+  { id: 303552, title: 'The Substitute', posterUrl: 'https://image.tmdb.org/t/p/w780/q464FdzW2edGsyNYAbueYuTEBMR.jpg', year: 2026, country: 'KR' },
 ]
 
-const FALLBACK_COL_2: PosterItem[] = [
-  { id: 289423, title: 'Take Charge of My Heart', posterUrl: 'https://image.tmdb.org/t/p/w780/ecRrKGXfflZmDZBD4irdkybClT.jpg', year: 2026, country: 'KR' },
-  { id: 117376, title: 'Vincenzo', posterUrl: 'https://image.tmdb.org/t/p/w780/qbkSS1cTjT4DzIwD44bdhTuYgdT.jpg', year: 2021, country: 'KR' },
-  { id: 231620, title: 'Natural High', posterUrl: 'https://image.tmdb.org/t/p/w780/oC2MuEWxnLVTyYw70XoK2HFf7nW.jpg', year: 2023, country: 'CN' },
-  { id: 112888, title: 'True Beauty', posterUrl: 'https://image.tmdb.org/t/p/w780/I9WCyKUbKAiu95tAitaHOx8EVO.jpg', year: 2020, country: 'KR' },
-  { id: 135157, title: 'Alchemy of Souls', posterUrl: 'https://image.tmdb.org/t/p/w780/gvOZN1NlAoL8iz9ghpES1zWA3w3.jpg', year: 2022, country: 'KR' },
-  { id: 285838, title: 'If Wishes Could Kill', posterUrl: 'https://image.tmdb.org/t/p/w780/2CfTNVaR8kZQkWtWWE3Cntaiq33.jpg', year: 2026, country: 'KR' },
+const DEFAULT_COL_2: PosterItem[] = [
+  { id: 303745, title: 'Love in Disguise', posterUrl: 'https://image.tmdb.org/t/p/w780/kSAXIAovLC4z7Wp2Hy8oqLmpkox.jpg', year: 2026, country: 'KR' },
+  { id: 307478, title: 'The Perfect Lie', posterUrl: 'https://image.tmdb.org/t/p/w780/lrFE7DdRXu6ofhCm9dLNzsyLg92.jpg', year: 2026, country: 'KR' },
+  { id: 322051, title: 'The Sound of Sugar Cubes', posterUrl: 'https://image.tmdb.org/t/p/w780/h5rPKIREqKHYPvVUl8sBJyna2vq.jpg', year: 2026, country: 'KR' },
+  { id: 313738, title: 'One of a Kind Romance', posterUrl: 'https://image.tmdb.org/t/p/w780/l9oQ1Ql8DJqYnrDyU85fAPYTmrD.jpg', year: 2026, country: 'KR' },
+  { id: 335951, title: 'Summer Vacation', posterUrl: 'https://image.tmdb.org/t/p/w780/ru4oyTVoPVQZPUE5rI3YPMgLHBY.jpg', year: 2026, country: 'KR' },
+  { id: 334321, title: 'SQUALL', posterUrl: 'https://image.tmdb.org/t/p/w780/sqbMChPp0aXNmkcMw2zjHjUpleB.jpg', year: 2026, country: 'JP' },
 ]
 
-const FALLBACK_COL_3: PosterItem[] = [
-  { id: 96162, title: 'Itaewon Class', posterUrl: 'https://image.tmdb.org/t/p/w780/qg7q0piY0fTt2enlIRHwKKRwNjS.jpg', year: 2020, country: 'KR' },
-  { id: 33238, title: 'Running Man', posterUrl: 'https://image.tmdb.org/t/p/w780/2Wmmu1MkqxJ48J7aySET9EKEjXz.jpg', year: 2010, country: 'KR' },
-  { id: 90447, title: 'Hotel Del Luna', posterUrl: 'https://image.tmdb.org/t/p/w780/8bizZsXoAsOTbhyFKfBogC8mgG2.jpg', year: 2019, country: 'KR' },
-  { id: 278573, title: 'Perfect Crown', posterUrl: 'https://image.tmdb.org/t/p/w780/ocXkHSslrSWMz2ZJGl5MjF6dQr3.jpg', year: 2026, country: 'KR' },
-  { id: 127529, title: 'Bloodhounds', posterUrl: 'https://image.tmdb.org/t/p/w780/uSQzD7TXsL96J5ggDrJFdUs8uXU.jpg', year: 2023, country: 'KR' },
-  { id: 67915, title: 'Guardian: The Lonely and Great God', posterUrl: 'https://image.tmdb.org/t/p/w780/sPkxHNw5BFvuCFGWw825TS7n6X3.jpg', year: 2016, country: 'KR' },
+const DEFAULT_COL_3: PosterItem[] = [
+  { id: 289517, title: 'Dead-End Job', posterUrl: 'https://image.tmdb.org/t/p/w780/1yobke0bpfNOazuF9wW7QbM2GER.jpg', year: 2026, country: 'KR' },
+  { id: 300523, title: 'Blue Road', posterUrl: 'https://image.tmdb.org/t/p/w780/rHgC4wYhpI8Vx7kSwA1OTvwQRh0.jpg', year: 2026, country: 'KR' },
+  { id: 256726, title: 'Tantara', posterUrl: 'https://image.tmdb.org/t/p/w780/733Vm8e0bzUbjbDuATgR4Ol7vqd.jpg', year: 2026, country: 'KR' },
+  { id: 258862, title: 'Sacred Jewel', posterUrl: 'https://image.tmdb.org/t/p/w780/2mDpdgBOH52W91wgzqXtxD7ajiZ.jpg', year: 2026, country: 'KR' },
+  { id: 326975, title: 'What a Boss Wants', posterUrl: 'https://image.tmdb.org/t/p/w780/ldqsRIHnjdCf72TRtXtdlaWlbsI.jpg', year: 2026, country: 'KR' },
+  { id: 283220, title: 'Quiztopia', posterUrl: 'https://image.tmdb.org/t/p/w780/yvkEL51xnhAuKpaycMU1dOnozwN.jpg', year: 2026, country: 'JP' },
 ]
+
+function extractColumns(items?: Drama[]) {
+  if (!items || items.length < 6) return null
+  const valid = items.filter(d => !!d.posterUrl && d.posterUrl.startsWith('http'))
+  if (valid.length < 6) return null
+  const c1: PosterItem[] = []
+  const c2: PosterItem[] = []
+  const c3: PosterItem[] = []
+
+  valid.forEach((d, idx) => {
+    const pItem: PosterItem = {
+      id: d.tmdbId,
+      title: d.title,
+      posterUrl: d.posterUrl.replace('/original/', '/w780/').replace('/w500/', '/w780/'),
+      year: d.releaseYear,
+      country: d.country,
+    }
+    if (idx % 3 === 0 && c1.length < 6) c1.push(pItem)
+    else if (idx % 3 === 1 && c2.length < 6) c2.push(pItem)
+    else if (c3.length < 6) c3.push(pItem)
+  })
+
+  return { c1, c2, c3 }
+}
 
 interface MovingPosterWallProps {
   dramas?: Drama[]
@@ -55,43 +79,29 @@ export default function MovingPosterWall({
   className = '',
   interactive = true,
 }: MovingPosterWallProps) {
-  const [col1, setCol1] = useState<PosterItem[]>(FALLBACK_COL_1)
-  const [col2, setCol2] = useState<PosterItem[]>(FALLBACK_COL_2)
-  const [col3, setCol3] = useState<PosterItem[]>(FALLBACK_COL_3)
-
-  function distribute(items: Drama[]) {
-    const valid = items.filter(d => !!d.posterUrl && d.posterUrl.startsWith('http'))
-    if (valid.length >= 6) {
-      const c1: PosterItem[] = []
-      const c2: PosterItem[] = []
-      const c3: PosterItem[] = []
-
-      valid.forEach((d, idx) => {
-        const pItem: PosterItem = {
-          id: d.tmdbId,
-          title: d.title,
-          posterUrl: d.posterUrl.replace('/original/', '/w780/').replace('/w500/', '/w780/'),
-          year: d.releaseYear,
-          country: d.country,
-        }
-        if (idx % 3 === 0 && c1.length < 6) c1.push(pItem)
-        else if (idx % 3 === 1 && c2.length < 6) c2.push(pItem)
-        else if (c3.length < 6) c3.push(pItem)
-      })
-
-      if (c1.length > 0) setCol1(c1)
-      if (c2.length > 0) setCol2(c2)
-      if (c3.length > 0) setCol3(c3)
-    }
-  }
+  const initialCols = extractColumns(dramas)
+  const [col1, setCol1] = useState<PosterItem[]>(() => initialCols?.c1 || DEFAULT_COL_1)
+  const [col2, setCol2] = useState<PosterItem[]>(() => initialCols?.c2 || DEFAULT_COL_2)
+  const [col3, setCol3] = useState<PosterItem[]>(() => initialCols?.c3 || DEFAULT_COL_3)
 
   useEffect(() => {
     if (dramas && dramas.length >= 6) {
-      distribute(dramas)
+      const parsed = extractColumns(dramas)
+      if (parsed) {
+        // Avoid state update if identical to prevent resetting scroll or swapping
+        const isSame =
+          parsed.c1.length === col1.length &&
+          parsed.c1.every((item, i) => item.id === col1[i]?.id)
+        if (!isSame) {
+          setCol1(parsed.c1)
+          setCol2(parsed.c2)
+          setCol3(parsed.c3)
+        }
+      }
       return
     }
 
-    // Auto-fetch real TMDB discover posters if dramas prop is empty (e.g. on AuthScreen)
+    // Auto-fetch real TMDB discover posters only if dramas prop is not provided
     let alive = true
     fetch('/api/discover?region=ALL')
       .then(res => res.json())
@@ -105,7 +115,12 @@ export default function MovingPosterWall({
           })
         }
         if (list.length >= 6) {
-          distribute(list)
+          const parsed = extractColumns(list)
+          if (parsed && alive) {
+            setCol1(parsed.c1)
+            setCol2(parsed.c2)
+            setCol3(parsed.c3)
+          }
         }
       })
       .catch(() => {})

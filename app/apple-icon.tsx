@@ -16,56 +16,21 @@ export default function AppleIcon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: '#08080e',
+          background: 'linear-gradient(135deg, #FF2E54 0%, #7928CA 52%, #0070F3 100%)',
           position: 'relative',
         }}
       >
-        {/* Vibrant radial glow */}
-        <div
-          style={{
-            position: 'absolute',
-            top: '-10%',
-            left: '-10%',
-            width: '120%',
-            height: '120%',
-            background: 'radial-gradient(circle at 40% 35%, rgba(194, 72, 22, 0.45), rgba(99, 102, 241, 0.5) 45%, rgba(255, 64, 105, 0.35) 75%, transparent 100%)',
-          }}
-        />
-
-        {/* Frosted Glass Squircle Inner Card */}
-        <div
-          style={{
-            width: '146px',
-            height: '146px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '34px',
-            border: '2px solid rgba(255, 255, 255, 0.28)',
-            backgroundColor: 'rgba(255, 255, 255, 0.08)',
-            position: 'relative',
-          }}
+        <svg
+          width="114"
+          height="114"
+          viewBox="0 0 320 320"
+          fill="none"
         >
-          {/* Cinema Archive / Vault Prism Emblem */}
-          <svg
-            width="80"
-            height="80"
-            viewBox="0 0 100 100"
-            fill="none"
-          >
-            <path
-              d="M50 14 L84 33 L84 67 L50 86 L16 67 L16 33 Z"
-              stroke="rgba(255, 255, 255, 0.6)"
-              strokeWidth="4"
-              fill="rgba(255, 255, 255, 0.08)"
-            />
-            <circle cx="50" cy="50" r="23" stroke="rgba(255, 255, 255, 0.75)" strokeWidth="3.5" />
-            <polygon
-              points="45,40 62,50 45,60"
-              fill="#ffffff"
-            />
-          </svg>
-        </div>
+          <g fill="#FFFFFF">
+            <rect x="24" y="20" width="62" height="280" rx="20" />
+            <path d="M 118 44 C 118 30 133 22 145 29 L 298 147 C 309 155 309 171 298 179 L 145 297 C 133 304 118 296 118 282 Z" />
+          </g>
+        </svg>
       </div>
     ),
     {

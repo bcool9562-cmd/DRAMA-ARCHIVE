@@ -35,70 +35,89 @@ export default function BottomNav({
 
   return (
     <>
-      {/* Top Header Bar */}
-      <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between p-4 pt-[env(safe-area-inset-top,16px)]">
-        {/* Official Drama Archive Brand Header */}
+      {/* Top Header Bar — floating glass bar with comfortable breathing room from screen top */}
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between pt-4 sm:pt-5 pb-3 px-5 sm:px-8 mt-[env(safe-area-inset-top,0px)]">
+        {/* Official Drama Archive Brand Mark */}
         <div className="pointer-events-auto flex items-center gap-2.5 touch-manipulation select-none">
-          <div className="w-9 h-9 rounded-[11px] bg-white/[0.08] backdrop-blur-xl border border-white/[0.15] flex items-center justify-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_6px_18px_rgba(0,0,0,0.35)]">
-            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-white">
+          {/* Left Icon Orb: Vibrant circular gradient orb */}
+          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-violet-600 via-indigo-500 to-fuchsia-500 flex items-center justify-center shadow-[0_0_20px_rgba(139,92,246,0.45),inset_0_1px_1px_rgba(255,255,255,0.4)] flex-shrink-0">
+            <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-white">
               <path
-                d="M12 3 L20 7.5 L20 16.5 L12 21 L4 16.5 L4 7.5 Z"
-                stroke="currentColor"
-                strokeWidth="1.8"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                d="M7 5.5v13a1 1 0 0 0 1.5.86l11-6.5a1 1 0 0 0 0-1.72l-11-6.5A1 1 0 0 0 7 5.5z"
                 fill="currentColor"
-                fillOpacity={0.15}
               />
-              <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.5" />
-              <polygon points="11,10 15,12 11,14" fill="currentColor" />
             </svg>
           </div>
-          <span className="text-[19px] font-bold tracking-tight text-white leading-none">
-            Drama Archive
+          {/* Brand Title: Ultra-bold tight Apple typography */}
+          <span className="text-[24px] sm:text-[26px] font-black tracking-tighter text-white flex items-baseline leading-none">
+            Drama Archive<span className="text-violet-500 ml-0.5">.</span>
           </span>
         </div>
 
         {/* Right Controls: Notification Bell + Lock Button */}
-        <div className="pointer-events-auto flex items-center gap-2">
-          {/* Notification Bell */}
+        <div className="pointer-events-auto flex items-center gap-2.5">
+          {/* Notification Button */}
           <button
             onClick={onNotificationsClick}
             className="
-              relative flex h-9 w-9 items-center justify-center
-              rounded-full bg-gradient-to-b from-white/[0.16] to-white/[0.06]
-              border border-white/[0.22] shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_rgba(0,0,0,0.4)]
-              backdrop-blur-xl transition active:scale-95 cursor-pointer touch-manipulation select-none
+              relative flex h-10 w-10 items-center justify-center
+              rounded-full bg-white/[0.07] hover:bg-white/[0.14]
+              backdrop-blur-xl border border-white/[0.14]
+              transition-all duration-200 active:scale-90 group
+              cursor-pointer touch-manipulation select-none
             "
             aria-label="Notifications"
           >
-            <Bell size={16} className="text-white/90" />
+            {/* Refined Bell SVG that animates with a smooth pendulum ring */}
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-4 h-4 text-white/90 group-hover:rotate-12 group-active:-rotate-12 transition-transform duration-300 origin-top"
+            >
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+            </svg>
             {notifCount > 0 && (
               <span className="
-                absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center
-                rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-md shadow-rose-500/50
+                absolute -top-1 -right-1 flex min-w-[18px] h-[18px] px-1 items-center justify-center
+                rounded-full bg-gradient-to-r from-rose-500 to-pink-600 text-[10px] font-bold text-white
+                border border-[#0a0a0f] shadow-lg shadow-rose-500/40 leading-none
               ">
                 {notifCount > 9 ? '9+' : notifCount}
               </span>
             )}
           </button>
 
-          {/* Lock / Log Out Button */}
+          {/* Lock Button: Frosted glass capsule */}
           <button
             onClick={onLockClick}
             title="Lock Archive"
             className="
-              group relative inline-flex items-center gap-1.5 rounded-full p-1 pr-3
-              bg-gradient-to-b from-white/[0.16] to-white/[0.06] backdrop-blur-xl border border-white/[0.22]
-              shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_rgba(0,0,0,0.4)]
-              transition active:scale-95 cursor-pointer touch-manipulation select-none
+              h-10 px-4 rounded-full bg-white/[0.07] hover:bg-white/[0.14]
+              backdrop-blur-xl border border-white/[0.14] flex items-center gap-2
+              text-[13px] font-semibold text-white/90 hover:text-white
+              transition-all duration-200 active:scale-95 group
+              cursor-pointer touch-manipulation select-none
             "
             aria-label="Lock Archive"
           >
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/80 to-purple-600/80 text-white shadow-inner">
-              <Lock size={12} />
-            </div>
-            <span className="text-xs font-semibold text-white/90">Lock</span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="w-3.5 h-3.5 text-white/80 group-hover:text-violet-400 group-hover:scale-110 transition-all duration-200"
+            >
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+            <span>Lock</span>
           </button>
         </div>
       </header>

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="drama-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF2E54" />
+      <stop offset="52%" stop-color="#7928CA" />
+      <stop offset="100%" stop-color="#0070F3" />
+    </linearGradient>
+    <linearGradient id="drama-shine" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.22" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Vibrant Rich Gradient Squircle Base -->
+  <rect width="512" height="512" rx="120" fill="url(#drama-grad)" />
+  <rect width="512" height="512" rx="120" fill="url(#drama-shine)" />
+  <rect x="2" y="2" width="508" height="508" rx="118" fill="none" stroke="rgba(255,255,255,0.32)" stroke-width="3" />
+
+  <!-- Geometric Play-Ribbon / Archive Monogram in Ultra-Crisp Pure White (#FFFFFF) taking up 65% canvas -->
+  <g fill="#FFFFFF">
+    <!-- Archive Ribbon Pillar / Bookmark -->
+    <rect x="124" y="116" width="62" height="280" rx="20" />
+    <!-- Cinema Play Ribbon Arrow -->
+    <path d="M 218 140 C 218 126 233 118 245 125 L 398 243 C 409 251 409 267 398 275 L 245 393 C 233 400 218 392 218 378 Z" />
+  </g>
+</svg>

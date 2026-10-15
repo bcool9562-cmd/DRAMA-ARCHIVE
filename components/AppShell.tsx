@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import AuthScreen from '@/components/auth/AuthScreen'
 import BottomNav, { TabId } from '@/components/nav/BottomNav'
-import SearchTab from '@/components/tabs/SearchTab'
+import SearchTab, { type DiscoverData } from '@/components/tabs/SearchTab'
 import WatchlistTab from '@/components/tabs/WatchlistTab'
 import WatchingTab from '@/components/tabs/WatchingTab'
 import FinishedTab from '@/components/tabs/FinishedTab'
@@ -19,6 +19,7 @@ export default function AppShell() {
   const [activeTab, setActiveTab] = useState<TabId>('search')
   const [showNotifications, setShowNotifications] = useState(false)
   const [savedDramas, setSavedDramas] = useState<UserDrama[]>(() => getSavedDramasSync())
+  const [discoverData, setDiscoverData] = useState<DiscoverData | null>(null)
 
   // Unified navigation stack — shared across all tabs
   const [navStack, setNavStack] = useState<StackItem[]>([])
@@ -27,6 +28,13 @@ export default function AppShell() {
   useEffect(() => {
     const unsub = onArchiveSync(setSavedDramas)
     return () => unsub()
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/discover?region=ALL')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => { if (data) setDiscoverData(data) })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -100,18 +108,53 @@ export default function AppShell() {
 
       <ToastContainer />
 
-      {/* Main content — blur & lock scroll when modal is open */}
-      <main className="pt-[env(safe-area-inset-top,0px)]">
-        {activeTab === 'search' && (
+      {/* Main content — keep all tabs mounted to preserve scroll & animation state, zero black flash */}
+      <main className="relative pt-[env(safe-area-inset-top,0px)]">
+        <div
+          className={`transition-all duration-250 ease-out ${
+            activeTab === 'search'
+              ? 'opacity-100 translate-y-0 pointer-events-auto'
+              : 'opacity-0 translate-y-2 pointer-events-none invisible absolute inset-x-0 top-0'
+          }`}
+        >
           <SearchTab
             onOpenDrama={openDrama}
             onOpenPerson={openPerson}
             onTabChange={setActiveTab}
+            discoverData={discoverData}
+            onDiscoverLoaded={setDiscoverData}
           />
-        )}
-        {activeTab === 'watchlist' && <WatchlistTab onOpenDrama={openDrama} onOpenPerson={openPerson} />}
-        {activeTab === 'watching' && <WatchingTab onOpenDrama={openDrama} onOpenPerson={openPerson} />}
-        {activeTab === 'finished' && <FinishedTab onOpenDrama={openDrama} onOpenPerson={openPerson} />}
+        </div>
+
+        <div
+          className={`transition-all duration-250 ease-out ${
+            activeTab === 'watchlist'
+              ? 'opacity-100 translate-y-0 pointer-events-auto'
+              : 'opacity-0 translate-y-2 pointer-events-none invisible absolute inset-x-0 top-0'
+          }`}
+        >
+          <WatchlistTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
+        </div>
+
+        <div
+          className={`transition-all duration-250 ease-out ${
+            activeTab === 'watching'
+              ? 'opacity-100 translate-y-0 pointer-events-auto'
+              : 'opacity-0 translate-y-2 pointer-events-none invisible absolute inset-x-0 top-0'
+          }`}
+        >
+          <WatchingTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
+        </div>
+
+        <div
+          className={`transition-all duration-250 ease-out ${
+            activeTab === 'finished'
+              ? 'opacity-100 translate-y-0 pointer-events-auto'
+              : 'opacity-0 translate-y-2 pointer-events-none invisible absolute inset-x-0 top-0'
+          }`}
+        >
+          <FinishedTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
+        </div>
       </main>
 
       {/* Bottom dock — hidden when modal is open to prevent GPU compositing */}

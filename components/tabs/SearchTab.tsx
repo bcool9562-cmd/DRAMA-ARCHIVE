@@ -20,10 +20,12 @@ interface SearchTabProps {
   onOpenDrama: (id: number, preview?: Drama) => void
   onOpenPerson: (id: number, name?: string) => void
   onTabChange?: (tab: 'search' | 'watchlist' | 'watching' | 'finished') => void
+  discoverData?: DiscoverData | null
+  onDiscoverLoaded?: (data: DiscoverData) => void
 }
 
 interface DiscoverRow { id: string; title: string; dramas: Drama[] }
-interface DiscoverData { hero: Drama[]; talkOfTheTown?: Drama[]; rows: DiscoverRow[] }
+export interface DiscoverData { hero: Drama[]; talkOfTheTown?: Drama[]; rows: DiscoverRow[] }
 
 // Custom SVG tilted megaphone icon with sound lines matching Photo 4
 function MegaphoneIcon({ className = 'w-7 h-7' }: { className?: string }) {
@@ -59,17 +61,29 @@ function getBuzzLabel(drama: Drama): string {
   return 'New Show'
 }
 
-export default function SearchTab({ onOpenDrama, onOpenPerson: _onOpenPerson, onTabChange }: SearchTabProps) {
+export default function SearchTab({
+  onOpenDrama,
+  onOpenPerson: _onOpenPerson,
+  onTabChange,
+  discoverData: propDiscoverData,
+  onDiscoverLoaded,
+}: SearchTabProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Drama[]>([])
   const [searching, setSearching] = useState(false)
   const [userDramas, setUserDramas] = useState<UserDrama[]>(() => getSavedDramasSync())
-  const [discoverData, setDiscoverData] = useState<DiscoverData | null>(null)
+  const [discoverData, setDiscoverData] = useState<DiscoverData | null>(() => propDiscoverData || null)
   const [discoverLoading, setDiscoverLoading] = useState(false)
   const [selectedVibe, setSelectedVibe] = useState<string | null>(null)
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (propDiscoverData) {
+      setDiscoverData(propDiscoverData)
+    }
+  }, [propDiscoverData])
 
   const refreshUserDramas = useCallback(async () => {
     try {
@@ -84,22 +98,24 @@ export default function SearchTab({ onOpenDrama, onOpenPerson: _onOpenPerson, on
     return () => unsubscribe()
   }, [refreshUserDramas])
 
-  // Load discover data once
+  // Load discover data once if not already provided
   const loadDiscover = useCallback(async () => {
+    if (propDiscoverData) return
     setDiscoverLoading(true)
     try {
       const res = await fetch('/api/discover?region=ALL')
       if (res.ok) {
         const data = await res.json()
         setDiscoverData(data)
+        onDiscoverLoaded?.(data)
       }
     } catch { /* ignore */ }
     setDiscoverLoading(false)
-  }, [])
+  }, [propDiscoverData, onDiscoverLoaded])
 
   useEffect(() => {
-    if (!discoverData) loadDiscover()
-  }, [discoverData, loadDiscover])
+    if (!discoverData && !propDiscoverData) loadDiscover()
+  }, [discoverData, propDiscoverData, loadDiscover])
 
   // Search logic
   const doSearch = useCallback(async (q: string) => {
@@ -168,7 +184,7 @@ export default function SearchTab({ onOpenDrama, onOpenPerson: _onOpenPerson, on
   return (
     <div className="relative flex flex-col min-h-screen">
       {/* 1. CLEAN EDITORIAL HEADER (NO SUBHO, NO SUBTITLE, NO COUNTER PILLS - PHOTO 2) */}
-      <header className="px-5 pt-14 pb-3 max-w-6xl mx-auto w-full">
+      <header className="px-5 pt-20 sm:pt-24 pb-3 max-w-6xl mx-auto w-full">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-[#c24816] via-[#c80815] to-[#ff4069] text-white shadow-sm">
