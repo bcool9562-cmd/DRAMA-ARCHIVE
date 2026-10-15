@@ -206,7 +206,7 @@ function PosterCard({
       tabIndex={onClick ? 0 : undefined}
       className={`relative aspect-[2/3] w-full rounded-2xl sm:rounded-3xl overflow-hidden border border-white/[0.10] bg-[#14141c] shadow-lg transform-gpu ${
         onClick
-          ? 'cursor-pointer active:scale-95 hover:border-white/40 hover:shadow-2xl transition-transform duration-200'
+          ? 'cursor-pointer active:scale-95 hover:scale-[1.04] hover:z-10 hover:border-white/40 hover:shadow-2xl transition-transform duration-300 ease-out'
           : 'pointer-events-none select-none'
       }`}
     >

@@ -199,7 +199,7 @@ export default function SearchTab({
 
       {/* 2. FLOATING iOS SPOTLIGHT SEARCH BAR */}
       <div className="sticky top-0 z-30 px-5 pt-2 pb-3 max-w-6xl mx-auto w-full">
-        <div className="relative flex items-center rounded-full bg-black/50 backdrop-blur-3xl border border-white/20 px-4 py-3 gap-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_12px_32px_rgba(0,0,0,0.6)] transform-gpu">
+        <div className="relative flex items-center rounded-full bg-black/50 backdrop-blur-3xl border border-white/20 px-4 py-3 gap-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_12px_32px_rgba(0,0,0,0.6)] transform-gpu hover:border-white/25 focus-within:scale-[1.01] focus-within:border-white/35 transition-all duration-300">
           {searching ? (
             <Loader2 size={17} className="text-white/80 flex-shrink-0 animate-spin" />
           ) : (
@@ -254,9 +254,9 @@ export default function SearchTab({
                   key={drama.dramaId}
                   onClick={() => handleOpenDrama(drama)}
                   style={{ animationDelay: `${Math.min(idx * 30, 300)}ms` }}
-                  className="group flex flex-col cursor-pointer touch-manipulation select-none"
+                  className="group flex flex-col cursor-pointer touch-manipulation select-none hover:-translate-y-1.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
                 >
-                  <div className="relative aspect-[2/3] w-full rounded-[12px] overflow-hidden bg-white/[0.04] shadow-md transition-transform duration-200 group-hover:scale-[1.02]">
+                  <div className="relative aspect-[2/3] w-full rounded-[12px] overflow-hidden bg-white/[0.04] shadow-md">
                     {posterSrc ? (
                       <Image
                         src={posterSrc}
@@ -265,7 +265,7 @@ export default function SearchTab({
                         sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 20vw"
                         loading="lazy"
                         onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none' }}
-                        className="object-cover"
+                        className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-black/70 text-white/25 text-xs font-medium">No Poster</div>
@@ -344,10 +344,10 @@ export default function SearchTab({
                   <div
                     key={drama.dramaId}
                     onClick={() => handleOpenDrama(drama)}
-                    className="group flex flex-col cursor-pointer touch-manipulation select-none"
+                    className="group flex flex-col cursor-pointer touch-manipulation select-none hover:-translate-y-1.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
                   >
                     {/* Clean Frameless Poster with NO overlays, badges, or buttons */}
-                    <div className="relative aspect-[2/3] w-full rounded-[12px] overflow-hidden bg-white/[0.04] shadow-md transition-transform duration-200 group-hover:scale-[1.02]">
+                    <div className="relative aspect-[2/3] w-full rounded-[12px] overflow-hidden bg-white/[0.04] shadow-md">
                       {posterSrc ? (
                         <Image
                           src={posterSrc}
@@ -356,7 +356,7 @@ export default function SearchTab({
                           sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 20vw"
                           loading="lazy"
                           onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none' }}
-                          className="object-cover"
+                          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-black/60 text-white/25 text-xs font-medium">No Poster</div>

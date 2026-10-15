@@ -60,7 +60,7 @@ export default function DramaCard({ drama, actions, onOpen, staggerIndex }: Dram
           ? { animationDelay: `${Math.min(staggerIndex * 35, 350)}ms` }
           : undefined
       }
-      className={`group relative aspect-[2/3] w-full rounded-[24px] overflow-hidden border border-white/[0.18] shadow-[0_16px_36px_-6px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.25)] transition-all duration-200 text-left touch-manipulation select-none active:scale-[0.98] transform-gpu ${
+      className={`group relative aspect-[2/3] w-full rounded-[24px] overflow-hidden border border-white/[0.18] shadow-[0_16px_36px_-6px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.25)] hover:-translate-y-1.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] text-left touch-manipulation select-none transform-gpu ${
         staggerIndex !== undefined ? 'ios-stagger-card' : ''
       } ${onOpen ? 'cursor-pointer' : ''}`}
     >
@@ -72,7 +72,7 @@ export default function DramaCard({ drama, actions, onOpen, staggerIndex }: Dram
           fill
           sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 22vw"
           loading="lazy"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           priority={false}
         />
       ) : (

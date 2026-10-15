@@ -242,11 +242,11 @@ export default function VibeChart({
               r={radius}
               fill="transparent"
               stroke={seg.color}
-              strokeWidth={seg.isCurrent ? strokeWidth + 4 : strokeWidth}
+              strokeWidth={seg.isCurrent ? strokeWidth + 5 : strokeWidth}
               strokeDasharray={seg.strokeArray}
               strokeDashoffset={seg.strokeOffset}
               strokeLinecap="round"
-              className="transition-all duration-300 cursor-pointer"
+              className="transition-all duration-300 cursor-pointer transform-gpu"
               style={{
                 opacity: (hoveredIdx !== null && hoveredIdx !== seg.idx) ? 0.45 : 1,
                 filter: seg.isCurrent ? `drop-shadow(0 0 8px ${seg.color}88)` : undefined,
@@ -275,7 +275,7 @@ export default function VibeChart({
       </div>
 
       {/* Legend List (Clean, compact rows to fit h-[460px] naturally) */}
-      <div className="flex flex-col gap-1.5 mt-2">
+      <div className="flex flex-col gap-1 mt-2">
         {chartVibes.map((item, idx) => {
           const isSelected = (hoveredIdx === idx) || (selectedVibe && item.name.toLowerCase() === selectedVibe.toLowerCase())
           return (
@@ -288,10 +288,10 @@ export default function VibeChart({
                 setHoveredIdx(idx)
                 onSelectVibe?.(item.name)
               }}
-              className={`flex items-center justify-between py-1.5 px-3 rounded-xl transition-all duration-150 cursor-pointer touch-manipulation select-none ${
+              className={`flex items-center justify-between py-1 px-2.5 -mx-1.5 rounded-xl transition-all duration-200 cursor-pointer touch-manipulation select-none hover:translate-x-1.5 hover:bg-white/[0.05] ${
                 isSelected
-                  ? 'bg-white/[0.12] border border-white/20 shadow-sm'
-                  : 'hover:bg-white/[0.06] border border-transparent'
+                  ? 'bg-white/[0.12] border border-white/20 shadow-sm translate-x-1'
+                  : 'border border-transparent'
               }`}
             >
               <div className="flex items-center gap-2.5">

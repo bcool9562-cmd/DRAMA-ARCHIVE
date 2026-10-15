@@ -717,7 +717,7 @@ function DramaPage({
               <h3 className="text-xs font-bold uppercase tracking-wider text-white/35 mb-2.5">Genres</h3>
               <div className="flex flex-wrap gap-2">
                 {drama.genres.map(g => (
-                  <span key={g} className="rounded-full bg-[#181820] border border-white/[0.12] px-4 py-1.5 text-[13px] font-semibold text-white shadow-sm">{g}</span>
+                  <span key={g} className="rounded-full bg-[#181820] border border-white/[0.12] px-4 py-1.5 text-[13px] font-semibold text-white shadow-sm hover:-translate-y-1 hover:scale-[1.04] active:scale-95 transition-all duration-250 ease-out cursor-default select-none">{g}</span>
                 ))}
               </div>
             </div>
@@ -729,7 +729,7 @@ function DramaPage({
               <h3 className="text-xs font-bold uppercase tracking-wider text-white/35 mb-2.5">Themes & Tags</h3>
               <div className="flex flex-wrap gap-2">
                 {drama.tags.slice(0, 14).map(t => (
-                  <span key={t} className="rounded-full bg-[#181820]/80 border border-white/[0.08] px-3.5 py-1 text-xs font-medium text-white/80">{toTitleCase(t)}</span>
+                  <span key={t} className="rounded-full bg-[#181820]/80 border border-white/[0.08] px-3.5 py-1 text-xs font-medium text-white/80 hover:-translate-y-1 hover:scale-[1.04] active:scale-95 transition-all duration-250 ease-out cursor-default select-none">{toTitleCase(t)}</span>
                 ))}
               </div>
             </div>
@@ -770,7 +770,7 @@ function DramaPage({
                   <button
                     key={i}
                     onClick={() => setLightboxSrc(`https://image.tmdb.org/t/p/original${img.file_path}`, `https://image.tmdb.org/t/p/w780${img.file_path}`)}
-                    className="group relative h-36 w-26 flex-shrink-0 overflow-hidden rounded-[20px] border border-white/[0.18] bg-[#161620] shadow-lg transition-transform duration-150 active:scale-95 cursor-pointer touch-manipulation"
+                    className="group relative h-36 w-26 flex-shrink-0 overflow-hidden rounded-[20px] border border-white/[0.18] bg-[#161620] shadow-lg hover:-translate-y-1 hover:scale-[1.04] active:scale-95 transition-all duration-250 ease-out cursor-pointer touch-manipulation"
                   >
                     <Image
                       src={`https://image.tmdb.org/t/p/w500${img.file_path}`}
@@ -852,7 +852,7 @@ function DramaPage({
                   <button
                     key={`${c.id}-${c.order}`}
                     onClick={() => onPersonClick(c.id, c.name)}
-                    className="group flex flex-col items-center gap-2 flex-shrink-0 w-22 text-center transition-transform duration-150 active:scale-95 cursor-pointer touch-manipulation select-none"
+                    className="group flex flex-col items-center gap-2 flex-shrink-0 w-22 text-center hover:-translate-y-1 hover:scale-[1.04] active:scale-95 transition-all duration-250 ease-out cursor-pointer touch-manipulation select-none"
                   >
                     <div className="relative h-22 w-22 overflow-hidden rounded-[22px] border border-white/[0.18] bg-[#161620] shadow-lg transition duration-200 group-hover:border-white/40">
                       {c.profile_path ? (
