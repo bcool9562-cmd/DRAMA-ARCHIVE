@@ -38,11 +38,11 @@ export default function BottomNav({
       {/* Top Header Bar */}
       <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between p-4 pt-[env(safe-area-inset-top,16px)]">
         {/* User Pill */}
-        <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/[0.12] bg-white/[0.08] px-3.5 py-1.5 backdrop-blur-xl shadow-lg shadow-black/40 touch-manipulation select-none">
-          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-tr from-purple-500 to-pink-500 text-[10px] font-extrabold text-white">
+        <div className="pointer-events-auto group relative inline-flex items-center gap-2 rounded-full p-1 pr-3 bg-gradient-to-b from-white/[0.16] to-white/[0.06] backdrop-blur-xl border border-white/[0.22] shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_rgba(0,0,0,0.4)] touch-manipulation select-none">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-purple-500 via-fuchsia-500 to-pink-500 text-[11px] font-black text-white shadow-inner">
             S
           </div>
-          <span className="text-xs font-semibold tracking-wide text-white/90">Subho !!</span>
+          <span className="text-xs font-semibold tracking-wide text-white/95">Subho !!</span>
         </div>
 
         {/* Right Controls: Notification Bell + Lock Button */}
@@ -52,17 +52,17 @@ export default function BottomNav({
             onClick={onNotificationsClick}
             className="
               relative flex h-9 w-9 items-center justify-center
-              rounded-full border border-white/[0.15] bg-white/[0.08]
-              shadow-lg shadow-black/40 backdrop-blur-xl transition
-              hover:bg-white/[0.14] active:scale-95 cursor-pointer touch-manipulation select-none
+              rounded-full bg-gradient-to-b from-white/[0.16] to-white/[0.06]
+              border border-white/[0.22] shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_rgba(0,0,0,0.4)]
+              backdrop-blur-xl transition active:scale-95 cursor-pointer touch-manipulation select-none
             "
             aria-label="Notifications"
           >
-            <Bell size={17} className="text-white/80" />
+            <Bell size={16} className="text-white/90" />
             {notifCount > 0 && (
               <span className="
                 absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center
-                rounded-full bg-red-500 text-[9px] font-bold text-white
+                rounded-full bg-rose-500 text-[9px] font-bold text-white shadow-md shadow-rose-500/50
               ">
                 {notifCount > 9 ? '9+' : notifCount}
               </span>
@@ -74,14 +74,17 @@ export default function BottomNav({
             onClick={onLockClick}
             title="Lock Archive"
             className="
-              flex items-center gap-1.5 rounded-full border border-white/[0.15] bg-white/[0.08]
-              px-3 py-1.5 text-xs font-medium text-white/80 shadow-lg shadow-black/40 backdrop-blur-xl transition
-              hover:bg-white/[0.14] hover:text-white active:scale-95 cursor-pointer touch-manipulation select-none
+              group relative inline-flex items-center gap-1.5 rounded-full p-1 pr-3
+              bg-gradient-to-b from-white/[0.16] to-white/[0.06] backdrop-blur-xl border border-white/[0.22]
+              shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_rgba(0,0,0,0.4)]
+              transition active:scale-95 cursor-pointer touch-manipulation select-none
             "
             aria-label="Lock Archive"
           >
-            <Lock size={13} className="text-purple-400" />
-            <span className="text-[11px] font-medium">Lock</span>
+            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/80 to-purple-600/80 text-white shadow-inner">
+              <Lock size={12} />
+            </div>
+            <span className="text-xs font-semibold text-white/90">Lock</span>
           </button>
         </div>
       </header>

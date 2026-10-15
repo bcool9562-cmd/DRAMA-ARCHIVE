@@ -64,7 +64,13 @@ export default function AppShell() {
 
       {/* Main content — blur & lock scroll when modal is open */}
       <main className="pt-[env(safe-area-inset-top,0px)]">
-        {activeTab === 'search' && <SearchTab onOpenDrama={openDrama} onOpenPerson={openPerson} />}
+        {activeTab === 'search' && (
+          <SearchTab
+            onOpenDrama={openDrama}
+            onOpenPerson={openPerson}
+            onTabChange={setActiveTab}
+          />
+        )}
         {activeTab === 'watchlist' && <WatchlistTab onOpenDrama={openDrama} onOpenPerson={openPerson} />}
         {activeTab === 'watching' && <WatchingTab onOpenDrama={openDrama} onOpenPerson={openPerson} />}
         {activeTab === 'finished' && <FinishedTab onOpenDrama={openDrama} onOpenPerson={openPerson} />}

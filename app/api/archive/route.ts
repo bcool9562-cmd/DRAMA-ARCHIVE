@@ -114,16 +114,22 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 3. Handle notifiable filter
+    // 3. Map watched_episodes and handle notifiable filter
+    let formatted = results.map((d: any) => ({
+      ...d,
+      watched_episodes: Number(d.watched_episodes ?? d.next_episode_number) || 0,
+      next_episode_number: Number(d.watched_episodes ?? d.next_episode_number) || 0,
+    }))
+
     if (notifiable) {
-      results = results.filter(
+      formatted = formatted.filter(
         d =>
           (d.status === 'watchlist' && d.airing_status === 'upcoming') ||
           (d.status === 'watching' && d.airing_status === 'ongoing' && d.next_episode_date)
       )
     }
 
-    return new NextResponse(JSON.stringify(results), {
+    return new NextResponse(JSON.stringify(formatted), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -151,6 +157,8 @@ export async function POST(req: NextRequest) {
     const firstAirDate = drama.first_air_date && String(drama.first_air_date).trim() ? String(drama.first_air_date).trim() : null
     const nextEpDate = drama.next_episode_date && String(drama.next_episode_date).trim() ? String(drama.next_episode_date).trim() : null
 
+    const watchedEpisodes = Number(drama.watched_episodes ?? drama.next_episode_number) || 0
+
     const fullRecord = {
       user_id: FIXED_USER_ID,
       drama_id: String(drama.drama_id),
@@ -166,7 +174,8 @@ export async function POST(req: NextRequest) {
       airing_status: drama.airing_status || 'completed',
       first_air_date: firstAirDate,
       next_episode_date: nextEpDate,
-      next_episode_number: Number(drama.next_episode_number) || null,
+      next_episode_number: watchedEpisodes,
+      watched_episodes: watchedEpisodes,
       updated_at: new Date().toISOString(),
     }
 
@@ -250,23 +259,34 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ── PATCH: Move drama status (watchlist → watching → finished) ───────────────
+// ── PATCH: Move drama status or update watched episodes ───────────────────────
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { drama_id, status } = await req.json()
-    if (!drama_id || !status) {
-      return NextResponse.json({ error: 'Missing drama_id or status' }, { status: 400 })
+    const body = await req.json()
+    const { drama_id, status, watched_episodes, next_episode_number } = body
+    if (!drama_id) {
+      return NextResponse.json({ error: 'Missing drama_id' }, { status: 400 })
     }
 
     const supabase = createAdminClient()
     const now = new Date().toISOString()
+    const updatePayload: Record<string, any> = { updated_at: now }
+
+    if (status) updatePayload.status = status
+    if (watched_episodes !== undefined || next_episode_number !== undefined) {
+      const epNum = Number(watched_episodes ?? next_episode_number) || 0
+      updatePayload.next_episode_number = epNum
+      updatePayload.watched_episodes = epNum
+    }
 
     // 1. Try updating user_dramas_v2
     try {
+      const dbPayload = { ...updatePayload }
+      delete dbPayload.watched_episodes // user_dramas_v2 stores it in next_episode_number
       await supabase
         .from(TABLE)
-        .update({ status, updated_at: now })
+        .update(dbPayload)
         .eq('user_id', FIXED_USER_ID)
         .eq('drama_id', drama_id)
     } catch {
@@ -277,12 +297,17 @@ export async function PATCH(req: NextRequest) {
     const cloudItems = await readFromStorage(supabase)
     const item = cloudItems.find((d: any) => d.drama_id === drama_id)
     if (item) {
-      item.status = status
+      if (status) item.status = status
+      if (watched_episodes !== undefined || next_episode_number !== undefined) {
+        const epNum = Number(watched_episodes ?? next_episode_number) || 0
+        item.next_episode_number = epNum
+        item.watched_episodes = epNum
+      }
       item.updated_at = now
       await writeToStorage(supabase, cloudItems)
     }
 
-    return new NextResponse(JSON.stringify({ success: true }), {
+    return new NextResponse(JSON.stringify({ success: true, updated: updatePayload }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',

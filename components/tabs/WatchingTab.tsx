@@ -66,7 +66,7 @@ export default function WatchingTab({ onOpenDrama }: WatchingTabProps) {
   }
 
   return (
-    <div className="relative min-h-screen px-4 pb-36 pt-20 max-w-7xl mx-auto">
+    <div className="relative min-h-screen px-4 pb-36 pt-20 max-w-7xl mx-auto animate-ios-spring">
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(168,85,247,0.18),_transparent_65%)]" />
       </div>
@@ -87,10 +87,11 @@ export default function WatchingTab({ onOpenDrama }: WatchingTabProps) {
       </div>
 
       <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5">
-        {dramas.map((drama) => (
+        {dramas.map((drama, index) => (
           <DramaCard
             key={drama.drama_id}
             drama={drama}
+            staggerIndex={index}
             onOpen={() => handleOpenDrama(drama)}
             actions={
               <div className="flex items-center gap-1.5 w-full">

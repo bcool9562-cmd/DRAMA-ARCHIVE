@@ -25,6 +25,7 @@ export interface UserDrama {
   first_air_date: string | null
   next_episode_date: string | null
   next_episode_number: number | null
+  watched_episodes?: number
   updated_at: string
 }
 
@@ -202,6 +203,44 @@ export async function moveDrama(dramaId: string, newStatus: DramaStatus): Promis
   } catch (err) {
     console.error('[archive] moveDrama network error:', err)
     showToast('Network error while moving drama', 'error')
+    return false
+  }
+}
+
+/** Update watched episode count with instant Optimistic UI update */
+export async function updateWatchedEpisodes(dramaId: string, watched: number): Promise<boolean> {
+  const current = getStoredCache()
+  const drama = current.find((d) => d.drama_id === dramaId)
+  if (drama) {
+    const safeWatched = Math.max(0, watched)
+    const updated = current.map((d) =>
+      d.drama_id === dramaId
+        ? {
+            ...d,
+            watched_episodes: safeWatched,
+            next_episode_number: safeWatched,
+            updated_at: new Date().toISOString(),
+          }
+        : d
+    )
+    setStoredCache(updated)
+  }
+
+  try {
+    const res = await fetch('/api/archive', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        drama_id: dramaId,
+        watched_episodes: Math.max(0, watched),
+        next_episode_number: Math.max(0, watched),
+      }),
+      cache: 'no-store',
+    })
+
+    return res.ok
+  } catch (err) {
+    console.error('[archive] updateWatchedEpisodes network error:', err)
     return false
   }
 }
