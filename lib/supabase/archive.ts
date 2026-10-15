@@ -59,6 +59,11 @@ function setStoredCache(dramas: UserDrama[]) {
   }
 }
 
+/** Get currently cached saved dramas synchronously (0ms) */
+export function getSavedDramasSync(): UserDrama[] {
+  return getStoredCache()
+}
+
 /** Subscribe to archive changes across all tabs */
 export function onArchiveSync(callback: (dramas: UserDrama[]) => void): () => void {
   if (typeof window === 'undefined') return () => {}

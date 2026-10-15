@@ -43,7 +43,7 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
           onOpen()
         }
       }}
-      className={`group relative flex flex-col overflow-hidden rounded-[24px] border border-white/[0.12] bg-white/[0.05] backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_12px_32px_-6px_rgba(0,0,0,0.6)] transition-all duration-200 text-left ${
+      className={`group relative flex flex-col overflow-hidden rounded-[24px] border border-white/[0.12] bg-white/[0.05] backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_12px_32px_-6px_rgba(0,0,0,0.6)] transition-all duration-200 text-left touch-manipulation select-none ${
         onOpen ? 'cursor-pointer' : ''
       }`}
     >

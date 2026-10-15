@@ -331,7 +331,7 @@ interface KuryanaResult {
 async function searchKuryana(query: string): Promise<Drama[]> {
   try {
     const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 2500)
+    const timeout = setTimeout(() => controller.abort(), 1200)
 
     const res = await fetch(`https://kuryana.tbdh.app/search/q/${encodeURIComponent(query)}`, {
       signal: controller.signal,

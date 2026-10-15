@@ -1,6 +1,6 @@
 'use client'
 
-import { getUserDramas, moveDrama, removeDrama, onArchiveSync, UserDrama } from '@/lib/supabase/archive'
+import { getUserDramas, moveDrama, removeDrama, onArchiveSync, getSavedDramasSync, UserDrama } from '@/lib/supabase/archive'
 import { CheckCircle, Play, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import DramaCard from '@/components/drama/DramaCard'
@@ -8,9 +8,11 @@ import DramaDetailSheet from '@/components/drama/DramaDetailSheet'
 import PersonProfileSheet from '@/components/person/PersonProfileSheet'
 
 export default function FinishedTab() {
-  const [dramas, setDramas] = useState<UserDrama[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selectedTmdbId, setSelectedTmdbId] = useState<number | null>(null)
+  const [dramas, setDramas] = useState<UserDrama[]>(() =>
+    getSavedDramasSync().filter((d) => d.status === 'finished')
+  )
+  const [loading, setLoading] = useState(dramas.length === 0)
+  const [selectedDrama, setSelectedDrama] = useState<UserDrama | null>(null)
   const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null)
   const [, setSelectedPersonName] = useState('')
 
@@ -28,6 +30,11 @@ export default function FinishedTab() {
     })
     return () => unsubscribe()
   }, [])
+
+  function handleOpenDrama(drama: UserDrama) {
+    (document.activeElement as HTMLElement)?.blur()
+    setSelectedDrama(drama)
+  }
 
   async function handleRewatch(dramaId: string) {
     await moveDrama(dramaId, 'watching')
@@ -88,13 +95,13 @@ export default function FinishedTab() {
           <DramaCard
             key={drama.drama_id}
             drama={drama}
-            onOpen={() => setSelectedTmdbId(drama.tmdb_id)}
+            onOpen={() => handleOpenDrama(drama)}
             actions={
               <div className="flex items-center gap-1.5 w-full">
                 <button
                   title="Re-watch"
                   onClick={() => handleRewatch(drama.drama_id)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-full border border-purple-500/30 bg-purple-500/15 text-purple-200 hover:bg-purple-500/30 active:scale-95 transition text-[11px] font-semibold cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-full border border-purple-500/30 bg-purple-500/15 text-purple-200 hover:bg-purple-500/30 active:scale-95 transition text-[11px] font-semibold cursor-pointer touch-manipulation select-none"
                 >
                   <Play size={11} className="fill-purple-300 text-purple-300" />
                   <span>Re-watch</span>
@@ -102,7 +109,7 @@ export default function FinishedTab() {
                 <button
                   title="Remove from Archive"
                   onClick={() => handleRemove(drama.drama_id)}
-                  className="flex items-center justify-center h-7 w-7 rounded-full border border-rose-500/30 bg-rose-500/15 text-rose-300 hover:bg-rose-500/30 active:scale-90 transition cursor-pointer"
+                  className="flex items-center justify-center h-7 w-7 rounded-full border border-rose-500/30 bg-rose-500/15 text-rose-300 hover:bg-rose-500/30 active:scale-90 transition cursor-pointer touch-manipulation select-none"
                 >
                   <Trash2 size={13} />
                 </button>
@@ -112,11 +119,12 @@ export default function FinishedTab() {
         ))}
       </div>
 
-      {/* Drama Detail Sheet */}
-      {selectedTmdbId && (
+      {/* Drama Detail Sheet with 0ms Instant Preview */}
+      {selectedDrama && (
         <DramaDetailSheet
-          tmdbId={selectedTmdbId}
-          onClose={() => { setSelectedTmdbId(null); load() }}
+          tmdbId={selectedDrama.tmdb_id}
+          initialDrama={selectedDrama}
+          onClose={() => { setSelectedDrama(null); load() }}
           onPersonClick={(id, name) => { setSelectedPersonId(id); setSelectedPersonName(name) }}
         />
       )}
@@ -126,7 +134,10 @@ export default function FinishedTab() {
         <PersonProfileSheet
           personId={selectedPersonId}
           onClose={() => setSelectedPersonId(null)}
-          onDramaClick={(id) => { setSelectedPersonId(null); setSelectedTmdbId(id) }}
+          onDramaClick={(id) => {
+            setSelectedPersonId(null)
+            setSelectedDrama({ tmdb_id: id, drama_id: `tmdb-${id}` } as UserDrama)
+          }}
         />
       )}
     </div>

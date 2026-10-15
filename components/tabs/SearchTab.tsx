@@ -5,7 +5,16 @@ import Image from 'next/image'
 import { Search, X, Bookmark, Play, CheckCircle, Loader2, Star, Sparkles } from 'lucide-react'
 import type { Drama } from '@/lib/tmdb'
 import { tmdbThumb } from '@/lib/image-utils'
-import { addDrama, getUserDramas, onArchiveSync, type DramaStatus, type UserDrama } from '@/lib/supabase/archive'
+import {
+  addDrama,
+  moveDrama,
+  removeDrama,
+  getUserDramas,
+  getSavedDramasSync,
+  onArchiveSync,
+  type DramaStatus,
+  type UserDrama,
+} from '@/lib/supabase/archive'
 import DramaDetailSheet, { REGION_NAMES } from '@/components/drama/DramaDetailSheet'
 import PersonProfileSheet from '@/components/person/PersonProfileSheet'
 
@@ -13,9 +22,8 @@ export default function SearchTab() {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<Drama[]>([])
   const [searching, setSearching] = useState(false)
-  const [userDramas, setUserDramas] = useState<UserDrama[]>([])
-  const [addingStatus, setAddingStatus] = useState<Record<string, DramaStatus | 'loading'>>({})
-  const [selectedDramaId, setSelectedDramaId] = useState<number | null>(null)
+  const [userDramas, setUserDramas] = useState<UserDrama[]>(() => getSavedDramasSync())
+  const [selectedDrama, setSelectedDrama] = useState<Drama | null>(null)
   const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null)
   const [, setSelectedPersonName] = useState('')
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -25,7 +33,7 @@ export default function SearchTab() {
   const refreshUserDramas = useCallback(async () => {
     try {
       const data = await getUserDramas()
-      setUserDramas(data)
+      if (Array.isArray(data)) setUserDramas(data)
     } catch {
       // ignore
     }
@@ -57,33 +65,43 @@ export default function SearchTab() {
     return () => { if (timerRef.current) clearTimeout(timerRef.current) }
   }, [query, doSearch])
 
-  async function quickAdd(drama: Drama, status: DramaStatus, e: React.MouseEvent) {
-    e.stopPropagation()
-    setAddingStatus(prev => ({ ...prev, [drama.dramaId]: 'loading' }))
-    await addDrama({
-      drama_id: drama.dramaId,
-      tmdb_id: drama.tmdbId,
-      title: drama.title,
-      native_title: drama.nativeTitle,
-      poster_url: drama.posterUrl,
-      country: drama.country,
-      release_year: drama.releaseYear,
-      total_episodes: drama.totalEpisodes,
-      rating: drama.rating,
-      status,
-      airing_status: drama.airingStatus,
-      first_air_date: drama.firstAirDate || null,
-      next_episode_date: drama.nextEpisodeDate,
-      next_episode_number: drama.nextEpisodeNumber,
-    })
-    setAddingStatus(prev => ({ ...prev, [drama.dramaId]: status }))
-    setTimeout(() => {
-      setAddingStatus(prev => {
-        const copy = { ...prev }
-        delete copy[drama.dramaId]
-        return copy
+  // Single-tap quick action toggle: adds if unsaved, moves if switching, removes if already active
+  function quickAdd(drama: Drama, targetStatus: DramaStatus, e: React.MouseEvent) {
+    e.stopPropagation();
+    // Blur any active input
+    (document.activeElement as HTMLElement)?.blur()
+
+    const currentSaved = userDramas.find(d => d.tmdb_id === drama.tmdbId)
+    const currentStatus = currentSaved?.status
+
+    if (currentStatus === targetStatus) {
+      removeDrama(drama.dramaId)
+    } else if (currentStatus) {
+      moveDrama(drama.dramaId, targetStatus)
+    } else {
+      addDrama({
+        drama_id: drama.dramaId,
+        tmdb_id: drama.tmdbId,
+        title: drama.title,
+        native_title: drama.nativeTitle || '',
+        poster_url: drama.posterUrl,
+        country: drama.country,
+        release_year: drama.releaseYear,
+        total_episodes: drama.totalEpisodes,
+        rating: drama.rating,
+        status: targetStatus,
+        airing_status: drama.airingStatus,
+        first_air_date: drama.firstAirDate || null,
+        next_episode_date: drama.nextEpisodeDate,
+        next_episode_number: drama.nextEpisodeNumber,
       })
-    }, 2000)
+    }
+  }
+
+  function handleOpenDrama(drama: Drama) {
+    // Blur search input immediately so the first click inside detail sheet is never swallowed
+    (document.activeElement as HTMLElement)?.blur()
+    setSelectedDrama(drama)
   }
 
   function handlePersonClick(personId: number, name: string) {
@@ -93,7 +111,7 @@ export default function SearchTab() {
 
   function handleDramaFromPerson(tmdbId: number) {
     setSelectedPersonId(null)
-    setSelectedDramaId(tmdbId)
+    setSelectedDrama({ tmdbId, dramaId: `tmdb-${tmdbId}` } as Drama)
   }
 
   const showResults = query.trim().length > 0
@@ -122,12 +140,12 @@ export default function SearchTab() {
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
-            className="flex-1 bg-transparent text-sm font-medium text-white placeholder-white/35 outline-none tracking-tight"
+            className="flex-1 bg-transparent text-sm font-medium text-white placeholder-white/35 outline-none tracking-tight touch-manipulation"
           />
           {query && (
             <button
               onClick={() => { setQuery(''); setResults([]) }}
-              className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white/50 hover:bg-white/20 hover:text-white transition active:scale-90 cursor-pointer"
+              className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-white/50 hover:bg-white/20 hover:text-white transition active:scale-90 cursor-pointer touch-manipulation select-none"
             >
               <X size={13} />
             </button>
@@ -156,15 +174,13 @@ export default function SearchTab() {
             {results.map((drama) => {
               const userSaved = userDramas.find(d => d.tmdb_id === drama.tmdbId)
               const savedStatus = userSaved?.status
-              const currentAction = addingStatus[drama.dramaId]
 
               return (
                 <SearchResultCard
                   key={drama.dramaId}
                   drama={drama}
                   savedStatus={savedStatus}
-                  addingStatus={currentAction}
-                  onOpen={() => setSelectedDramaId(drama.tmdbId)}
+                  onOpen={() => handleOpenDrama(drama)}
                   onQuickAdd={(status, e) => quickAdd(drama, status, e)}
                 />
               )
@@ -206,12 +222,13 @@ export default function SearchTab() {
         </div>
       )}
 
-      {/* Drama Detail Sheet */}
-      {selectedDramaId && (
+      {/* Drama Detail Sheet with 0ms Instant Preview */}
+      {selectedDrama && (
         <DramaDetailSheet
-          tmdbId={selectedDramaId}
+          tmdbId={selectedDrama.tmdbId}
+          initialDrama={selectedDrama}
           onClose={() => {
-            setSelectedDramaId(null)
+            setSelectedDrama(null)
             refreshUserDramas()
           }}
           onPersonClick={handlePersonClick}
@@ -235,7 +252,6 @@ export default function SearchTab() {
 interface SearchResultCardProps {
   drama: Drama
   savedStatus?: DramaStatus
-  addingStatus: DramaStatus | 'loading' | undefined
   onOpen: () => void
   onQuickAdd: (status: DramaStatus, e: React.MouseEvent) => void
 }
@@ -243,12 +259,10 @@ interface SearchResultCardProps {
 function SearchResultCard({
   drama,
   savedStatus,
-  addingStatus,
   onOpen,
   onQuickAdd,
 }: SearchResultCardProps) {
   const regionBadge = drama.country ? REGION_NAMES[drama.country.toUpperCase()]?.badge || drama.country : null
-  const isLoading = addingStatus === 'loading'
 
   let eps = ''
   if (drama.totalEpisodes && drama.totalEpisodes > 1) {
@@ -263,7 +277,6 @@ function SearchResultCard({
     .filter(Boolean)
     .join(' • ')
 
-  // Use crisp w342 thumbnail for search results instead of heavy 10MB uncompressed original
   const thumbSrc = tmdbThumb(drama.posterUrl)
 
   return (
@@ -272,7 +285,7 @@ function SearchResultCard({
       tabIndex={0}
       onClick={onOpen}
       onKeyDown={e => e.key === 'Enter' && onOpen()}
-      className="group relative flex gap-3.5 rounded-[22px] border border-white/[0.12] bg-white/[0.05] p-3 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.18),0_10px_28px_-6px_rgba(0,0,0,0.6)] transition-all duration-200 hover:bg-white/[0.09] active:scale-[0.99] cursor-pointer"
+      className="group relative flex gap-3.5 rounded-[22px] border border-white/[0.12] bg-white/[0.05] p-3 backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.18),0_10px_28px_-6px_rgba(0,0,0,0.6)] transition-transform duration-150 active:scale-[0.98] cursor-pointer touch-manipulation select-none"
     >
       {/* Poster thumbnail */}
       <div className="relative h-28 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-black/60 shadow-md">
@@ -320,46 +333,33 @@ function SearchResultCard({
         {/* Quick Actions Shelf */}
         <div className="mt-2 flex items-center justify-between" onClick={e => e.stopPropagation()}>
           <div className="flex items-center gap-1.5">
-            {isLoading ? (
-              <div className="flex items-center gap-1.5 text-xs text-white/50">
-                <Loader2 size={14} className="animate-spin text-purple-400" />
-                <span>Saving…</span>
-              </div>
-            ) : addingStatus ? (
-              <span className="text-xs font-bold text-emerald-400">
-                ✓ Added to {addingStatus}
-              </span>
-            ) : (
-              <>
-                <QuickActionPill
-                  icon={Bookmark}
-                  title="Add to Watchlist"
-                  label="Watchlist"
-                  isActive={savedStatus === 'watchlist'}
-                  activeClass="border-sky-400/40 bg-sky-500/20 text-sky-300"
-                  onClick={e => onQuickAdd('watchlist', e)}
-                />
-                <QuickActionPill
-                  icon={Play}
-                  title="Mark as Watching"
-                  label="Watching"
-                  isActive={savedStatus === 'watching'}
-                  activeClass="border-purple-400/40 bg-purple-500/20 text-purple-300"
-                  onClick={e => onQuickAdd('watching', e)}
-                />
-                <QuickActionPill
-                  icon={CheckCircle}
-                  title="Mark as Finished"
-                  label="Finished"
-                  isActive={savedStatus === 'finished'}
-                  activeClass="border-emerald-400/40 bg-emerald-500/20 text-emerald-300"
-                  onClick={e => onQuickAdd('finished', e)}
-                />
-              </>
-            )}
+            <QuickActionPill
+              icon={Bookmark}
+              title="Watchlist"
+              label="Watchlist"
+              isActive={savedStatus === 'watchlist'}
+              activeClass="border-sky-400/50 bg-sky-500/25 text-sky-200 shadow-sm"
+              onClick={e => onQuickAdd('watchlist', e)}
+            />
+            <QuickActionPill
+              icon={Play}
+              title="Watching"
+              label="Watching"
+              isActive={savedStatus === 'watching'}
+              activeClass="border-purple-400/50 bg-purple-500/25 text-purple-200 shadow-sm"
+              onClick={e => onQuickAdd('watching', e)}
+            />
+            <QuickActionPill
+              icon={CheckCircle}
+              title="Finished"
+              label="Finished"
+              isActive={savedStatus === 'finished'}
+              activeClass="border-emerald-400/50 bg-emerald-500/25 text-emerald-200 shadow-sm"
+              onClick={e => onQuickAdd('finished', e)}
+            />
           </div>
 
-          {savedStatus && !addingStatus && (
+          {savedStatus && (
             <span className="text-[10px] font-semibold tracking-wide text-white/40 uppercase">
               In {savedStatus}
             </span>
@@ -389,7 +389,7 @@ function QuickActionPill({
     <button
       title={title}
       onClick={onClick}
-      className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition active:scale-95 cursor-pointer ${
+      className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition active:scale-95 cursor-pointer touch-manipulation select-none ${
         isActive
           ? activeClass
           : 'border-white/[0.14] bg-white/[0.06] text-white/60 hover:bg-white/[0.12] hover:text-white'
