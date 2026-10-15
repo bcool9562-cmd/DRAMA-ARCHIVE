@@ -51,17 +51,12 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-black px-4">
       {/* Moving Poster Wall Background */}
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-85 scale-105">
+      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden opacity-90 scale-105">
         <MovingPosterWall interactive={false} speedSeconds={50} className="h-full w-full" />
       </div>
 
-      {/* Dark Dimmer reduced from pitch black to bg-black/55 so posters are clearly visible */}
-      <div className="pointer-events-none absolute inset-0 z-0 bg-black/55 backdrop-blur-[1px]" />
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
-        <div className="absolute -top-40 -left-40 h-[600px] w-[600px] rounded-full bg-purple-900/25 blur-[140px]" />
-        <div className="absolute -bottom-40 -right-20 h-[500px] w-[500px] rounded-full bg-pink-900/15 blur-[140px]" />
-        <div className="absolute top-1/2 left-1/2 h-[450px] w-[450px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-indigo-950/25 blur-[130px]" />
-      </div>
+      {/* Crisp dark radial vignette without ANY backdrop-blur filter */}
+      <div className="pointer-events-none absolute inset-0 z-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.25)_0%,rgba(0,0,0,0.82)_100%)]" />
 
       {/* Lock Card */}
       <div className="relative z-10 w-full max-w-sm">

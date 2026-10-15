@@ -37,12 +37,26 @@ export default function BottomNav({
     <>
       {/* Top Header Bar */}
       <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex items-center justify-between p-4 pt-[env(safe-area-inset-top,16px)]">
-        {/* User Pill */}
-        <div className="pointer-events-auto group relative inline-flex items-center gap-2 rounded-full p-1 pr-3 bg-gradient-to-b from-white/[0.16] to-white/[0.06] backdrop-blur-xl border border-white/[0.22] shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_rgba(0,0,0,0.4)] touch-manipulation select-none">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-tr from-purple-500 via-fuchsia-500 to-pink-500 text-[11px] font-black text-white shadow-inner">
-            S
+        {/* Official Drama Archive Brand Header */}
+        <div className="pointer-events-auto flex items-center gap-2.5 touch-manipulation select-none">
+          <div className="w-9 h-9 rounded-[11px] bg-white/[0.08] backdrop-blur-xl border border-white/[0.15] flex items-center justify-center shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_6px_18px_rgba(0,0,0,0.35)]">
+            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-white">
+              <path
+                d="M12 3 L20 7.5 L20 16.5 L12 21 L4 16.5 L4 7.5 Z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="currentColor"
+                fillOpacity={0.15}
+              />
+              <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="1.5" />
+              <polygon points="11,10 15,12 11,14" fill="currentColor" />
+            </svg>
           </div>
-          <span className="text-xs font-semibold tracking-wide text-white/95">Subho !!</span>
+          <span className="text-[19px] font-bold tracking-tight text-white leading-none">
+            Drama Archive
+          </span>
         </div>
 
         {/* Right Controls: Notification Bell + Lock Button */}

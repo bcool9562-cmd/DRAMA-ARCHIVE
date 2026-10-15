@@ -98,8 +98,16 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
   // Saved dramas for single-source-of-truth status
   const [savedDramas, setSavedDramas] = useState<UserDrama[]>(() => getSavedDramasSync())
 
-  // Lightbox src for gallery
+  // Lightbox state for gallery with thumbnail persistence & smooth 4K fade-in
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
+  const [lightboxThumb, setLightboxThumb] = useState<string | null>(null)
+  const [lightboxLoaded, setLightboxLoaded] = useState(false)
+
+  const openLightbox = useCallback((src: string, thumb?: string) => {
+    setLightboxSrc(src)
+    setLightboxThumb(thumb || src.replace('/original/', '/w780/'))
+    setLightboxLoaded(false)
+  }, [])
 
   // Force re-render when cache updates (shallow ref, need a trigger)
   const [, forceUpdate] = useReducer(x => x + 1, 0)
@@ -209,17 +217,43 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95 backdrop-blur-2xl p-4"
-            onClick={() => setLightboxSrc(null)}
+            className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95 backdrop-blur-2xl p-4 select-none"
+            onClick={() => { setLightboxSrc(null); setLightboxThumb(null) }}
           >
             <button
-              className="absolute right-6 top-6 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-xl border border-white/20 transition hover:bg-white/20 active:scale-95 cursor-pointer touch-manipulation"
-              onClick={() => setLightboxSrc(null)}
+              className="absolute right-6 top-6 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-xl border border-white/20 transition hover:bg-white/20 active:scale-95 cursor-pointer touch-manipulation"
+              onClick={() => { setLightboxSrc(null); setLightboxThumb(null) }}
             >
               <X size={20} />
             </button>
-            <div className="relative h-[85vh] w-full max-w-4xl">
-              <Image src={lightboxSrc} alt="Gallery Still" fill className="object-contain" priority />
+            <div className="relative h-[85vh] w-full max-w-4xl flex items-center justify-center">
+              {/* Dimmed thumbnail behind while 4K loads */}
+              {lightboxThumb && !lightboxLoaded && (
+                <Image
+                  src={lightboxThumb}
+                  alt="Gallery Thumbnail"
+                  fill
+                  className="object-contain opacity-35 blur-sm pointer-events-none"
+                  priority
+                />
+              )}
+
+              {/* Minimal white partial-ring spinner matching Photo 3 */}
+              {!lightboxLoaded && (
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-200 pointer-events-none">
+                  <div className="w-9 h-9 rounded-full border-[2.5px] border-white/15 border-t-white animate-spin" />
+                </div>
+              )}
+
+              <Image
+                src={lightboxSrc}
+                alt="Gallery Still"
+                fill
+                sizes="(max-width: 1024px) 100vw, 1200px"
+                className={`object-contain transition-opacity duration-300 ${lightboxLoaded ? 'opacity-100' : 'opacity-0'}`}
+                priority
+                onLoad={() => setLightboxLoaded(true)}
+              />
             </div>
           </motion.div>
         )}
@@ -250,7 +284,7 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
               onPushPhotos={pushPhotos}
               onPushCast={pushCast}
               onForceUpdate={forceUpdate}
-              setLightboxSrc={setLightboxSrc}
+              setLightboxSrc={openLightbox}
             />
           ) : current.type === 'person' ? (
             <PersonPage
@@ -273,7 +307,7 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
               canGoBack={stack.length > 1}
               onBack={popOne}
               onClose={closeAll}
-              setLightboxSrc={setLightboxSrc}
+              setLightboxSrc={openLightbox}
             />
           ) : (
             <CastGridPage
@@ -309,7 +343,7 @@ interface DramaPageProps {
   onPushPhotos: (dramaId: number, title: string, photos: TmdbImage[]) => void
   onPushCast: (dramaId: number, title: string, cast: TmdbCastMember[], directors: TmdbCrewMember[]) => void
   onForceUpdate: () => void
-  setLightboxSrc: (src: string) => void
+  setLightboxSrc: (src: string, thumb?: string) => void
 }
 
 function DramaPage({
@@ -458,8 +492,8 @@ function DramaPage({
 
       {/* Scrollable body */}
       {loading && !drama?.title ? (
-        <div className="flex flex-1 items-center justify-center">
-          <Loader2 size={28} className="animate-spin text-purple-400" />
+        <div className="flex flex-1 items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-9 h-9 rounded-full border-[2.5px] border-white/15 border-t-white animate-spin" />
         </div>
       ) : !drama ? (
         <div className="relative z-10 flex flex-1 items-center justify-center text-white/40">Failed to load drama.</div>
@@ -720,7 +754,7 @@ function DramaPage({
                 {visibleImages.map((img, i) => (
                   <button
                     key={i}
-                    onClick={() => setLightboxSrc(`https://image.tmdb.org/t/p/original${img.file_path}`)}
+                    onClick={() => setLightboxSrc(`https://image.tmdb.org/t/p/original${img.file_path}`, `https://image.tmdb.org/t/p/w780${img.file_path}`)}
                     className="group relative h-36 w-26 flex-shrink-0 overflow-hidden rounded-[20px] border border-white/[0.18] bg-[#161620] shadow-lg transition-transform duration-150 active:scale-95 cursor-pointer touch-manipulation"
                   >
                     <Image
@@ -942,8 +976,8 @@ function PersonPage({ personId, personCache, backLabel, canGoBack, onBack, onClo
 
       {/* Content */}
       {loading ? (
-        <div className="flex flex-1 items-center justify-center">
-          <Loader2 size={24} className="animate-spin text-purple-400" />
+        <div className="flex flex-1 items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-9 h-9 rounded-full border-[2.5px] border-white/15 border-t-white animate-spin" />
         </div>
       ) : person ? (
         <div
@@ -1060,7 +1094,7 @@ function PhotosGridPage({
 }: {
   photos: TmdbImage[]; dramaTitle: string; backLabel: string
   canGoBack: boolean; onBack: () => void; onClose: () => void
-  setLightboxSrc: (src: string) => void
+  setLightboxSrc: (src: string, thumb?: string) => void
 }) {
   return (
     <div
@@ -1101,11 +1135,11 @@ function PhotosGridPage({
           {photos.map((img, i) => (
             <button
               key={i}
-              onClick={() => setLightboxSrc(`https://image.tmdb.org/t/p/original${img.file_path}`)}
+              onClick={() => setLightboxSrc(`https://image.tmdb.org/t/p/original${img.file_path}`, `https://image.tmdb.org/t/p/w780${img.file_path}`)}
               className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-[#161620] border border-white/[0.10] active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation"
             >
               <Image
-                src={`https://image.tmdb.org/t/p/w500${img.file_path}`}
+                src={`https://image.tmdb.org/t/p/w780${img.file_path}`}
                 alt="Still"
                 fill
                 loading="lazy"

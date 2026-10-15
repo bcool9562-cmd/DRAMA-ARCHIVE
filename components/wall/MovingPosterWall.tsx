@@ -12,32 +12,32 @@ interface PosterItem {
   country?: string
 }
 
-// 100% verified, live East Asian drama posters on TMDB CDN
+// 100% verified, live East Asian drama posters on TMDB CDN in crisp HD w780
 const FALLBACK_COL_1: PosterItem[] = [
-  { id: 293610, title: 'Doctor X: Mafia in White', posterUrl: 'https://image.tmdb.org/t/p/w500/nDDVzQfv95PGwj9nV2fJvUrkcvU.jpg', year: 2026, country: 'KR' },
-  { id: 94796, title: 'Crash Landing on You', posterUrl: 'https://image.tmdb.org/t/p/w500/fgBNLPr6mC8pxuR79ENAJY4nBmj.jpg', year: 2019, country: 'KR' },
-  { id: 293607, title: '100 Days of Deception', posterUrl: 'https://image.tmdb.org/t/p/w500/bZHEU42QynnMrHUWK1Hhvj2cdPA.jpg', year: 2026, country: 'KR' },
-  { id: 93405, title: 'Squid Game', posterUrl: 'https://image.tmdb.org/t/p/w500/1QdXdRYfktUSONkl1oD5gc6Be0s.jpg', year: 2021, country: 'KR' },
-  { id: 296206, title: 'Agent Kim Reactivated', posterUrl: 'https://image.tmdb.org/t/p/w500/mxa7YxVln3Rwnd2Va82PoclTznj.jpg', year: 2026, country: 'KR' },
-  { id: 276161, title: 'Teach You a Lesson', posterUrl: 'https://image.tmdb.org/t/p/w500/fMECSPrTmRClSViMsXFYmiYIcWP.jpg', year: 2026, country: 'KR' },
+  { id: 293610, title: 'Doctor X: Mafia in White', posterUrl: 'https://image.tmdb.org/t/p/w780/nDDVzQfv95PGwj9nV2fJvUrkcvU.jpg', year: 2026, country: 'KR' },
+  { id: 94796, title: 'Crash Landing on You', posterUrl: 'https://image.tmdb.org/t/p/w780/fgBNLPr6mC8pxuR79ENAJY4nBmj.jpg', year: 2019, country: 'KR' },
+  { id: 293607, title: '100 Days of Deception', posterUrl: 'https://image.tmdb.org/t/p/w780/bZHEU42QynnMrHUWK1Hhvj2cdPA.jpg', year: 2026, country: 'KR' },
+  { id: 93405, title: 'Squid Game', posterUrl: 'https://image.tmdb.org/t/p/w780/1QdXdRYfktUSONkl1oD5gc6Be0s.jpg', year: 2021, country: 'KR' },
+  { id: 296206, title: 'Agent Kim Reactivated', posterUrl: 'https://image.tmdb.org/t/p/w780/mxa7YxVln3Rwnd2Va82PoclTznj.jpg', year: 2026, country: 'KR' },
+  { id: 276161, title: 'Teach You a Lesson', posterUrl: 'https://image.tmdb.org/t/p/w780/fMECSPrTmRClSViMsXFYmiYIcWP.jpg', year: 2026, country: 'KR' },
 ]
 
 const FALLBACK_COL_2: PosterItem[] = [
-  { id: 289423, title: 'Take Charge of My Heart', posterUrl: 'https://image.tmdb.org/t/p/w500/ecRrKGXfflZmDZBD4irdkybClT.jpg', year: 2026, country: 'KR' },
-  { id: 117376, title: 'Vincenzo', posterUrl: 'https://image.tmdb.org/t/p/w500/qbkSS1cTjT4DzIwD44bdhTuYgdT.jpg', year: 2021, country: 'KR' },
-  { id: 231620, title: 'Natural High', posterUrl: 'https://image.tmdb.org/t/p/w500/oC2MuEWxnLVTyYw70XoK2HFf7nW.jpg', year: 2023, country: 'CN' },
-  { id: 112888, title: 'True Beauty', posterUrl: 'https://image.tmdb.org/t/p/w500/I9WCyKUbKAiu95tAitaHOx8EVO.jpg', year: 2020, country: 'KR' },
-  { id: 135157, title: 'Alchemy of Souls', posterUrl: 'https://image.tmdb.org/t/p/w500/gvOZN1NlAoL8iz9ghpES1zWA3w3.jpg', year: 2022, country: 'KR' },
-  { id: 285838, title: 'If Wishes Could Kill', posterUrl: 'https://image.tmdb.org/t/p/w500/2CfTNVaR8kZQkWtWWE3Cntaiq33.jpg', year: 2026, country: 'KR' },
+  { id: 289423, title: 'Take Charge of My Heart', posterUrl: 'https://image.tmdb.org/t/p/w780/ecRrKGXfflZmDZBD4irdkybClT.jpg', year: 2026, country: 'KR' },
+  { id: 117376, title: 'Vincenzo', posterUrl: 'https://image.tmdb.org/t/p/w780/qbkSS1cTjT4DzIwD44bdhTuYgdT.jpg', year: 2021, country: 'KR' },
+  { id: 231620, title: 'Natural High', posterUrl: 'https://image.tmdb.org/t/p/w780/oC2MuEWxnLVTyYw70XoK2HFf7nW.jpg', year: 2023, country: 'CN' },
+  { id: 112888, title: 'True Beauty', posterUrl: 'https://image.tmdb.org/t/p/w780/I9WCyKUbKAiu95tAitaHOx8EVO.jpg', year: 2020, country: 'KR' },
+  { id: 135157, title: 'Alchemy of Souls', posterUrl: 'https://image.tmdb.org/t/p/w780/gvOZN1NlAoL8iz9ghpES1zWA3w3.jpg', year: 2022, country: 'KR' },
+  { id: 285838, title: 'If Wishes Could Kill', posterUrl: 'https://image.tmdb.org/t/p/w780/2CfTNVaR8kZQkWtWWE3Cntaiq33.jpg', year: 2026, country: 'KR' },
 ]
 
 const FALLBACK_COL_3: PosterItem[] = [
-  { id: 96162, title: 'Itaewon Class', posterUrl: 'https://image.tmdb.org/t/p/w500/qg7q0piY0fTt2enlIRHwKKRwNjS.jpg', year: 2020, country: 'KR' },
-  { id: 33238, title: 'Running Man', posterUrl: 'https://image.tmdb.org/t/p/w500/2Wmmu1MkqxJ48J7aySET9EKEjXz.jpg', year: 2010, country: 'KR' },
-  { id: 90447, title: 'Hotel Del Luna', posterUrl: 'https://image.tmdb.org/t/p/w500/8bizZsXoAsOTbhyFKfBogC8mgG2.jpg', year: 2019, country: 'KR' },
-  { id: 278573, title: 'Perfect Crown', posterUrl: 'https://image.tmdb.org/t/p/w500/ocXkHSslrSWMz2ZJGl5MjF6dQr3.jpg', year: 2026, country: 'KR' },
-  { id: 127529, title: 'Bloodhounds', posterUrl: 'https://image.tmdb.org/t/p/w500/uSQzD7TXsL96J5ggDrJFdUs8uXU.jpg', year: 2023, country: 'KR' },
-  { id: 67915, title: 'Guardian: The Lonely and Great God', posterUrl: 'https://image.tmdb.org/t/p/w500/sPkxHNw5BFvuCFGWw825TS7n6X3.jpg', year: 2016, country: 'KR' },
+  { id: 96162, title: 'Itaewon Class', posterUrl: 'https://image.tmdb.org/t/p/w780/qg7q0piY0fTt2enlIRHwKKRwNjS.jpg', year: 2020, country: 'KR' },
+  { id: 33238, title: 'Running Man', posterUrl: 'https://image.tmdb.org/t/p/w780/2Wmmu1MkqxJ48J7aySET9EKEjXz.jpg', year: 2010, country: 'KR' },
+  { id: 90447, title: 'Hotel Del Luna', posterUrl: 'https://image.tmdb.org/t/p/w780/8bizZsXoAsOTbhyFKfBogC8mgG2.jpg', year: 2019, country: 'KR' },
+  { id: 278573, title: 'Perfect Crown', posterUrl: 'https://image.tmdb.org/t/p/w780/ocXkHSslrSWMz2ZJGl5MjF6dQr3.jpg', year: 2026, country: 'KR' },
+  { id: 127529, title: 'Bloodhounds', posterUrl: 'https://image.tmdb.org/t/p/w780/uSQzD7TXsL96J5ggDrJFdUs8uXU.jpg', year: 2023, country: 'KR' },
+  { id: 67915, title: 'Guardian: The Lonely and Great God', posterUrl: 'https://image.tmdb.org/t/p/w780/sPkxHNw5BFvuCFGWw825TS7n6X3.jpg', year: 2016, country: 'KR' },
 ]
 
 interface MovingPosterWallProps {
@@ -70,13 +70,13 @@ export default function MovingPosterWall({
         const pItem: PosterItem = {
           id: d.tmdbId,
           title: d.title,
-          posterUrl: d.posterUrl.replace('/original/', '/w500/'),
+          posterUrl: d.posterUrl.replace('/original/', '/w780/').replace('/w500/', '/w780/'),
           year: d.releaseYear,
           country: d.country,
         }
-        if (idx % 3 === 0) c1.push(pItem)
-        else if (idx % 3 === 1) c2.push(pItem)
-        else c3.push(pItem)
+        if (idx % 3 === 0 && c1.length < 6) c1.push(pItem)
+        else if (idx % 3 === 1 && c2.length < 6) c2.push(pItem)
+        else if (c3.length < 6) c3.push(pItem)
       })
 
       if (c1.length > 0) setCol1(c1)
@@ -113,23 +113,23 @@ export default function MovingPosterWall({
     return () => { alive = false }
   }, [dramas])
 
-  // Duplicate arrays to allow seamless continuous loop
-  const list1 = [...col1, ...col1]
-  const list2 = [...col2, ...col2]
-  const list3 = [...col3, ...col3]
+  // Exactly 6 items duplicated once = 12 items per column max (butter-smooth 60fps)
+  const list1 = [...col1.slice(0, 6), ...col1.slice(0, 6)]
+  const list2 = [...col2.slice(0, 6), ...col2.slice(0, 6)]
+  const list3 = [...col3.slice(0, 6), ...col3.slice(0, 6)]
 
   return (
     <div
-      className={`relative w-full h-full overflow-hidden ${className}`}
+      className={`relative w-full h-full overflow-hidden will-change-transform transform-gpu [backface-visibility:hidden] [contain:layout_paint] ${className}`}
       style={{
         maskImage: 'linear-gradient(to bottom, transparent, black 8%, black 92%, transparent)',
         WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 8%, black 92%, transparent)',
       }}
     >
-      <div className="grid grid-cols-3 gap-3 sm:gap-4 h-full w-full">
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-4 h-full w-full">
         {/* Column 1: Scrolls Upward */}
         <div
-          className="flex flex-col gap-3 sm:gap-4 animate-scroll-up"
+          className="flex flex-col gap-2.5 sm:gap-4 animate-scroll-up will-change-transform transform-gpu [backface-visibility:hidden]"
           style={{ animationDuration: `${speedSeconds}s` }}
         >
           {list1.map((item, idx) => (
@@ -143,7 +143,7 @@ export default function MovingPosterWall({
 
         {/* Column 2: Scrolls Downward */}
         <div
-          className="flex flex-col gap-3 sm:gap-4 animate-scroll-down"
+          className="flex flex-col gap-2.5 sm:gap-4 animate-scroll-down will-change-transform transform-gpu [backface-visibility:hidden]"
           style={{ animationDuration: `${speedSeconds * 1.05}s` }}
         >
           {list2.map((item, idx) => (
@@ -157,7 +157,7 @@ export default function MovingPosterWall({
 
         {/* Column 3: Scrolls Upward */}
         <div
-          className="flex flex-col gap-3 sm:gap-4 animate-scroll-up"
+          className="flex flex-col gap-2.5 sm:gap-4 animate-scroll-up will-change-transform transform-gpu [backface-visibility:hidden]"
           style={{ animationDuration: `${speedSeconds * 0.95}s` }}
         >
           {list3.map((item, idx) => (
@@ -189,17 +189,17 @@ function PosterCard({
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
-      className={`relative aspect-[2/3] w-full rounded-2xl sm:rounded-3xl overflow-hidden border border-white/[0.12] bg-[#14141c] shadow-lg transition-transform duration-200 transform-gpu ${
+      className={`relative aspect-[2/3] w-full rounded-2xl sm:rounded-3xl overflow-hidden border border-white/[0.10] bg-[#14141c] shadow-lg transform-gpu ${
         onClick
-          ? 'cursor-pointer active:scale-95 hover:border-white/40 hover:shadow-2xl'
-          : 'pointer-events-none'
+          ? 'cursor-pointer active:scale-95 hover:border-white/40 hover:shadow-2xl transition-transform duration-200'
+          : 'pointer-events-none select-none'
       }`}
     >
       <Image
         src={item.posterUrl}
         alt={item.title}
         fill
-        sizes="(max-width: 640px) 30vw, (max-width: 1024px) 25vw, 180px"
+        sizes="(max-width: 640px) 30vw, (max-width: 1024px) 25vw, 240px"
         loading="lazy"
         onError={() => setHasError(true)}
         className="object-cover"

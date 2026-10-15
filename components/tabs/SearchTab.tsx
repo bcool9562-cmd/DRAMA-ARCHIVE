@@ -23,7 +23,7 @@ interface SearchTabProps {
 }
 
 interface DiscoverRow { id: string; title: string; dramas: Drama[] }
-interface DiscoverData { hero: Drama[]; rows: DiscoverRow[] }
+interface DiscoverData { hero: Drama[]; talkOfTheTown?: Drama[]; rows: DiscoverRow[] }
 
 // Custom SVG tilted megaphone icon with sound lines matching Photo 4
 function MegaphoneIcon({ className = 'w-7 h-7' }: { className?: string }) {
@@ -46,21 +46,17 @@ function MegaphoneIcon({ className = 'w-7 h-7' }: { className?: string }) {
 }
 
 function getBuzzLabel(drama: Drama): string {
-  if (drama.firstAirDate) {
-    const airDate = new Date(drama.firstAirDate)
-    const now = new Date()
-    const diffDays = (now.getTime() - airDate.getTime()) / (1000 * 60 * 60 * 24)
-    if (diffDays < 0 || drama.airingStatus === 'upcoming') {
-      return 'Upcoming'
-    }
-    if (diffDays <= 60) {
-      return 'New Show'
-    }
+  if (!drama.firstAirDate) return 'Airing Now'
+  const airTime = new Date(drama.firstAirDate).getTime()
+  const now = Date.now()
+  if (airTime > now || drama.airingStatus === 'upcoming') {
+    return 'Upcoming'
   }
-  if (drama.airingStatus === 'ongoing') {
+  const diffDays = Math.floor((now - airTime) / (1000 * 60 * 60 * 24))
+  if (diffDays <= 45 || drama.airingStatus === 'ongoing') {
     return 'Airing Now'
   }
-  return 'Trending Series'
+  return 'New Show'
 }
 
 export default function SearchTab({ onOpenDrama, onOpenPerson: _onOpenPerson, onTabChange }: SearchTabProps) {
@@ -155,6 +151,19 @@ export default function SearchTab({ onOpenDrama, onOpenPerson: _onOpenPerson, on
     }
     return list
   }, [discoverData])
+
+  // Dedicated Talk Of The Town list (strictly recent & upcoming dramas)
+  const talkOfTheTownDramas: Drama[] = useMemo(() => {
+    if (discoverData?.talkOfTheTown && discoverData.talkOfTheTown.length > 0) {
+      return discoverData.talkOfTheTown
+    }
+    const cutoffTime = Date.now() - 75 * 24 * 60 * 60 * 1000
+    return allDiscoverDramas.filter(d => {
+      if (!d.firstAirDate) return false
+      const airTime = new Date(d.firstAirDate).getTime()
+      return airTime >= cutoffTime
+    })
+  }, [discoverData, allDiscoverDramas])
 
   return (
     <div className="relative flex flex-col min-h-screen">
@@ -305,13 +314,13 @@ export default function SearchTab({ onOpenDrama, onOpenPerson: _onOpenPerson, on
           </div>
 
           {/* 5. 5-COLUMN POSTER GRID (FRAMELESS POSTER + BOLD TITLE + BUZZ LABEL) */}
-          {discoverLoading && allDiscoverDramas.length === 0 ? (
+          {discoverLoading && talkOfTheTownDramas.length === 0 ? (
             <div className="flex items-center justify-center py-24">
               <div className="h-9 w-9 animate-spin rounded-full border-2 border-white/15 border-t-white" />
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-5 gap-y-8">
-              {allDiscoverDramas.map((drama) => {
+              {talkOfTheTownDramas.map((drama) => {
                 const posterSrc = tmdbCard(drama.posterUrl)
                 const buzzLabel = getBuzzLabel(drama)
 
