@@ -249,7 +249,11 @@ export interface Drama {
 export function isEastAsian(r: {
   origin_country?: string[]
   original_language?: string
+  genre_ids?: number[]
 }): boolean {
+  // Strictly exclude Animation / Anime (TMDB genre ID 16)
+  if (Array.isArray(r.genre_ids) && r.genre_ids.includes(16)) return false
+
   const countryMatch =
     Array.isArray(r.origin_country) &&
     r.origin_country.some((c) => EAST_ASIAN_REGIONS.includes(c?.toUpperCase()))

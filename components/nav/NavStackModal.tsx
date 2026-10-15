@@ -377,10 +377,10 @@ function DramaPage({
   const regionBadge = drama?.country ? REGION_NAMES[drama.country]?.badge || drama.country : null
   const episodesLabel = drama?.totalEpisodes ? `${drama.totalEpisodes} Episodes` : 'Episodes TBA'
 
-  const pills: { status: DramaStatus; label: string; icon: typeof Bookmark; gradient: string }[] = [
-    { status: 'watchlist', label: 'Watchlist', icon: Bookmark, gradient: 'bg-gradient-to-r from-sky-500 to-blue-600' },
-    { status: 'watching', label: 'Watching', icon: Play, gradient: 'bg-gradient-to-r from-purple-500 to-indigo-600' },
-    { status: 'finished', label: 'Finished', icon: CheckCircle, gradient: 'bg-gradient-to-r from-emerald-500 to-teal-600' },
+  const pills: { status: DramaStatus; label: string; icon: typeof Bookmark; dotColor: string }[] = [
+    { status: 'watchlist', label: 'Watchlist', icon: Bookmark, dotColor: 'bg-sky-400 shadow-[0_0_8px_rgba(56,189,248,0.8)]' },
+    { status: 'watching', label: 'Watching', icon: Play, dotColor: 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]' },
+    { status: 'finished', label: 'Finished', icon: CheckCircle, dotColor: 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]' },
   ]
 
   // Image limits for smooth mobile performance
@@ -492,27 +492,28 @@ function DramaPage({
             {drama.runtime && (<><span className="text-white/30">•</span><span className="flex-shrink-0 rounded-full bg-[#1c1c24] px-3 py-1 text-white/60">{drama.runtime} min/ep</span></>)}
           </div>
 
-          {/* Status Pill Bar */}
+          {/* Segmented Status Pill Bar */}
           <div className="mb-6">
-            <div className="relative rounded-full bg-white/[0.06] backdrop-blur-xl p-1.5 border border-white/[0.16] shadow-[inset_0_1px_1px_rgba(255,255,255,0.22),0_8px_20px_rgba(0,0,0,0.4)] flex items-center gap-1 touch-manipulation select-none">
-              {pills.map(({ status, label, icon: Icon, gradient }) => {
+            <div className="relative rounded-full bg-black/35 backdrop-blur-3xl border border-white/20 p-1.5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)] flex items-center gap-1 touch-manipulation select-none">
+              {pills.map(({ status, label, icon: Icon, dotColor }) => {
                 const isActive = currentStatus === status
                 return (
                   <button
                     key={status}
                     type="button"
                     onClick={() => handleStatusToggle(status)}
-                    className={`relative flex flex-1 items-center justify-center gap-2 rounded-full py-2.5 px-3 text-xs font-semibold tracking-wide transition-colors duration-150 cursor-pointer touch-manipulation select-none active:scale-95 ${isActive ? 'text-white' : 'text-white/50 hover:text-white/80'}`}
+                    className={`relative flex flex-1 items-center justify-center gap-2 rounded-full py-2.5 px-3 text-xs font-semibold tracking-wide transition-colors duration-150 cursor-pointer touch-manipulation select-none active:scale-95 ${isActive ? 'text-white' : 'text-white/45 hover:text-white/80'}`}
                   >
                     {isActive && (
                       <motion.div
                         layoutId={`activeStatusPill-${tmdbId}`}
-                        className={`absolute inset-0 rounded-full shadow-lg ${gradient}`}
+                        className="absolute inset-0 rounded-full bg-white/[0.22] backdrop-blur-2xl border border-white/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.6),0_6px_20px_rgba(0,0,0,0.35)]"
                         transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                       />
                     )}
                     <span className="relative z-10 flex items-center gap-1.5">
-                      <Icon size={14} fill={isActive && status === 'watchlist' ? 'currentColor' : 'none'} strokeWidth={isActive ? 2.4 : 1.8} />
+                      {isActive && <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />}
+                      <Icon size={13} strokeWidth={isActive ? 2.4 : 1.8} />
                       <span>{label}</span>
                     </span>
                   </button>
@@ -523,11 +524,11 @@ function DramaPage({
 
           {/* Episode Progress Tracker (Visible when Watching) */}
           {currentStatus === 'watching' && (
-            <div className="mb-7 rounded-[24px] bg-white/[0.07] backdrop-blur-xl border border-white/[0.18] p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_12px_28px_rgba(0,0,0,0.5)] transform-gpu">
+            <div className="mb-7 rounded-[24px] bg-black/35 backdrop-blur-3xl border border-white/20 p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_12px_28px_rgba(0,0,0,0.5)] transform-gpu">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="relative flex h-9 w-9 items-center justify-center rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300">
-                    <Play size={14} className="fill-purple-400 ml-0.5" />
+                  <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.14] border border-white/25 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]">
+                    <Play size={12} className="fill-white ml-0.5" />
                   </div>
                   <div>
                     <div className="text-xs font-bold text-white tracking-tight">Episode Tracker</div>
@@ -542,7 +543,7 @@ function DramaPage({
                 </div>
 
                 {/* Stepper buttons */}
-                <div className="flex items-center gap-1.5 bg-black/40 border border-white/[0.14] rounded-full p-1 backdrop-blur-md">
+                <div className="flex items-center gap-1.5 bg-black/40 border border-white/20 rounded-full p-1 backdrop-blur-md">
                   <button
                     type="button"
                     disabled={(userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0) <= 0}
@@ -552,7 +553,7 @@ function DramaPage({
                         updateWatchedEpisodes(drama.dramaId, currentWatched - 1)
                       }
                     }}
-                    className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.08] text-white/80 hover:bg-white/20 active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer touch-manipulation"
+                    className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.10] hover:bg-white/[0.20] active:scale-90 text-white disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer touch-manipulation"
                   >
                     <Minus size={13} strokeWidth={2.5} />
                   </button>
@@ -567,7 +568,7 @@ function DramaPage({
                       const nextVal = currentWatched + 1
                       updateWatchedEpisodes(drama.dramaId, nextVal)
                     }}
-                    className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-500 text-white shadow-md shadow-purple-500/40 hover:bg-purple-400 active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer touch-manipulation"
+                    className="flex h-7 w-7 items-center justify-center rounded-full bg-white/[0.25] hover:bg-white/[0.35] text-white shadow-md active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer touch-manipulation"
                   >
                     <Plus size={13} strokeWidth={2.5} />
                   </button>
@@ -577,9 +578,9 @@ function DramaPage({
               {/* Progress Bar */}
               {drama.totalEpisodes > 0 && (
                 <div className="space-y-1.5">
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-black/40 border border-white/[0.10]">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/50 border border-white/15">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-purple-500 via-indigo-500 to-sky-400 shadow-[0_0_12px_rgba(168,85,247,0.6)] transition-all duration-300"
+                      className="h-full rounded-full bg-white/80 shadow-[0_0_10px_rgba(255,255,255,0.6)] transition-all duration-300"
                       style={{
                         width: `${Math.min(100, Math.round(((userDrama?.watched_episodes ?? userDrama?.next_episode_number ?? 0) / drama.totalEpisodes) * 100))}%`
                       }}
@@ -597,7 +598,7 @@ function DramaPage({
                 <button
                   type="button"
                   onClick={() => moveDrama(drama.dramaId, 'finished')}
-                  className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-600 py-2 text-xs font-bold text-white shadow-lg shadow-emerald-500/30 active:scale-95 transition cursor-pointer touch-manipulation"
+                  className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-full bg-white/[0.20] hover:bg-white/[0.30] border border-white/30 py-2 text-xs font-bold text-white shadow-lg active:scale-95 transition cursor-pointer touch-manipulation"
                 >
                   <CheckCircle size={14} />
                   <span>Completed! Move to Finished</span>
@@ -644,16 +645,15 @@ function DramaPage({
           {allImages.length > 0 && (
             <div className="mb-7">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-white/35">Stills & Posters</h3>
+                <div className="flex items-baseline">
+                  <h3 className="text-sm font-bold tracking-tight text-white">Stills & Posters</h3>
+                  <span className="text-xs text-white/45 font-normal ml-1.5">{allImages.length}</span>
+                </div>
                 <button
                   onClick={() => onPushPhotos(tmdbId, drama.title, allImages)}
-                  className="flex items-center gap-2 rounded-full border border-white/[0.16] bg-white/[0.08] backdrop-blur-xl px-3 py-1.5 text-xs font-semibold text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] hover:bg-white/[0.14] active:scale-95 transition cursor-pointer touch-manipulation select-none"
+                  className="w-8 h-8 rounded-full bg-white/[0.14] hover:bg-white/[0.24] backdrop-blur-2xl border border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] flex items-center justify-center text-white active:scale-90 transition cursor-pointer touch-manipulation"
                 >
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-tr from-sky-500/30 to-blue-500/40 text-sky-300">
-                    <Images size={11} />
-                  </span>
-                  <span className="tabular-nums font-bold">{allImages.length}</span>
-                  <ChevronRight size={13} className="text-white/50" />
+                  <ChevronRight size={15} strokeWidth={2.4} />
                 </button>
               </div>
               <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide -mx-6 px-6" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -661,7 +661,7 @@ function DramaPage({
                   <button
                     key={i}
                     onClick={() => setLightboxSrc(`https://image.tmdb.org/t/p/original${img.file_path}`)}
-                    className="group relative h-36 w-26 flex-shrink-0 overflow-hidden rounded-[20px] border border-white/[0.14] bg-[#161620] shadow-lg transition-transform duration-150 active:scale-95 cursor-pointer touch-manipulation"
+                    className="group relative h-36 w-26 flex-shrink-0 overflow-hidden rounded-[20px] border border-white/[0.18] bg-[#161620] shadow-lg transition-transform duration-150 active:scale-95 cursor-pointer touch-manipulation"
                   >
                     <Image
                       src={`https://image.tmdb.org/t/p/w500${img.file_path}`}
@@ -678,10 +678,20 @@ function DramaPage({
                 {allImages.length > 12 && (
                   <button
                     onClick={() => onPushPhotos(tmdbId, drama.title, allImages)}
-                    className="flex-shrink-0 flex flex-col items-center justify-center gap-1.5 h-36 w-24 rounded-[20px] border border-white/[0.14] bg-white/[0.06] hover:bg-white/[0.10] active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation text-white/70"
+                    className="relative h-36 w-26 flex-shrink-0 overflow-hidden rounded-[20px] border border-white/25 bg-[#161620] shadow-lg active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation group"
                   >
-                    <Images size={20} />
-                    <span className="text-[11px] font-semibold">+{allImages.length - 12} more</span>
+                    {allImages[12]?.file_path && (
+                      <Image
+                        src={`https://image.tmdb.org/t/p/w500${allImages[12].file_path}`}
+                        alt="Next still"
+                        fill
+                        className="object-cover scale-110 blur-sm"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-2xl bg-white/[0.14] border border-white/25 flex flex-col items-center justify-center p-2 text-center">
+                      <span className="text-lg font-black text-white tracking-tight">+{allImages.length - 12}</span>
+                      <span className="text-[10px] font-bold text-white/85 mt-0.5 tracking-tight">View Gallery</span>
+                    </div>
                   </button>
                 )}
               </div>
@@ -697,10 +707,10 @@ function DramaPage({
                   <button
                     key={d.id}
                     onClick={() => onPersonClick(d.id, d.name)}
-                    className="flex items-center gap-2.5 rounded-full bg-[#181822] border border-white/[0.12] px-4 py-2 hover:bg-white/[0.16] transition-transform duration-150 active:scale-95 cursor-pointer touch-manipulation"
+                    className="flex items-center gap-2.5 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/20 px-4 py-2 hover:bg-white/[0.16] transition-transform duration-150 active:scale-95 cursor-pointer touch-manipulation shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
                   >
                     {d.profile_path ? (
-                      <div className="relative h-6 w-6 overflow-hidden rounded-full border border-white/20">
+                      <div className="relative h-6 w-6 overflow-hidden rounded-full border border-white/25">
                         <Image src={`https://image.tmdb.org/t/p/w185${d.profile_path}`} alt={d.name} fill loading="lazy" className="object-cover" />
                       </div>
                     ) : (
@@ -717,16 +727,15 @@ function DramaPage({
           {drama.cast && drama.cast.length > 0 && (
             <div className="mb-8">
               <div className="flex items-center justify-between mb-3.5">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-white/35">Main & Supporting Cast</h3>
+                <div className="flex items-baseline">
+                  <h3 className="text-sm font-bold tracking-tight text-white">Main & Supporting Cast</h3>
+                  <span className="text-xs text-white/45 font-normal ml-1.5">{drama.cast.length}</span>
+                </div>
                 <button
                   onClick={() => onPushCast(tmdbId, drama.title, drama.cast!, drama.directors || [])}
-                  className="flex items-center gap-2 rounded-full border border-white/[0.16] bg-white/[0.08] backdrop-blur-xl px-3 py-1.5 text-xs font-semibold text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] hover:bg-white/[0.14] active:scale-95 transition cursor-pointer touch-manipulation select-none"
+                  className="w-8 h-8 rounded-full bg-white/[0.14] hover:bg-white/[0.24] backdrop-blur-2xl border border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] flex items-center justify-center text-white active:scale-90 transition cursor-pointer touch-manipulation"
                 >
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-tr from-purple-500/30 to-indigo-500/40 text-purple-300">
-                    <Users size={11} />
-                  </span>
-                  <span className="tabular-nums font-bold">{drama.cast.length}</span>
-                  <ChevronRight size={13} className="text-white/50" />
+                  <ChevronRight size={15} strokeWidth={2.4} />
                 </button>
               </div>
               <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide -mx-6 px-6" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -736,7 +745,7 @@ function DramaPage({
                     onClick={() => onPersonClick(c.id, c.name)}
                     className="group flex flex-col items-center gap-2 flex-shrink-0 w-22 text-center transition-transform duration-150 active:scale-95 cursor-pointer touch-manipulation select-none"
                   >
-                    <div className="relative h-22 w-22 overflow-hidden rounded-[22px] border border-white/[0.16] bg-[#161620] shadow-lg transition duration-200 group-hover:border-white/40">
+                    <div className="relative h-22 w-22 overflow-hidden rounded-[22px] border border-white/[0.18] bg-[#161620] shadow-lg transition duration-200 group-hover:border-white/40">
                       {c.profile_path ? (
                         <Image
                           src={`https://image.tmdb.org/t/p/w185${c.profile_path}`}
@@ -760,10 +769,20 @@ function DramaPage({
                 {drama.cast.length > 15 && (
                   <button
                     onClick={() => onPushCast(tmdbId, drama.title, drama.cast!, drama.directors || [])}
-                    className="flex-shrink-0 flex flex-col items-center justify-center gap-1.5 h-22 w-20 rounded-[22px] border border-white/[0.14] bg-white/[0.06] hover:bg-white/[0.10] active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation text-white/70"
+                    className="relative h-22 w-22 flex-shrink-0 overflow-hidden rounded-[22px] border border-white/25 bg-[#161620] shadow-lg active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation group"
                   >
-                    <Users size={18} />
-                    <span className="text-[10px] font-semibold">+{drama.cast.length - 15} more</span>
+                    {drama.cast[15]?.profile_path && (
+                      <Image
+                        src={`https://image.tmdb.org/t/p/w185${drama.cast[15].profile_path}`}
+                        alt="Next cast"
+                        fill
+                        className="object-cover scale-110 blur-sm"
+                      />
+                    )}
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-2xl bg-white/[0.14] border border-white/25 flex flex-col items-center justify-center p-1 text-center">
+                      <span className="text-base font-black text-white tracking-tight">+{drama.cast.length - 15}</span>
+                      <span className="text-[10px] font-bold text-white/85 mt-0.5 tracking-tight">All Cast</span>
+                    </div>
                   </button>
                 )}
               </div>
@@ -921,8 +940,10 @@ function PersonPage({ personId, personCache, backLabel, canGoBack, onBack, onClo
           {dedupedWorks.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-semibold uppercase tracking-widest text-white/30">Other Works</h3>
-                <span className="text-xs text-white/30">{dedupedWorks.length} Titles</span>
+                <div className="flex items-baseline">
+                  <h3 className="text-sm font-bold tracking-tight text-white">Other Works</h3>
+                  <span className="text-xs text-white/45 font-normal ml-1.5">{dedupedWorks.length} Titles</span>
+                </div>
               </div>
               <div className="grid grid-cols-3 gap-2.5">
                 {dedupedWorks.slice(0, 30).map(work => (

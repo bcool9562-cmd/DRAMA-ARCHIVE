@@ -102,6 +102,7 @@ async function buildDiscover(region: string): Promise<DiscoverResponse> {
       language: 'en-US',
       sort_by: row.id === 'top' ? 'vote_average.desc' : 'popularity.desc',
       'vote_count.gte': '50',
+      without_genres: '16',
       include_adult: 'false',
       include_null_first_air_dates: 'false',
     }
@@ -118,6 +119,7 @@ async function buildDiscover(region: string): Promise<DiscoverResponse> {
       sort_by: 'popularity.desc',
       with_original_language: regionInfo.languages[0],
       with_origin_country: regionInfo.countries[0],
+      without_genres: '16',
       include_adult: 'false',
     }))
   }
@@ -125,9 +127,11 @@ async function buildDiscover(region: string): Promise<DiscoverResponse> {
   const results = await Promise.all(fetches)
   const trendingRaw = results[0]?.results || []
 
-  // Filter trending to East Asian only
+  // Filter trending to East Asian live-action only (exclude Anime/Animation)
   const trendingEA = trendingRaw
     .filter((r: any) => {
+      // Exclude Animation (genre ID 16)
+      if (Array.isArray(r.genre_ids) && r.genre_ids.includes(16)) return false
       const cMatch = Array.isArray(r.origin_country) && r.origin_country.some((c: string) => EA_COUNTRIES.includes(c?.toUpperCase()))
       const lMatch = EA_LANGS.includes(r.original_language)
       return cMatch || lMatch
@@ -145,6 +149,8 @@ async function buildDiscover(region: string): Promise<DiscoverResponse> {
     const rawList = results[i + 1]?.results || []
     const mapped = rawList
       .filter((r: any) => {
+        // Exclude Animation
+        if (Array.isArray(r.genre_ids) && r.genre_ids.includes(16)) return false
         if (rowDefs[i].id === 'top') {
           const cMatch = Array.isArray(r.origin_country) && r.origin_country.some((c: string) => EA_COUNTRIES.includes(c?.toUpperCase()))
           const lMatch = EA_LANGS.includes(r.original_language)

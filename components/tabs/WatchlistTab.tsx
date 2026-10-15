@@ -98,24 +98,24 @@ export default function WatchlistTab({ onOpenDrama }: WatchlistTabProps) {
                 <button
                   title="Start Watching"
                   onClick={() => handleMove(drama.drama_id, 'watching')}
-                  className="flex-1 flex items-center justify-center gap-1 py-1.5 px-2 rounded-full border border-purple-500/30 bg-purple-500/15 text-purple-200 hover:bg-purple-500/30 active:scale-95 transition text-[11px] font-semibold cursor-pointer touch-manipulation select-none"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-1 px-2.5 rounded-full border border-white/25 bg-white/[0.18] hover:bg-white/[0.28] text-white active:scale-95 transition text-[11px] font-semibold cursor-pointer touch-manipulation select-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.35)]"
                 >
-                  <Play size={11} className="fill-purple-300 text-purple-300" />
+                  <Play size={10} className="fill-white" />
                   <span>Watch</span>
                 </button>
                 <button
                   title="Mark Finished"
                   onClick={() => handleMove(drama.drama_id, 'finished')}
-                  className="flex items-center justify-center h-7 w-7 rounded-full border border-emerald-500/30 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/30 active:scale-90 transition cursor-pointer touch-manipulation select-none"
+                  className="flex items-center justify-center h-6 w-6 rounded-full border border-white/20 bg-white/[0.12] hover:bg-white/[0.22] text-white/80 hover:text-white active:scale-90 transition cursor-pointer touch-manipulation select-none"
                 >
-                  <CheckCircle size={13} />
+                  <CheckCircle size={12} />
                 </button>
                 <button
                   title="Remove from Watchlist"
                   onClick={() => handleRemove(drama.drama_id)}
-                  className="flex items-center justify-center h-7 w-7 rounded-full border border-rose-500/30 bg-rose-500/15 text-rose-300 hover:bg-rose-500/30 active:scale-90 transition cursor-pointer touch-manipulation select-none"
+                  className="flex items-center justify-center h-6 w-6 rounded-full border border-white/15 bg-white/[0.08] hover:bg-white/[0.18] text-white/50 hover:text-white active:scale-90 transition cursor-pointer touch-manipulation select-none"
                 >
-                  <Trash2 size={13} />
+                  <Trash2 size={12} />
                 </button>
               </div>
             }
