@@ -4,17 +4,17 @@ import { getUserDramas, moveDrama, removeDrama, onArchiveSync, getSavedDramasSyn
 import { Bookmark, Play, CheckCircle, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import DramaCard from '@/components/drama/DramaCard'
-import DramaDetailSheet from '@/components/drama/DramaDetailSheet'
-import PersonProfileSheet from '@/components/person/PersonProfileSheet'
 
-export default function WatchlistTab() {
+interface WatchlistTabProps {
+  onOpenDrama: (id: number, preview?: UserDrama) => void
+  onOpenPerson: (id: number, name?: string) => void
+}
+
+export default function WatchlistTab({ onOpenDrama }: WatchlistTabProps) {
   const [dramas, setDramas] = useState<UserDrama[]>(() =>
     getSavedDramasSync().filter((d) => d.status === 'watchlist')
   )
   const [loading, setLoading] = useState(dramas.length === 0)
-  const [selectedDrama, setSelectedDrama] = useState<UserDrama | null>(null)
-  const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null)
-  const [, setSelectedPersonName] = useState('')
 
   async function load() {
     const data = await getUserDramas('watchlist')
@@ -24,7 +24,6 @@ export default function WatchlistTab() {
 
   useEffect(() => {
     load()
-    // Subscribe to instant optimistic sync events across all tabs
     const unsubscribe = onArchiveSync((allDramas) => {
       setDramas(allDramas.filter((d) => d.status === 'watchlist'))
     })
@@ -32,8 +31,8 @@ export default function WatchlistTab() {
   }, [])
 
   function handleOpenDrama(drama: UserDrama) {
-    (document.activeElement as HTMLElement)?.blur()
-    setSelectedDrama(drama)
+    ;(document.activeElement as HTMLElement)?.blur()
+    onOpenDrama(drama.tmdb_id, drama)
   }
 
   async function handleMove(dramaId: string, status: 'watching' | 'finished') {
@@ -68,12 +67,10 @@ export default function WatchlistTab() {
 
   return (
     <div className="relative min-h-screen px-4 pb-36 pt-20 max-w-7xl mx-auto">
-      {/* Zero-cost hardware-accelerated radial ambient gradient (60 FPS on mobile GPUs) */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(56,189,248,0.18),_transparent_65%)]" />
       </div>
 
-      {/* Header Bar */}
       <div className="relative z-10 mb-6 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full border border-sky-400/30 bg-sky-500/15 text-sky-400 shadow-lg shadow-sky-500/20 backdrop-blur-md">
@@ -89,7 +86,6 @@ export default function WatchlistTab() {
         </span>
       </div>
 
-      {/* Responsive iOS Poster Grid */}
       <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5">
         {dramas.map((drama) => (
           <DramaCard
@@ -125,28 +121,6 @@ export default function WatchlistTab() {
           />
         ))}
       </div>
-
-      {/* Drama Detail Sheet with 0ms Instant Preview */}
-      {selectedDrama && (
-        <DramaDetailSheet
-          tmdbId={selectedDrama.tmdb_id}
-          initialDrama={selectedDrama}
-          onClose={() => { setSelectedDrama(null); load() }}
-          onPersonClick={(id, name) => { setSelectedPersonId(id); setSelectedPersonName(name) }}
-        />
-      )}
-
-      {/* Person Profile Sheet */}
-      {selectedPersonId && (
-        <PersonProfileSheet
-          personId={selectedPersonId}
-          onClose={() => setSelectedPersonId(null)}
-          onDramaClick={(id) => {
-            setSelectedPersonId(null)
-            setSelectedDrama({ tmdb_id: id, drama_id: `tmdb-${id}` } as UserDrama)
-          }}
-        />
-      )}
     </div>
   )
 }
