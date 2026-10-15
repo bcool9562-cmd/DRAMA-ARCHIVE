@@ -13,6 +13,24 @@ interface DramaCardProps {
   staggerIndex?: number
 }
 
+// Photo 3 Signature Laser-Flare Progress Bar component
+export function CornfieldLaserProgressBar({ progressPct }: { progressPct: number }) {
+  const safePct = Math.min(96, Math.max(5, progressPct))
+  return (
+    <div className="relative h-[4px] w-full rounded-full bg-white/[0.14] overflow-visible my-1">
+      {/* Filled beam */}
+      <div
+        className="h-full rounded-full bg-gradient-to-r from-[#38bdf8] via-[#bae6fd] to-white shadow-[0_0_12px_rgba(56,189,248,0.85)] relative transition-all duration-300"
+        style={{ width: `${safePct}%` }}
+      >
+        {/* Comet Lens-Flare Tip (Photo 3 signature effect) */}
+        <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-8 h-3.5 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,1)_0%,rgba(125,211,252,0.85)_40%,rgba(56,189,248,0)_80%)] blur-[2px] pointer-events-none" />
+        <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-1 rounded-full bg-white shadow-[0_0_10px_2px_#fff] pointer-events-none" />
+      </div>
+    </div>
+  )
+}
+
 export default function DramaCard({ drama, actions, onOpen, staggerIndex }: DramaCardProps) {
   const year = drama.release_year ? String(drama.release_year) : ''
   const regionBadge = drama.country ? REGION_NAMES[drama.country.toUpperCase()]?.badge || drama.country : null
@@ -29,10 +47,11 @@ export default function DramaCard({ drama, actions, onOpen, staggerIndex }: Dram
   const subline = [regionBadge, year, episodesText].filter(Boolean).join(' • ')
   const posterSrc = tmdbCard(drama.poster_url)
 
-  // Episode tracking for watching dramas
+  // Episode tracking calculation with smart visual denominator (Fix for "The Early Spring" & missing total_episodes)
   const watchedEp = Number(drama.watched_episodes ?? drama.next_episode_number) || 0
   const totalEp = Number(drama.total_episodes) || 0
-  const progressPct = totalEp > 0 ? Math.min(100, Math.round((watchedEp / totalEp) * 100)) : 0
+  const effectiveTotal = totalEp > 1 ? totalEp : Math.max(watchedEp + 5, 16)
+  const progressPct = Math.min(94, Math.max(6, Math.round(((watchedEp || 1) / effectiveTotal) * 100)))
 
   async function handleStep(delta: number, e: React.MouseEvent) {
     e.stopPropagation()
@@ -96,9 +115,20 @@ export default function DramaCard({ drama, actions, onOpen, staggerIndex }: Dram
         )}
       </div>
 
-      {/* Floating Gaussian-Blurred Frosted Glass Dock */}
-      <div className="absolute inset-x-2.5 bottom-2.5 z-10 rounded-[20px] bg-black/35 backdrop-blur-2xl border border-white/25 p-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_8px_24px_rgba(0,0,0,0.5)] flex flex-col gap-1.5">
-        <div className="flex flex-col min-w-0">
+      {/* Photo 3 Deep Obsidian Glass Dock with Saturated Bottom Horizon Glow */}
+      <div className="absolute inset-x-2.5 bottom-2.5 z-10 rounded-[22px] bg-[#0a0a12]/85 backdrop-blur-2xl border border-white/[0.16] p-3.5 relative overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_12px_32px_rgba(0,0,0,0.6)] flex flex-col gap-2">
+        {/* Photo 3 Saturated Bottom-Edge Horizon Glow */}
+        {drama.status === 'watching' && (
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_110%,rgba(168,85,247,0.55)_0%,transparent_70%)]" />
+        )}
+        {drama.status === 'watchlist' && (
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_110%,rgba(56,189,248,0.5)_0%,transparent_70%)]" />
+        )}
+        {drama.status === 'finished' && (
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_110%,rgba(16,185,129,0.5)_0%,transparent_70%)]" />
+        )}
+
+        <div className="relative z-10 flex flex-col min-w-0">
           <h3 className="text-[13px] font-bold tracking-tight text-white line-clamp-1 leading-tight group-hover:text-white/90">
             {drama.title}
           </h3>
@@ -109,57 +139,54 @@ export default function DramaCard({ drama, actions, onOpen, staggerIndex }: Dram
           )}
         </div>
 
-        {/* Watching Episode Stepper Capsule with Luminous Effect Progress Bar */}
+        {/* Watching Stepper + Photo 3 "Cornfield Chase" Laser-Flare Progress Bar (ALWAYS RENDERS ON WATCHING) */}
         {drama.status === 'watching' && (
           <div
-            className="flex flex-col gap-1.5 rounded-[16px] bg-white/[0.12] border border-white/20 p-2 backdrop-blur-xl shadow-inner"
+            className="relative z-10 flex flex-col gap-1.5 rounded-[16px] bg-white/[0.08] border border-white/[0.14] p-2.5 backdrop-blur-xl shadow-inner"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-wide text-white/90">
-                EP {watchedEp}{totalEp > 0 ? ` / ${totalEp}` : ''}
-                {totalEp > 0 && <span className="text-white/50 font-normal ml-1">({progressPct}%)</span>}
+              <span className="text-[11px] font-black tracking-tight text-white">
+                EP {watchedEp}{totalEp > 1 ? ` / ${totalEp}` : ''}
+                {totalEp > 1 && (
+                  <span className="text-[#38bdf8] font-bold text-[10px] ml-1.5">
+                    ({progressPct}%)
+                  </span>
+                )}
               </span>
 
-              {/* Steppers */}
-              <div className="flex items-center gap-1">
+              {/* Action Orbs: Frosted Minus Orb + Electric Sky-Blue Plus Orb */}
+              <div className="flex items-center gap-1.5">
                 <button
                   type="button"
                   title="Previous Episode"
                   onClick={(e) => handleStep(-1, e)}
                   disabled={watchedEp <= 0}
-                  className="flex h-5 w-5 items-center justify-center rounded-full bg-white/[0.15] hover:bg-white/[0.30] active:scale-90 text-white disabled:opacity-30 disabled:pointer-events-none transition cursor-pointer"
+                  className="w-7 h-7 rounded-full bg-white/[0.14] hover:bg-white/[0.22] text-white flex items-center justify-center border border-white/[0.15] active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
                 >
-                  <Minus size={10} strokeWidth={2.5} />
+                  <Minus size={11} strokeWidth={2.8} />
                 </button>
                 <button
                   type="button"
                   title="Next Episode (+1)"
                   onClick={(e) => handleStep(1, e)}
-                  className="flex h-5 items-center gap-0.5 px-2 rounded-full bg-white/[0.28] hover:bg-white/[0.45] active:scale-90 text-white font-bold text-[10px] shadow-sm transition cursor-pointer"
+                  className="h-7 px-3 rounded-full bg-[#38bdf8] text-[#04111d] font-bold text-[11px] flex items-center gap-1 shadow-[0_0_16px_rgba(56,189,248,0.55)] active:scale-90 transition cursor-pointer"
                 >
-                  <Plus size={10} strokeWidth={3} />
+                  <Plus size={11} strokeWidth={3} />
                   <span>1</span>
                 </button>
               </div>
             </div>
 
-            {/* Signature ColorOS 17 Luminous Progress Bar with Glowing Tip */}
-            {totalEp > 0 && (
-              <div className="relative h-1.5 w-full rounded-full bg-black/50 overflow-visible mt-0.5">
-                <div
-                  className="relative h-full rounded-full bg-gradient-to-r from-violet-500 via-fuchsia-400 to-white transition-all duration-300 after:content-[''] after:absolute after:right-0 after:top-1/2 after:-translate-y-1/2 after:w-2.5 after:h-2.5 after:rounded-full after:bg-white after:shadow-[0_0_12px_3px_rgba(255,255,255,0.95),0_0_20px_6px_rgba(217,70,239,0.8)]"
-                  style={{ width: `${Math.max(4, progressPct)}%` }}
-                />
-              </div>
-            )}
+            {/* Photo 3 "Cornfield Chase" Laser-Flare Progress Bar */}
+            <CornfieldLaserProgressBar progressPct={progressPct} />
           </div>
         )}
 
         {/* 1-Tap Action Buttons Shelf */}
         {actions && (
           <div
-            className="pt-1.5 border-t border-white/[0.14]"
+            className="relative z-10 pt-2 border-t border-white/[0.12]"
             onClick={(e) => e.stopPropagation()}
           >
             {actions}
