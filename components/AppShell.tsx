@@ -131,7 +131,7 @@ export default function AppShell() {
       />
 
       {/* Main content — keep all tabs mounted to preserve scroll & animation state, zero black flash */}
-      <main className="relative z-10 bg-transparent">
+      <main className="relative z-10 bg-transparent pt-16">
         <div
           className={`transition-all duration-250 ease-out ${
             activeTab === 'search'

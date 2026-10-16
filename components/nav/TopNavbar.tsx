@@ -17,13 +17,29 @@ export default function TopNavbar({
   onLockClick,
 }: TopNavbarProps) {
   const [notifCount, setNotifCount] = useState(0)
+  const [isScrolled, setIsScrolled] = useState(false)
 
   useEffect(() => {
     getNotifiableDramas().then((dramas) => setNotifCount(dramas.length))
   }, [])
 
+  useEffect(() => {
+    function handleScroll() {
+      setIsScrolled(window.scrollY > 12)
+    }
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
   return (
-    <header className="sticky top-0 z-50 w-full h-16 bg-[#040406] border-b border-white/[0.08] select-none">
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 h-16 w-full transition-all duration-300 ease-out select-none ${
+        isScrolled
+          ? 'bg-[#050507]/45 backdrop-blur-2xl border-b border-white/[0.08] shadow-[0_8px_30px_rgba(0,0,0,0.4)]'
+          : 'bg-[#050507] border-b border-white/[0.08]'
+      }`}
+    >
       {/* Inner centered container matches max-w-6xl mx-auto w-full px-6 */}
       <div className="max-w-6xl mx-auto w-full h-full px-6 flex items-center justify-between">
         {/* Brand Identity: -ml-3 sm:-ml-4 offsets logo slightly to the left of Explore without drifting far left */}
