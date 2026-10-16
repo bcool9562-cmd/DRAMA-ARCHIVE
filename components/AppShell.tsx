@@ -159,9 +159,9 @@ export default function AppShell() {
         onLockClick={handleLock}
       />
 
-      {/* Main content — keep all tabs mounted to preserve scroll & animation state, zero exit overlap flash */}
+      {/* Main content — silky iOS spring entrance on active tab, zero exit overlap flash */}
       <main className="relative z-10 bg-transparent pt-16">
-        <div className={activeTab === 'search' ? 'block' : 'hidden'}>
+        <div className={activeTab === 'search' ? 'block animate-ios-view' : 'hidden'}>
           <SearchTab
             onOpenDrama={openDrama}
             onOpenPerson={openPerson}
@@ -171,15 +171,15 @@ export default function AppShell() {
           />
         </div>
 
-        <div className={activeTab === 'watchlist' ? 'block' : 'hidden'}>
+        <div className={activeTab === 'watchlist' ? 'block animate-ios-view' : 'hidden'}>
           <WatchlistTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
         </div>
 
-        <div className={activeTab === 'watching' ? 'block' : 'hidden'}>
+        <div className={activeTab === 'watching' ? 'block animate-ios-view' : 'hidden'}>
           <WatchingTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
         </div>
 
-        <div className={activeTab === 'finished' ? 'block' : 'hidden'}>
+        <div className={activeTab === 'finished' ? 'block animate-ios-view' : 'hidden'}>
           <FinishedTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
         </div>
       </main>

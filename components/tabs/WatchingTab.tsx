@@ -66,7 +66,7 @@ export default function WatchingTab({ onOpenDrama }: WatchingTabProps) {
   }
 
   return (
-    <div className="relative w-full max-w-7xl mx-auto px-6 sm:px-10 py-6 pb-24 flex flex-col gap-6 animate-ios-spring">
+    <div className="relative w-full max-w-7xl mx-auto px-6 sm:px-10 py-6 pb-24 flex flex-col gap-6">
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(168,85,247,0.18),_transparent_65%)]" />
       </div>
