@@ -66,12 +66,12 @@ export default function WatchlistTab({ onOpenDrama }: WatchlistTabProps) {
   }
 
   return (
-    <div className="relative min-h-[calc(100vh-140px)] h-auto px-4 pb-24 pt-6 sm:pt-8 max-w-7xl mx-auto flex flex-col justify-between animate-ios-spring">
+    <div className="relative w-full max-w-7xl mx-auto px-6 sm:px-10 py-6 pb-24 flex flex-col gap-6 animate-ios-spring">
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(56,189,248,0.18),_transparent_65%)]" />
       </div>
 
-      <div className="relative z-10 mb-6 flex items-center justify-between">
+      <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full border border-sky-400/30 bg-sky-500/15 text-sky-400 shadow-lg shadow-sky-500/20 backdrop-blur-md">
             <Bookmark size={18} className="fill-sky-400" />

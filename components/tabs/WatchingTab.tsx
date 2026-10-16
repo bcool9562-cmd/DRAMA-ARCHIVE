@@ -66,12 +66,12 @@ export default function WatchingTab({ onOpenDrama }: WatchingTabProps) {
   }
 
   return (
-    <div className="relative min-h-[calc(100vh-140px)] h-auto px-4 pb-24 pt-6 sm:pt-8 max-w-7xl mx-auto flex flex-col justify-between animate-ios-spring">
+    <div className="relative w-full max-w-7xl mx-auto px-6 sm:px-10 py-6 pb-24 flex flex-col gap-6 animate-ios-spring">
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(168,85,247,0.18),_transparent_65%)]" />
       </div>
 
-      <div className="relative z-10 mb-6 flex items-center justify-between">
+      <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-full border border-purple-400/30 bg-purple-500/15 text-purple-400 shadow-lg shadow-purple-500/20 backdrop-blur-md">
             <Play size={18} className="fill-purple-400 ml-0.5" />
