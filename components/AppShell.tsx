@@ -111,16 +111,17 @@ export default function AppShell() {
 
   return (
     <div className={`bg-[#050507] relative min-h-screen overflow-x-hidden text-white ${modalOpen ? 'overflow-hidden' : ''}`}>
-      {/* Top-Left Purple-Teal Aurora Background Gradient (Kept mounted at all times, smooth opacity transition without remounting) */}
-      <div
-        className={`pointer-events-none absolute top-16 left-0 right-0 h-[520px] z-0 transition-opacity duration-300 ease-out ${
-          activeTab === 'search' ? 'opacity-100' : 'opacity-0'
-        }`}
-        style={{
-          transformOrigin: '0% 0%',
-          background: 'radial-gradient(ellipse 50% 85% at 15% 0%, rgba(124, 58, 237, 0.52) 0%, rgba(91, 33, 182, 0.24) 50%, transparent 80%), radial-gradient(ellipse 42% 70% at 45% 0%, rgba(13, 148, 136, 0.24) 0%, transparent 75%)',
-        }}
-      />
+      {/* Top-Left Purple-Teal Aurora Background Gradient (Visibly sweeps & blooms outward from 0% 0% top-left corner on Home/Search) */}
+      {activeTab === 'search' && (
+        <div
+          key="home-aurora-search"
+          className="pointer-events-none absolute top-16 left-0 right-0 h-[520px] z-0 animate-aurora-sweep"
+          style={{
+            transformOrigin: '0% 0%',
+            background: 'radial-gradient(ellipse 50% 85% at 15% 0%, rgba(124, 58, 237, 0.52) 0%, rgba(91, 33, 182, 0.24) 50%, transparent 80%), radial-gradient(ellipse 42% 70% at 45% 0%, rgba(13, 148, 136, 0.24) 0%, transparent 75%)',
+          }}
+        />
+      )}
 
       {/* Global Ambient Artwork Canvas — ensures all frosted glass surfaces visibly refract real artwork */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none opacity-40">
