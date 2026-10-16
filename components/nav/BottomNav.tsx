@@ -38,7 +38,12 @@ export default function BottomNav({
           return (
             <button
               key={id}
-              onClick={() => onTabChange(id)}
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+                }
+                onTabChange(id)
+              }}
               className={`
                 relative flex flex-col items-center gap-0.5 rounded-full px-4 py-2
                 transition-all duration-200 ease-out

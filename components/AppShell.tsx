@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback } from 'react'
 import Image from 'next/image'
 import AuthScreen from '@/components/auth/AuthScreen'
 import TopNavbar from '@/components/nav/TopNavbar'
@@ -14,13 +14,44 @@ import NavStackModal, { type StackItem } from '@/components/nav/NavStackModal'
 import ToastContainer from '@/components/Toast'
 import { getSavedDramasSync, onArchiveSync, type UserDrama } from '@/lib/supabase/archive'
 
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
+
 export default function AppShell() {
   const [isUnlocked, setIsUnlocked] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
-  const [activeTab, setActiveTab] = useState<TabId>('search')
+  const [activeTab, setActiveTab] = useState<TabId>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const params = new URLSearchParams(window.location.search)
+        const tabParam = params.get('tab') as TabId
+        if (tabParam && ['search', 'watchlist', 'watching', 'finished'].includes(tabParam)) {
+          return tabParam
+        }
+      } catch { /* ignore */ }
+    }
+    return 'search'
+  })
   const [showNotifications, setShowNotifications] = useState(false)
   const [savedDramas, setSavedDramas] = useState<UserDrama[]>(() => getSavedDramasSync())
   const [discoverData, setDiscoverData] = useState<DiscoverData | null>(null)
+
+  // Synchronous tab switching with instant scroll reset before browser paint
+  const handleTabChange = useCallback((tab: TabId) => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+      try {
+        window.history.replaceState(null, '', tab === 'search' ? '/' : `/?tab=${tab}`)
+      } catch { /* ignore */ }
+    }
+    setActiveTab(tab)
+  }, [])
+
+  // Guarantee scroll is at (0, 0) before paint of new tab
+  useIsomorphicLayoutEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    }
+  }, [activeTab])
 
   // Unified navigation stack — shared across all tabs
   const [navStack, setNavStack] = useState<StackItem[]>([])
@@ -80,17 +111,16 @@ export default function AppShell() {
 
   return (
     <div className={`bg-[#050507] relative min-h-screen overflow-x-hidden text-white ${modalOpen ? 'overflow-hidden' : ''}`}>
-      {/* Top-Left Purple-Teal Aurora Background Gradient (Visibly sweeps & blooms outward from 0% 0% top-left corner on Home/Search) */}
-      {activeTab === 'search' && (
-        <div
-          key="home-aurora-search"
-          className="pointer-events-none absolute top-16 left-0 right-0 h-[520px] z-0 animate-aurora-sweep"
-          style={{
-            transformOrigin: '0% 0%',
-            background: 'radial-gradient(ellipse 50% 85% at 15% 0%, rgba(124, 58, 237, 0.52) 0%, rgba(91, 33, 182, 0.24) 50%, transparent 80%), radial-gradient(ellipse 42% 70% at 45% 0%, rgba(13, 148, 136, 0.24) 0%, transparent 75%)',
-          }}
-        />
-      )}
+      {/* Top-Left Purple-Teal Aurora Background Gradient (Kept mounted at all times, smooth opacity transition without remounting) */}
+      <div
+        className={`pointer-events-none absolute top-16 left-0 right-0 h-[520px] z-0 transition-opacity duration-300 ease-out ${
+          activeTab === 'search' ? 'opacity-100' : 'opacity-0'
+        }`}
+        style={{
+          transformOrigin: '0% 0%',
+          background: 'radial-gradient(ellipse 50% 85% at 15% 0%, rgba(124, 58, 237, 0.52) 0%, rgba(91, 33, 182, 0.24) 50%, transparent 80%), radial-gradient(ellipse 42% 70% at 45% 0%, rgba(13, 148, 136, 0.24) 0%, transparent 75%)',
+        }}
+      />
 
       {/* Global Ambient Artwork Canvas — ensures all frosted glass surfaces visibly refract real artwork */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none opacity-40">
@@ -123,58 +153,33 @@ export default function AppShell() {
       {/* Full-Width Solid Black Top Navbar Strip */}
       <TopNavbar
         onLogoClick={() => {
-          setActiveTab('search')
-          window.scrollTo({ top: 0, behavior: 'smooth' })
+          handleTabChange('search')
         }}
         onNotificationsClick={() => setShowNotifications(true)}
         onLockClick={handleLock}
       />
 
-      {/* Main content — keep all tabs mounted to preserve scroll & animation state, zero black flash */}
+      {/* Main content — keep all tabs mounted to preserve scroll & animation state, zero exit overlap flash */}
       <main className="relative z-10 bg-transparent pt-16">
-        <div
-          className={`transition-all duration-250 ease-out ${
-            activeTab === 'search'
-              ? 'opacity-100 translate-y-0 pointer-events-auto'
-              : 'opacity-0 translate-y-2 pointer-events-none invisible absolute inset-x-0 top-0'
-          }`}
-        >
+        <div className={activeTab === 'search' ? 'block' : 'hidden'}>
           <SearchTab
             onOpenDrama={openDrama}
             onOpenPerson={openPerson}
-            onTabChange={setActiveTab}
+            onTabChange={handleTabChange}
             discoverData={discoverData}
             onDiscoverLoaded={setDiscoverData}
           />
         </div>
 
-        <div
-          className={`transition-all duration-250 ease-out ${
-            activeTab === 'watchlist'
-              ? 'opacity-100 translate-y-0 pointer-events-auto'
-              : 'opacity-0 translate-y-2 pointer-events-none invisible absolute inset-x-0 top-0'
-          }`}
-        >
+        <div className={activeTab === 'watchlist' ? 'block' : 'hidden'}>
           <WatchlistTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
         </div>
 
-        <div
-          className={`transition-all duration-250 ease-out ${
-            activeTab === 'watching'
-              ? 'opacity-100 translate-y-0 pointer-events-auto'
-              : 'opacity-0 translate-y-2 pointer-events-none invisible absolute inset-x-0 top-0'
-          }`}
-        >
+        <div className={activeTab === 'watching' ? 'block' : 'hidden'}>
           <WatchingTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
         </div>
 
-        <div
-          className={`transition-all duration-250 ease-out ${
-            activeTab === 'finished'
-              ? 'opacity-100 translate-y-0 pointer-events-auto'
-              : 'opacity-0 translate-y-2 pointer-events-none invisible absolute inset-x-0 top-0'
-          }`}
-        >
+        <div className={activeTab === 'finished' ? 'block' : 'hidden'}>
           <FinishedTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
         </div>
       </main>
@@ -183,7 +188,7 @@ export default function AppShell() {
       {!modalOpen && (
         <BottomNav
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={handleTabChange}
         />
       )}
 
