@@ -16,57 +16,37 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#08080c',
+          background: '#050507',
           borderRadius: 124,
-          border: '4px solid rgba(244, 63, 94, 0.45)',
           position: 'relative',
         }}
       >
-        {/* Soft pink ambient halo */}
-        <div
-          style={{
-            position: 'absolute',
-            width: 280,
-            height: 280,
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(244,63,94,0.65) 0%, rgba(236,72,153,0.3) 50%, transparent 75%)',
-          }}
-        />
-
-        {/* Frosted Rose-Pink Glass Frame */}
+        {/* Crisp Circular Rose-Pink Gradient Emblem */}
         <div
           style={{
             width: 352,
             height: 352,
-            borderRadius: 84,
-            background: 'linear-gradient(135deg, rgba(236,72,153,0.3) 0%, rgba(244,63,94,0.2) 50%, rgba(192,38,211,0.3) 100%)',
-            border: '2.5px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #e11d48 0%, #f472b6 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            position: 'relative',
           }}
         >
-          {/* 4-Point Star-Prism / Cinema Aperture */}
+          {/* Pure-White Interlocking Geometric Twin-Ring / Angled Cinema-Lens Cut */}
           <svg
-            width="256"
-            height="256"
-            viewBox="0 0 256 256"
+            width="220"
+            height="220"
+            viewBox="0 0 24 24"
             fill="none"
+            stroke="#FFFFFF"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
-            {/* Primary Star - Left & Top Facets in Crisp White */}
-            <path
-              d="M 128 0 C 128 70 70 128 0 128 C 70 128 128 186 128 256 C 128 186 186 128 256 128 C 186 128 128 70 128 0 Z"
-              fill="#FFFFFF"
-            />
-            {/* 3D Prism Aperture Facet - Right & Bottom in Rose-Pink */}
-            <path
-              d="M 128 0 C 128 70 186 128 256 128 C 186 128 128 186 128 256 L 128 0 Z"
-              fill="#FB7185"
-              fillOpacity="0.9"
-            />
-            {/* Precision Radiant Core */}
-            <circle cx="128" cy="128" r="22" fill="#FFFFFF" />
+            <path d="M 6.5 11.5 A 5.5 5.5 0 1 1 17.5 12" />
+            <path d="M 17.5 12.5 A 5.5 5.5 0 1 1 6.5 12" />
+            <path d="M 7.5 16.5 L 16.5 7.5" />
           </svg>
         </div>
       </div>

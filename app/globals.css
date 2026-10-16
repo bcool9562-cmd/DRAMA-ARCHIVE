@@ -134,20 +134,26 @@ body {
   transform-origin: top center;
 }
 
-/* Home Explore Purple-Teal Aurora Glow Entrance Animation */
-@keyframes homeGlowLightUp {
+/* Home Explore Purple-Teal Aurora Glow Corner Sweep Entrance Animation */
+@keyframes cornerAuroraSweep {
   0% {
     opacity: 0;
-    transform: translateY(-15px) scale(0.94);
+    transform: scale(0.12) translate(-8%, -8%);
+    filter: blur(30px);
+  }
+  35% {
+    opacity: 0.75;
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: scale(1) translate(0%, 0%);
+    filter: blur(0px);
   }
 }
 
-.animate-home-glow {
-  animation: homeGlowLightUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform, opacity;
+.animate-aurora-sweep {
+  transform-origin: 0% 0%;
+  animation: cornerAuroraSweep 1.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity, filter;
 }
 

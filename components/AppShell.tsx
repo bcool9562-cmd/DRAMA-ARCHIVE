@@ -80,13 +80,14 @@ export default function AppShell() {
 
   return (
     <div className={`bg-[#050507] relative min-h-screen overflow-x-hidden text-white ${modalOpen ? 'overflow-hidden' : ''}`}>
-      {/* Top-Left Purple-Teal Aurora Background Gradient (Rendered ONLY on Home/Search, starts from pure black and smoothly lights up) */}
+      {/* Top-Left Purple-Teal Aurora Background Gradient (Visibly sweeps & blooms outward from 0% 0% top-left corner on Home/Search) */}
       {activeTab === 'search' && (
         <div
-          key="home-glow-active"
-          className="pointer-events-none absolute top-16 left-0 right-0 h-[480px] z-0 animate-home-glow"
+          key="home-aurora-search"
+          className="pointer-events-none absolute top-16 left-0 right-0 h-[520px] z-0 animate-aurora-sweep"
           style={{
-            background: 'radial-gradient(ellipse 48% 85% at 15% 0%, rgba(124, 58, 237, 0.48) 0%, rgba(91, 33, 182, 0.22) 50%, transparent 80%), radial-gradient(ellipse 40% 70% at 45% 0%, rgba(13, 148, 136, 0.22) 0%, transparent 75%)',
+            transformOrigin: '0% 0%',
+            background: 'radial-gradient(ellipse 50% 85% at 15% 0%, rgba(124, 58, 237, 0.52) 0%, rgba(91, 33, 182, 0.24) 50%, transparent 80%), radial-gradient(ellipse 42% 70% at 45% 0%, rgba(13, 148, 136, 0.24) 0%, transparent 75%)',
           }}
         />
       )}

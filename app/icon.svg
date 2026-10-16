@@ -1,50 +1,24 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <filter id="pink-glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="35" result="blur" />
-    </filter>
-    <linearGradient id="glass-pink" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ec4899" stop-opacity="0.3" />
-      <stop offset="50%" stop-color="#f43f5e" stop-opacity="0.2" />
-      <stop offset="100%" stop-color="#c026d3" stop-opacity="0.3" />
+    <linearGradient id="scenova-circle-grad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#e11d48" />
+      <stop offset="100%" stop-color="#f472b6" />
     </linearGradient>
-    <radialGradient id="halo-radial" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.8" />
-      <stop offset="50%" stop-color="#ec4899" stop-opacity="0.4" />
-      <stop offset="100%" stop-color="#f43f5e" stop-opacity="0" />
-    </radialGradient>
   </defs>
 
-  <!-- Deep #08080c Squircle Base -->
-  <rect width="512" height="512" rx="124" fill="#08080c" />
-  <!-- Glowing Pink Border -->
-  <rect x="2" y="2" width="508" height="508" rx="122" fill="none" stroke="rgba(244,63,94,0.45)" stroke-width="4" />
+  <!-- Deep Pure Black #050507 Squircle Base -->
+  <rect width="512" height="512" rx="124" fill="#050507" />
 
-  <!-- Gaussian-Blurred Pink Halo -->
-  <circle cx="256" cy="256" r="140" fill="url(#halo-radial)" filter="url(#pink-glow)" />
+  <!-- Crisp Circular Rose-Pink Gradient Emblem -->
+  <circle cx="256" cy="256" r="176" fill="url(#scenova-circle-grad)" />
 
-  <!-- Frosted Rose-Pink Glass Squircle Frame -->
-  <rect x="80" y="80" width="352" height="352" rx="84" fill="url(#glass-pink)" stroke="rgba(255,255,255,0.28)" stroke-width="2.5" />
-
-  <!-- 4-Point Star-Prism / Cinema Aperture -->
-  <g id="star-prism">
-    <!-- Ambient Core Halo -->
-    <circle cx="256" cy="256" r="60" fill="#f43f5e" fill-opacity="0.35" />
-
-    <!-- Left & Top Facets in Crisp White (#FFFFFF) -->
-    <path
-      d="M 256 128 C 256 198 198 256 128 256 C 198 256 256 314 256 384 C 256 314 314 256 384 256 C 314 256 256 198 256 128 Z"
-      fill="#FFFFFF"
-    />
-
-    <!-- 3D Prism Aperture Facet - Right & Bottom in Vibrant Rose-Pink (#FB7185) -->
-    <path
-      d="M 256 128 C 256 198 314 256 384 256 C 314 256 256 314 256 384 L 256 128 Z"
-      fill="#FB7185"
-      fill-opacity="0.9"
-    />
-
-    <!-- Precision Radiant White Core -->
-    <circle cx="256" cy="256" r="22" fill="#FFFFFF" />
+  <!-- Pure-White Interlocking Geometric Twin-Ring / Angled Cinema-Lens Cut -->
+  <g transform="translate(136, 136) scale(10)" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <!-- Upper angled cinema ring / aperture arc -->
+    <path d="M 6.5 11.5 A 5.5 5.5 0 1 1 17.5 12" />
+    <!-- Lower angled cinema ring / aperture arc -->
+    <path d="M 17.5 12.5 A 5.5 5.5 0 1 1 6.5 12" />
+    <!-- Angled cinema-lens aperture cut -->
+    <path d="M 7.5 16.5 L 16.5 7.5" />
   </g>
 </svg>

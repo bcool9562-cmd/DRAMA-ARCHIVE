@@ -24,25 +24,21 @@ export default function TopNavbar({
 
   return (
     <header className="sticky top-0 z-50 w-full h-16 bg-[#040406] border-b border-white/[0.08] select-none">
-      {/* Inner centered container set to max-w-[1380px] so logo sits slightly to the left of Explore below */}
-      <div className="max-w-[1380px] mx-auto w-full h-full px-6 sm:px-10 flex items-center justify-between">
-        {/* Brand Identity: Pink-Shade Gaussian-Blurred Glass Logo + SCEN-OVA Wordmark */}
+      {/* Inner centered container matches max-w-6xl mx-auto w-full px-6 */}
+      <div className="max-w-6xl mx-auto w-full h-full px-6 flex items-center justify-between">
+        {/* Brand Identity: -ml-3 sm:-ml-4 offsets logo slightly to the left of Explore without drifting far left */}
         <button
           type="button"
           onClick={onLogoClick}
-          className="group flex items-center gap-3 hover:opacity-95 active:scale-95 transition-all duration-200 cursor-pointer touch-manipulation text-left outline-none select-none py-1"
+          className="-ml-3 sm:-ml-4 group flex items-center gap-2.5 hover:opacity-90 active:scale-95 transition-all duration-200 cursor-pointer touch-manipulation text-left outline-none select-none py-1"
           aria-label="SCENOVA Home"
         >
-          <ScenovaLogo className="w-9 h-9 transition-transform duration-300 group-hover:scale-105" />
+          <ScenovaLogo className="w-8 h-8 flex-shrink-0 transition-transform duration-200 group-hover:scale-105" />
 
-          <div className="relative inline-flex items-center">
-            {/* Soft Gaussian-blurred pink-rose ambient backlight */}
-            <div className="absolute -inset-x-3 -inset-y-1 bg-gradient-to-r from-pink-500/25 via-rose-500/20 to-transparent blur-xl rounded-full pointer-events-none -z-10" />
-
-            <span className="font-[family-name:var(--font-unbounded)] text-[22px] font-black tracking-tight text-white drop-shadow-[0_0_14px_rgba(244,114,182,0.55)] leading-none select-none">
-              SCEN<span className="text-pink-400">OVA</span>
-            </span>
-          </div>
+          {/* Crisp, solid wordmark: SCEN in pure white, OVA in crisp rose-pink with ZERO outer blur/drop-shadow */}
+          <span className="font-[family-name:var(--font-unbounded)] text-[22px] font-black tracking-tight leading-none select-none text-white">
+            SCEN<span className="text-[#F472B6]">OVA</span>
+          </span>
         </button>
 
         {/* Right Controls: ONLY Airing Alerts & Lock Archive */}
