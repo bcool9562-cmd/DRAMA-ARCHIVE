@@ -53,7 +53,7 @@ export default function WatchingTab({ onOpenDrama }: WatchingTabProps) {
 
   if (dramas.length === 0) {
     return (
-      <div className="relative flex min-h-[75vh] flex-col items-center justify-center px-6 pt-16 text-center">
+      <div className="relative flex min-h-[calc(100vh-140px)] flex-col items-center justify-center px-6 py-12 text-center">
         <div className="flex h-20 w-20 items-center justify-center rounded-3xl border border-white/[0.14] bg-white/[0.06] shadow-xl backdrop-blur-md mb-4">
           <Play size={32} className="text-purple-400/70 ml-1" />
         </div>
@@ -66,7 +66,7 @@ export default function WatchingTab({ onOpenDrama }: WatchingTabProps) {
   }
 
   return (
-    <div className="relative min-h-screen px-4 pb-36 pt-6 sm:pt-8 max-w-7xl mx-auto animate-ios-spring">
+    <div className="relative min-h-[calc(100vh-140px)] h-auto px-4 pb-24 pt-6 sm:pt-8 max-w-7xl mx-auto flex flex-col justify-between animate-ios-spring">
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(168,85,247,0.18),_transparent_65%)]" />
       </div>

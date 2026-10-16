@@ -36,7 +36,7 @@ export default function TopNavbar({
     <header
       className={`fixed top-0 left-0 right-0 z-50 h-16 w-full transition-all duration-300 ease-out select-none ${
         isScrolled
-          ? 'bg-[#050507]/45 backdrop-blur-2xl border-b border-white/[0.08] shadow-[0_8px_30px_rgba(0,0,0,0.4)]'
+          ? 'bg-[#030305]/78 backdrop-blur-3xl border-b border-white/[0.05] shadow-[0_10px_30px_rgba(0,0,0,0.8)]'
           : 'bg-[#050507] border-b border-white/[0.08]'
       }`}
     >
