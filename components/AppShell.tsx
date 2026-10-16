@@ -80,13 +80,16 @@ export default function AppShell() {
 
   return (
     <div className={`bg-[#050507] relative min-h-screen overflow-x-hidden text-white ${modalOpen ? 'overflow-hidden' : ''}`}>
-      {/* Top-Left Purple-Teal Aurora Background Gradient (Photo 2 background, 100% visible) */}
-      <div
-        className="pointer-events-none absolute top-16 left-0 right-0 h-[480px] z-0"
-        style={{
-          background: 'radial-gradient(ellipse 48% 85% at 15% 0%, rgba(124, 58, 237, 0.48) 0%, rgba(91, 33, 182, 0.22) 50%, transparent 80%), radial-gradient(ellipse 40% 70% at 45% 0%, rgba(13, 148, 136, 0.22) 0%, transparent 75%)',
-        }}
-      />
+      {/* Top-Left Purple-Teal Aurora Background Gradient (Rendered ONLY on Home/Search, starts from pure black and smoothly lights up) */}
+      {activeTab === 'search' && (
+        <div
+          key="home-glow-active"
+          className="pointer-events-none absolute top-16 left-0 right-0 h-[480px] z-0 animate-home-glow"
+          style={{
+            background: 'radial-gradient(ellipse 48% 85% at 15% 0%, rgba(124, 58, 237, 0.48) 0%, rgba(91, 33, 182, 0.22) 50%, transparent 80%), radial-gradient(ellipse 40% 70% at 45% 0%, rgba(13, 148, 136, 0.22) 0%, transparent 75%)',
+          }}
+        />
+      )}
 
       {/* Global Ambient Artwork Canvas — ensures all frosted glass surfaces visibly refract real artwork */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none opacity-40">

@@ -24,11 +24,11 @@ export const metadata: Metadata = {
   manifest: '/manifest.webmanifest',
   icons: {
     icon: [
-      { url: '/icon.svg', type: 'image/svg+xml' },
-      { url: '/icon', sizes: '512x512', type: 'image/png' },
+      { url: '/icon.svg?v=pink2', type: 'image/svg+xml' },
+      { url: '/icon?v=pink2', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
-      { url: '/apple-icon', sizes: '180x180', type: 'image/png' },
+      { url: '/apple-icon?v=pink2', sizes: '180x180', type: 'image/png' },
     ],
   },
   appleWebApp: {
@@ -58,8 +58,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <head>
-        <link rel="icon" type="image/svg+xml" href="/icon.svg" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon" />
+        <link rel="icon" type="image/svg+xml" href="/icon.svg?v=pink2" />
+        <link rel="icon" sizes="512x512" type="image/png" href="/icon?v=pink2" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon?v=pink2" />
       </head>
       <body
         suppressHydrationWarning

@@ -65,11 +65,14 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
           
           {/* SCENOVA Brand Mark */}
           <div className="mb-6 flex flex-col items-center justify-center gap-2">
-            <div className="flex items-center gap-2.5">
-              <ScenovaLogo className="w-9 h-7 text-white fill-white flex-shrink-0" />
-              <span className="font-[family-name:var(--font-unbounded)] text-[22px] font-black uppercase tracking-[-0.03em] scale-x-[1.12] origin-left text-white select-none leading-none">
-                SCENOVA
-              </span>
+            <div className="flex items-center gap-3">
+              <ScenovaLogo className="w-9 h-9" />
+              <div className="relative inline-flex items-center">
+                <div className="absolute -inset-x-3 -inset-y-1 bg-gradient-to-r from-pink-500/25 via-rose-500/20 to-transparent blur-xl rounded-full pointer-events-none -z-10" />
+                <span className="font-[family-name:var(--font-unbounded)] text-[22px] font-black tracking-tight text-white drop-shadow-[0_0_14px_rgba(244,114,182,0.55)] leading-none select-none">
+                  SCEN<span className="text-pink-400">OVA</span>
+                </span>
+              </div>
             </div>
             <div className="flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.06] px-3.5 py-1 text-[11px] font-medium text-white/60 shadow-inner">
               <Lock size={12} className="text-white/70" />

@@ -16,22 +16,59 @@ export default function Icon() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#050507',
+          background: '#08080c',
+          borderRadius: 124,
+          border: '4px solid rgba(244, 63, 94, 0.45)',
           position: 'relative',
         }}
       >
-        {/* Monolithic SCENOVA Pure-White Organic Rounded Emblem (#FFFFFF) */}
-        <svg
-          width="324"
-          height="252"
-          viewBox="0 0 36 28"
-          fill="none"
+        {/* Soft pink ambient halo */}
+        <div
+          style={{
+            position: 'absolute',
+            width: 280,
+            height: 280,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(244,63,94,0.65) 0%, rgba(236,72,153,0.3) 50%, transparent 75%)',
+          }}
+        />
+
+        {/* Frosted Rose-Pink Glass Frame */}
+        <div
+          style={{
+            width: 352,
+            height: 352,
+            borderRadius: 84,
+            background: 'linear-gradient(135deg, rgba(236,72,153,0.3) 0%, rgba(244,63,94,0.2) 50%, rgba(192,38,211,0.3) 100%)',
+            border: '2.5px solid rgba(255, 255, 255, 0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+          }}
         >
-          <path
-            d="M 18 7 C 22.5 7 24.5 2.5 28.5 2.5 C 32.5 2.5 35 5.5 35 9.5 C 35 12 33 13.2 31.5 14 C 33 14.8 35 16 35 18.5 C 35 22.5 32.5 25.5 28.5 25.5 C 24.5 25.5 22.5 21 18 21 C 13.5 21 11.5 25.5 7.5 25.5 C 3.5 25.5 1 22.5 1 18.5 C 1 16 3 14.8 4.5 14 C 3 13.2 1 12 1 9.5 C 1 5.5 3.5 2.5 7.5 2.5 C 11.5 2.5 13.5 7 18 7 Z"
-            fill="#FFFFFF"
-          />
-        </svg>
+          {/* 4-Point Star-Prism / Cinema Aperture */}
+          <svg
+            width="256"
+            height="256"
+            viewBox="0 0 256 256"
+            fill="none"
+          >
+            {/* Primary Star - Left & Top Facets in Crisp White */}
+            <path
+              d="M 128 0 C 128 70 70 128 0 128 C 70 128 128 186 128 256 C 128 186 186 128 256 128 C 186 128 128 70 128 0 Z"
+              fill="#FFFFFF"
+            />
+            {/* 3D Prism Aperture Facet - Right & Bottom in Rose-Pink */}
+            <path
+              d="M 128 0 C 128 70 186 128 256 128 C 186 128 128 186 128 256 L 128 0 Z"
+              fill="#FB7185"
+              fillOpacity="0.9"
+            />
+            {/* Precision Radiant Core */}
+            <circle cx="128" cy="128" r="22" fill="#FFFFFF" />
+          </svg>
+        </div>
       </div>
     ),
     {
