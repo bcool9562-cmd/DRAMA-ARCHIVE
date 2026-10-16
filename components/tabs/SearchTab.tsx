@@ -184,7 +184,7 @@ export default function SearchTab({
   return (
     <div className="relative flex flex-col min-h-screen">
       {/* 1. CLEAN EDITORIAL HEADER (NO SUBHO, NO SUBTITLE, NO COUNTER PILLS - PHOTO 2) */}
-      <header className="px-5 pt-20 sm:pt-24 pb-3 max-w-6xl mx-auto w-full">
+      <header className="px-5 pt-6 sm:pt-8 pb-3 max-w-6xl mx-auto w-full">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-tr from-[#c24816] via-[#c80815] to-[#ff4069] text-white shadow-sm">
@@ -198,7 +198,7 @@ export default function SearchTab({
       </header>
 
       {/* 2. FLOATING iOS SPOTLIGHT SEARCH BAR */}
-      <div className="sticky top-0 z-30 px-5 pt-2 pb-3 max-w-6xl mx-auto w-full">
+      <div className="sticky top-16 z-30 px-5 pt-2 pb-3 max-w-6xl mx-auto w-full">
         <div className="relative flex items-center rounded-full bg-black/50 backdrop-blur-3xl border border-white/20 px-4 py-3 gap-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_12px_32px_rgba(0,0,0,0.6)] transform-gpu hover:border-white/25 focus-within:scale-[1.01] focus-within:border-white/35 transition-all duration-300">
           {searching ? (
             <Loader2 size={17} className="text-white/80 flex-shrink-0 animate-spin" />

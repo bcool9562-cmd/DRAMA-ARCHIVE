@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react'
 import { Eye, EyeOff, Lock, Unlock, Loader2, Sparkles } from 'lucide-react'
 import MovingPosterWall from '@/components/wall/MovingPosterWall'
+import ScenovaLogo from '@/components/brand/ScenovaLogo'
 
 interface AuthScreenProps {
   onAuthenticated: () => void
@@ -62,11 +63,17 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
       <div className="relative z-10 w-full max-w-sm">
         <div className="rounded-[32px] border border-white/[0.15] bg-white/[0.07] px-8 py-10 shadow-2xl shadow-black/80 backdrop-blur-2xl text-center">
           
-          {/* iOS Lock status indicator */}
-          <div className="mb-6 flex justify-center">
+          {/* SCENOVA Brand Mark */}
+          <div className="mb-6 flex flex-col items-center justify-center gap-2">
+            <div className="flex items-center gap-2.5">
+              <ScenovaLogo className="w-8 h-7 text-white fill-current flex-shrink-0" />
+              <span className="text-[22px] font-black uppercase tracking-[0.06em] scale-x-[1.08] origin-left text-white select-none leading-none">
+                SCENOVA
+              </span>
+            </div>
             <div className="flex items-center gap-1.5 rounded-full border border-white/[0.12] bg-white/[0.06] px-3.5 py-1 text-[11px] font-medium text-white/60 shadow-inner">
-              <Lock size={12} className="text-purple-400" />
-              <span>Drama Archive Locked</span>
+              <Lock size={12} className="text-white/70" />
+              <span>Archive Locked</span>
             </div>
           </div>
 

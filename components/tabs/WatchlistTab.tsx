@@ -66,7 +66,7 @@ export default function WatchlistTab({ onOpenDrama }: WatchlistTabProps) {
   }
 
   return (
-    <div className="relative min-h-screen px-4 pb-36 pt-20 max-w-7xl mx-auto animate-ios-spring">
+    <div className="relative min-h-screen px-4 pb-36 pt-6 sm:pt-8 max-w-7xl mx-auto animate-ios-spring">
       <div className="pointer-events-none fixed inset-0 overflow-hidden z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(56,189,248,0.18),_transparent_65%)]" />
       </div>

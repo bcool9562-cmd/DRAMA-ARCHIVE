@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Drama Archive',
+  title: 'SCENOVA',
   description: 'Track your K-Drama, J-Drama, and C-Drama watchlist beautifully',
   manifest: '/manifest.webmanifest',
   icons: {
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Drama Archive',
+    title: 'SCENOVA',
   },
   other: {
     'mobile-web-app-capable': 'yes',
@@ -41,7 +41,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#000000',
+  themeColor: '#050507',
 }
 
 export default function RootLayout({
@@ -57,7 +57,7 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-black text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-[#060608] text-white`}
       >
         {children}
       </body>

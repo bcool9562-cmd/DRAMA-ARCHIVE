@@ -2,13 +2,13 @@ import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Drama Archive',
-    short_name: 'Drama Archive',
+    name: 'SCENOVA',
+    short_name: 'SCENOVA',
     description: 'Track your K-Drama, J-Drama, and C-Drama watchlist beautifully',
     start_url: '/',
     display: 'standalone',
-    background_color: '#08080e',
-    theme_color: '#08080e',
+    background_color: '#050507',
+    theme_color: '#050507',
     orientation: 'portrait',
     icons: [
       {

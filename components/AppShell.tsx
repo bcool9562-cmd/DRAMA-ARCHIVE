@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import AuthScreen from '@/components/auth/AuthScreen'
+import TopNavbar from '@/components/nav/TopNavbar'
 import BottomNav, { TabId } from '@/components/nav/BottomNav'
 import SearchTab, { type DiscoverData } from '@/components/tabs/SearchTab'
 import WatchlistTab from '@/components/tabs/WatchlistTab'
@@ -62,8 +63,8 @@ export default function AppShell() {
 
   if (!authChecked) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-black">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-purple-500" />
+      <div className="flex min-h-screen items-center justify-center bg-[#060608]">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-white" />
       </div>
     )
   }
@@ -78,9 +79,12 @@ export default function AppShell() {
   const ambientArt2 = postersWithImages[1]?.poster_url || postersWithImages[0]?.poster_url || null
 
   return (
-    <div className={`relative min-h-screen bg-black ${modalOpen ? 'overflow-hidden' : ''}`}>
+    <div className={`relative min-h-screen bg-[#060608] text-white ${modalOpen ? 'overflow-hidden' : ''}`}>
+      {/* Top-Left Purple-Indigo Ambient Background Gradient (inspired by Moctale) */}
+      <div className="pointer-events-none fixed inset-x-0 top-16 h-[520px] -z-10 bg-[radial-gradient(ellipse_55%_55%_at_12%_15%,rgba(109,40,217,0.38)_0%,rgba(67,56,202,0.16)_45%,transparent_75%)]" />
+
       {/* Global Ambient Artwork Canvas — ensures all frosted glass surfaces visibly refract real artwork */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none">
+      <div className="fixed inset-0 -z-20 overflow-hidden pointer-events-none select-none">
         {ambientArt1 && (
           <div className="absolute -top-[15%] -left-[10%] w-[85vw] h-[85vw] max-w-[750px] max-h-[750px] transform-gpu">
             <Image
@@ -103,13 +107,23 @@ export default function AppShell() {
             />
           </div>
         )}
-        <div className="absolute inset-0 bg-black/45" />
+        <div className="absolute inset-0 bg-[#060608]/45" />
       </div>
 
       <ToastContainer />
 
+      {/* Full-Width Solid Black Top Navbar Strip */}
+      <TopNavbar
+        onLogoClick={() => {
+          setActiveTab('search')
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        }}
+        onNotificationsClick={() => setShowNotifications(true)}
+        onLockClick={handleLock}
+      />
+
       {/* Main content — keep all tabs mounted to preserve scroll & animation state, zero black flash */}
-      <main className="relative pt-[env(safe-area-inset-top,0px)]">
+      <main className="relative">
         <div
           className={`transition-all duration-250 ease-out ${
             activeTab === 'search'
@@ -162,8 +176,6 @@ export default function AppShell() {
         <BottomNav
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          onNotificationsClick={() => setShowNotifications(true)}
-          onLockClick={handleLock}
         />
       )}
 
