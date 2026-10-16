@@ -66,8 +66,8 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
           {/* SCENOVA Brand Mark */}
           <div className="mb-6 flex flex-col items-center justify-center gap-2">
             <div className="flex items-center gap-2.5">
-              <ScenovaLogo className="w-8 h-7 text-white fill-current flex-shrink-0" />
-              <span className="text-[22px] font-black uppercase tracking-[0.06em] scale-x-[1.08] origin-left text-white select-none leading-none">
+              <ScenovaLogo className="w-9 h-7 text-white fill-white flex-shrink-0" />
+              <span className="font-[family-name:var(--font-unbounded)] text-[22px] font-black uppercase tracking-[-0.03em] scale-x-[1.12] origin-left text-white select-none leading-none">
                 SCENOVA
               </span>
             </div>

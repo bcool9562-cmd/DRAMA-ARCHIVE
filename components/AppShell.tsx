@@ -79,12 +79,17 @@ export default function AppShell() {
   const ambientArt2 = postersWithImages[1]?.poster_url || postersWithImages[0]?.poster_url || null
 
   return (
-    <div className={`relative min-h-screen bg-[#060608] text-white ${modalOpen ? 'overflow-hidden' : ''}`}>
-      {/* Top-Left Purple-Indigo Ambient Background Gradient (inspired by Moctale) */}
-      <div className="pointer-events-none fixed inset-x-0 top-16 h-[520px] -z-10 bg-[radial-gradient(ellipse_55%_55%_at_12%_15%,rgba(109,40,217,0.38)_0%,rgba(67,56,202,0.16)_45%,transparent_75%)]" />
+    <div className={`bg-[#050507] relative min-h-screen overflow-x-hidden text-white ${modalOpen ? 'overflow-hidden' : ''}`}>
+      {/* Top-Left Purple-Teal Aurora Background Gradient (Photo 2 background, 100% visible) */}
+      <div
+        className="pointer-events-none absolute top-16 left-0 right-0 h-[480px] z-0"
+        style={{
+          background: 'radial-gradient(ellipse 48% 85% at 15% 0%, rgba(124, 58, 237, 0.48) 0%, rgba(91, 33, 182, 0.22) 50%, transparent 80%), radial-gradient(ellipse 40% 70% at 45% 0%, rgba(13, 148, 136, 0.22) 0%, transparent 75%)',
+        }}
+      />
 
       {/* Global Ambient Artwork Canvas — ensures all frosted glass surfaces visibly refract real artwork */}
-      <div className="fixed inset-0 -z-20 overflow-hidden pointer-events-none select-none">
+      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none opacity-40">
         {ambientArt1 && (
           <div className="absolute -top-[15%] -left-[10%] w-[85vw] h-[85vw] max-w-[750px] max-h-[750px] transform-gpu">
             <Image
@@ -107,7 +112,6 @@ export default function AppShell() {
             />
           </div>
         )}
-        <div className="absolute inset-0 bg-[#060608]/45" />
       </div>
 
       <ToastContainer />
@@ -123,7 +127,7 @@ export default function AppShell() {
       />
 
       {/* Main content — keep all tabs mounted to preserve scroll & animation state, zero black flash */}
-      <main className="relative">
+      <main className="relative z-10 bg-transparent">
         <div
           className={`transition-all duration-250 ease-out ${
             activeTab === 'search'

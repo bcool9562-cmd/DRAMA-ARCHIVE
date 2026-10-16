@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Geist, Geist_Mono, Unbounded } from 'next/font/google'
 import './globals.css'
 
 const geistSans = Geist({
@@ -10,6 +10,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+})
+
+const unbounded = Unbounded({
+  variable: '--font-unbounded',
+  subsets: ['latin'],
+  weight: ['800', '900'],
 })
 
 export const metadata: Metadata = {
@@ -57,7 +63,7 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-[#060608] text-white`}
+        className={`${geistSans.variable} ${geistMono.variable} ${unbounded.variable} antialiased min-h-screen bg-[#050507] text-white`}
       >
         {children}
       </body>

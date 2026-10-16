@@ -3,13 +3,10 @@
   <rect width="512" height="512" rx="120" fill="#050507" />
   <rect x="2" y="2" width="508" height="508" rx="118" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="3" />
 
-  <!-- Monolithic SCENOVA Pure-White Geometric Emblem (#FFFFFF) -->
-  <g transform="translate(96, 116) scale(10)" fill="#FFFFFF">
+  <!-- Monolithic SCENOVA Pure-White Organic Rounded Emblem (#FFFFFF) -->
+  <g transform="translate(94, 130) scale(9)" fill="#FFFFFF">
     <path
-      d="M 4 13 C 4 6.37 9.37 1 16 1 L 27.5 1 C 29.43 1 31 2.57 31 4.5 C 31 6.43 29.43 8 27.5 8 L 16.5 8 C 13.46 8 11 10.46 11 13.5 C 11 14.33 10.33 15 9.5 15 L 5.5 15 C 4.67 15 4 14.33 4 13.5 Z"
-    />
-    <path
-      d="M 28 15 C 28 21.63 22.63 27 16 27 L 4.5 27 C 2.57 27 1 25.43 1 23.5 C 1 21.57 2.57 20 4.5 20 L 15.5 20 C 18.54 20 21 17.54 21 14.5 C 21 13.67 21.67 13 22.5 13 L 26.5 13 C 27.33 13 28 13.67 28 14.5 Z"
+      d="M 18 7 C 22.5 7 24.5 2.5 28.5 2.5 C 32.5 2.5 35 5.5 35 9.5 C 35 12 33 13.2 31.5 14 C 33 14.8 35 16 35 18.5 C 35 22.5 32.5 25.5 28.5 25.5 C 24.5 25.5 22.5 21 18 21 C 13.5 21 11.5 25.5 7.5 25.5 C 3.5 25.5 1 22.5 1 18.5 C 1 16 3 14.8 4.5 14 C 3 13.2 1 12 1 9.5 C 1 5.5 3.5 2.5 7.5 2.5 C 11.5 2.5 13.5 7 18 7 Z"
     />
   </g>
 </svg>

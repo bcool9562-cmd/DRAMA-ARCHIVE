@@ -5,28 +5,24 @@ interface ScenovaLogoProps {
 }
 
 /**
- * SCENOVA Pure-White Geometric Emblem (#FFFFFF)
+ * SCENOVA Pure-White Organic Rounded Emblem (#FFFFFF)
  *
- * Monolithic architectural mark formed by two heavy, rounded-corner interlocking
- * abstract S-frames / cinema capsules angled around a crisp negative-space cut.
- * 100% solid white, thick geometry, no colors, no gradients, no play triangle.
+ * Smooth, plump, puffy organic rounded silhouette in pure #FFFFFF
+ * (symmetrical 4-lobed rounded cloud-prism / soft pinched-waist infinity-cushion)
+ * with continuous bezier curves and zero sharp corners.
  */
-export default function ScenovaLogo({ className = 'w-8 h-7 text-white fill-current' }: ScenovaLogoProps) {
+export default function ScenovaLogo({ className = 'w-9 h-7 text-white fill-white' }: ScenovaLogoProps) {
   return (
     <svg
-      viewBox="0 0 32 28"
+      viewBox="0 0 36 28"
       fill="currentColor"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       aria-hidden="true"
     >
-      {/* Upper heavy capsule hook */}
       <path
-        d="M 4 13 C 4 6.37 9.37 1 16 1 L 27.5 1 C 29.43 1 31 2.57 31 4.5 C 31 6.43 29.43 8 27.5 8 L 16.5 8 C 13.46 8 11 10.46 11 13.5 C 11 14.33 10.33 15 9.5 15 L 5.5 15 C 4.67 15 4 14.33 4 13.5 Z"
-      />
-      {/* Lower heavy capsule hook (180° rotational symmetry) */}
-      <path
-        d="M 28 15 C 28 21.63 22.63 27 16 27 L 4.5 27 C 2.57 27 1 25.43 1 23.5 C 1 21.57 2.57 20 4.5 20 L 15.5 20 C 18.54 20 21 17.54 21 14.5 C 21 13.67 21.67 13 22.5 13 L 26.5 13 C 27.33 13 28 13.67 28 14.5 Z"
+        d="M 18 7 C 22.5 7 24.5 2.5 28.5 2.5 C 32.5 2.5 35 5.5 35 9.5 C 35 12 33 13.2 31.5 14 C 33 14.8 35 16 35 18.5 C 35 22.5 32.5 25.5 28.5 25.5 C 24.5 25.5 22.5 21 18 21 C 13.5 21 11.5 25.5 7.5 25.5 C 3.5 25.5 1 22.5 1 18.5 C 1 16 3 14.8 4.5 14 C 3 13.2 1 12 1 9.5 C 1 5.5 3.5 2.5 7.5 2.5 C 11.5 2.5 13.5 7 18 7 Z"
+        fill="#FFFFFF"
       />
     </svg>
   )
