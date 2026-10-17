@@ -50,7 +50,29 @@ body {
   transform: translate3d(0, 0, 0);
 }
 
-/* 60FPS iOS Spring Entrance Animations */
+/* Unhurried, Silky iOS Spring Fluid Entrance Animations (750ms with cubic-bezier(0.25, 0.8, 0.25, 1)) */
+@keyframes smoothTabFloat {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.animate-tab-glide {
+  animation: smoothTabFloat 750ms cubic-bezier(0.25, 0.8, 0.25, 1) both;
+  will-change: transform, opacity;
+}
+
+.animate-card-glide,
+.ios-stagger-card {
+  animation: smoothTabFloat 750ms cubic-bezier(0.25, 0.8, 0.25, 1) both;
+  will-change: transform, opacity;
+}
+
 @keyframes iosViewEnter {
   0% {
     opacity: 0;
@@ -85,18 +107,17 @@ body {
 }
 
 .animate-ios-view {
-  animation: iosViewEnter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: smoothTabFloat 750ms cubic-bezier(0.25, 0.8, 0.25, 1) both;
   will-change: transform, opacity;
 }
 
 .animate-ios-spring {
-  animation: iosViewEnter 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: smoothTabFloat 750ms cubic-bezier(0.25, 0.8, 0.25, 1) both;
   will-change: transform, opacity;
 }
 
-.animate-ios-card-cascade,
-.ios-stagger-card {
-  animation: iosCardCascade 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+.animate-ios-card-cascade {
+  animation: smoothTabFloat 750ms cubic-bezier(0.25, 0.8, 0.25, 1) both;
   will-change: transform, opacity;
 }
 

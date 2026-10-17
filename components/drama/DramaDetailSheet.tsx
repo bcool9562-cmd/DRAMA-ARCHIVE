@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  X, Bookmark, Play, CheckCircle, Star, Maximize2, Plus, Minus
+  X, Bookmark, Play, CheckCircle, Star, Maximize2
 } from 'lucide-react'
 import type { Drama } from '@/lib/tmdb'
 import {
@@ -14,7 +14,6 @@ import {
   getUserDramas,
   getSavedDramasSync,
   onArchiveSync,
-  updateWatchedEpisodes,
   type DramaStatus,
   type UserDrama,
 } from '@/lib/supabase/archive'
@@ -404,86 +403,6 @@ export default function DramaDetailSheet({
                 })}
               </div>
             </div>
-
-            {/* Photo 3 Live Cards Style Episode Tracker with Horizon Glow & Cornfield Chase Bar */}
-            {currentStatus === 'watching' && (() => {
-              const savedDrama = savedDramas.find(d => String(d.drama_id) === String(drama.dramaId || drama.tmdbId))
-              const watchedEp = Number(savedDrama?.watched_episodes ?? 0)
-              const totalEp = Number(drama.totalEpisodes) || Number(savedDrama?.total_episodes) || 0
-              const effectiveTotal = totalEp > 1 ? totalEp : Math.max(watchedEp + 5, 16)
-              const progressPct = Math.min(94, Math.max(6, Math.round(((watchedEp || 1) / effectiveTotal) * 100)))
-
-              return (
-                <div className="relative overflow-hidden rounded-[24px] bg-[#12101e]/90 border border-purple-500/25 p-5 mb-7 shadow-[0_12px_32px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.15)] flex flex-col gap-4">
-                  {/* Purple-indigo internal ambient glow */}
-                  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(100%_90%_at_50%_100%,rgba(147,51,234,0.35)_0%,rgba(59,130,246,0.15)_50%,transparent_80%)]" />
-
-                  <div className="relative z-10 flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.8)]" />
-                        <span className="text-xs font-bold uppercase tracking-wider text-white/80">Episode Tracker</span>
-                      </div>
-                      <p className="text-[12px] text-white/50 mt-0.5">
-                        Watched {watchedEp} of {totalEp > 1 ? `${totalEp} episodes` : 'ongoing'}{totalEp > 1 ? ` (${progressPct}%)` : ''}
-                      </p>
-                    </div>
-
-                    {/* Stepper controls */}
-                    <div className="flex items-center gap-2.5">
-                      {/* Frosted Translucent Minus Button */}
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const nextVal = Math.max(0, watchedEp - 1)
-                          await updateWatchedEpisodes(String(drama.dramaId || drama.tmdbId), nextVal)
-                        }}
-                        disabled={watchedEp <= 0}
-                        className="w-8 h-8 rounded-full bg-white/[0.12] hover:bg-white/[0.22] text-white flex items-center justify-center border border-white/[0.15] active:scale-90 transition disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                        title="Previous Episode"
-                      >
-                        <Minus size={14} strokeWidth={2.5} />
-                      </button>
-
-                      {/* Tabular EP Number */}
-                      <div className="flex items-baseline px-1 font-black text-white text-base tracking-tight tabular-nums">
-                        <span>EP {watchedEp}</span>
-                        {totalEp > 1 && <span className="text-white/40 text-xs ml-1 font-semibold">/ {totalEp}</span>}
-                      </div>
-
-                      {/* Glowing Purple Plus Button */}
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const nextVal = watchedEp + 1
-                          await updateWatchedEpisodes(String(drama.dramaId || drama.tmdbId), nextVal)
-                          if (totalEp > 0 && nextVal >= totalEp) {
-                            await moveDrama(String(drama.dramaId || drama.tmdbId), 'finished')
-                          }
-                        }}
-                        className="w-8 h-8 rounded-full bg-purple-500 hover:bg-purple-400 text-white font-bold flex items-center justify-center shadow-[0_0_14px_rgba(168,85,247,0.6)] active:scale-90 transition cursor-pointer"
-                        title="Next Episode (+1)"
-                      >
-                        <Plus size={15} strokeWidth={2.8} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Cornfield Chase Laser-Flare Progress Bar */}
-                  <div className="relative z-10 pt-1">
-                    <div className="relative h-[5px] w-full rounded-full bg-white/[0.12] overflow-visible">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-purple-500 via-sky-400 to-white shadow-[0_0_14px_rgba(168,85,247,0.8)] relative transition-all duration-300"
-                        style={{ width: `${Math.min(96, Math.max(5, progressPct))}%` }}
-                      >
-                        <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-8 h-3.5 rounded-full bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,1)_0%,rgba(192,132,252,0.85)_45%,transparent_80%)] blur-[2px] pointer-events-none" />
-                        <div className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-1.5 rounded-full bg-white shadow-[0_0_10px_2px_#fff] pointer-events-none" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })()}
 
             {/* Genres */}
             {drama.genres && drama.genres.length > 0 && (

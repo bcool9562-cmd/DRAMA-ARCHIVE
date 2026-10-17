@@ -31,6 +31,12 @@ export default function AppShell() {
     }
     return 'search'
   })
+  const [tabSwitchCounts, setTabSwitchCounts] = useState<Record<TabId, number>>({
+    search: 0,
+    watchlist: 0,
+    watching: 0,
+    finished: 0,
+  })
   const [showNotifications, setShowNotifications] = useState(false)
   const [savedDramas, setSavedDramas] = useState<UserDrama[]>(() => getSavedDramasSync())
   const [discoverData, setDiscoverData] = useState<DiscoverData | null>(null)
@@ -43,6 +49,7 @@ export default function AppShell() {
         window.history.replaceState(null, '', tab === 'search' ? '/' : `/?tab=${tab}`)
       } catch { /* ignore */ }
     }
+    setTabSwitchCounts(prev => ({ ...prev, [tab]: prev[tab] + 1 }))
     setActiveTab(tab)
   }, [])
 
@@ -111,17 +118,46 @@ export default function AppShell() {
 
   return (
     <div className={`bg-[#050507] relative min-h-screen overflow-x-hidden text-white ${modalOpen ? 'overflow-hidden' : ''}`}>
-      {/* Top-Left Purple-Teal Aurora Background Gradient (Visibly sweeps & blooms outward from 0% 0% top-left corner on Home/Search) */}
-      {activeTab === 'search' && (
-        <div
-          key="home-aurora-search"
-          className="pointer-events-none absolute top-16 left-0 right-0 h-[520px] z-0 animate-aurora-sweep"
-          style={{
-            transformOrigin: '0% 0%',
-            background: 'radial-gradient(ellipse 50% 85% at 15% 0%, rgba(124, 58, 237, 0.52) 0%, rgba(91, 33, 182, 0.24) 50%, transparent 80%), radial-gradient(ellipse 42% 70% at 45% 0%, rgba(13, 148, 136, 0.24) 0%, transparent 75%)',
-          }}
-        />
-      )}
+      {/* ── Ambient Background Layer System: ALL backgrounds stay permanently mounted in DOM and cross-fade smoothly ── */}
+      {/* 1. Home (Search) Top-Left Purple-Teal Aurora Bloom */}
+      <div
+        className={`pointer-events-none absolute top-16 left-0 right-0 h-[520px] z-0 origin-top-left transition-all duration-[1500ms] ease-out ${
+          activeTab === 'search'
+            ? 'opacity-100 scale-100 blur-0'
+            : 'opacity-0 scale-[0.12] blur-[30px]'
+        }`}
+        style={{
+          transformOrigin: '0% 0%',
+          background: 'radial-gradient(ellipse 50% 85% at 15% 0%, rgba(124, 58, 237, 0.52) 0%, rgba(91, 33, 182, 0.24) 50%, transparent 80%), radial-gradient(ellipse 42% 70% at 45% 0%, rgba(13, 148, 136, 0.24) 0%, transparent 75%)',
+        }}
+      />
+
+      {/* 2. Watchlist Ambient Sky-Blue Glow */}
+      <div
+        className={`pointer-events-none fixed inset-0 z-0 overflow-hidden transition-opacity duration-700 ease-in-out ${
+          activeTab === 'watchlist' ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(56,189,248,0.18),_transparent_65%)]" />
+      </div>
+
+      {/* 3. Watching Ambient Purple Glow */}
+      <div
+        className={`pointer-events-none fixed inset-0 z-0 overflow-hidden transition-opacity duration-700 ease-in-out ${
+          activeTab === 'watching' ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(168,85,247,0.18),_transparent_65%)]" />
+      </div>
+
+      {/* 4. Finished Ambient Emerald Glow */}
+      <div
+        className={`pointer-events-none fixed inset-0 z-0 overflow-hidden transition-opacity duration-700 ease-in-out ${
+          activeTab === 'finished' ? 'opacity-100' : 'opacity-0'
+        }`}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(16,185,129,0.18),_transparent_65%)]" />
+      </div>
 
       {/* Global Ambient Artwork Canvas — ensures all frosted glass surfaces visibly refract real artwork */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none opacity-40">
@@ -160,28 +196,36 @@ export default function AppShell() {
         onLockClick={handleLock}
       />
 
-      {/* Main content — silky iOS spring entrance on active tab, zero exit overlap flash */}
+      {/* Main content — keep all 4 tab containers mounted in DOM, with activation counter key for smooth glide */}
       <main className="relative z-10 bg-transparent pt-16">
-        <div className={activeTab === 'search' ? 'block animate-ios-view' : 'hidden'}>
-          <SearchTab
-            onOpenDrama={openDrama}
-            onOpenPerson={openPerson}
-            onTabChange={handleTabChange}
-            discoverData={discoverData}
-            onDiscoverLoaded={setDiscoverData}
-          />
+        <div className={activeTab === 'search' ? 'block' : 'hidden'}>
+          <div key={`search-glide-${tabSwitchCounts.search}`} className="animate-tab-glide">
+            <SearchTab
+              onOpenDrama={openDrama}
+              onOpenPerson={openPerson}
+              onTabChange={handleTabChange}
+              discoverData={discoverData}
+              onDiscoverLoaded={setDiscoverData}
+            />
+          </div>
         </div>
 
-        <div className={activeTab === 'watchlist' ? 'block animate-ios-view' : 'hidden'}>
-          <WatchlistTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
+        <div className={activeTab === 'watchlist' ? 'block' : 'hidden'}>
+          <div key={`watchlist-glide-${tabSwitchCounts.watchlist}`} className="animate-tab-glide">
+            <WatchlistTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
+          </div>
         </div>
 
-        <div className={activeTab === 'watching' ? 'block animate-ios-view' : 'hidden'}>
-          <WatchingTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
+        <div className={activeTab === 'watching' ? 'block' : 'hidden'}>
+          <div key={`watching-glide-${tabSwitchCounts.watching}`} className="animate-tab-glide">
+            <WatchingTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
+          </div>
         </div>
 
-        <div className={activeTab === 'finished' ? 'block animate-ios-view' : 'hidden'}>
-          <FinishedTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
+        <div className={activeTab === 'finished' ? 'block' : 'hidden'}>
+          <div key={`finished-glide-${tabSwitchCounts.finished}`} className="animate-tab-glide">
+            <FinishedTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
+          </div>
         </div>
       </main>
 
