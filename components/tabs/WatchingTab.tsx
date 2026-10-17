@@ -8,9 +8,10 @@ import DramaCard from '@/components/drama/DramaCard'
 interface WatchingTabProps {
   onOpenDrama: (id: number, preview?: UserDrama) => void
   onOpenPerson: (id: number, name?: string) => void
+  activeCount?: number
 }
 
-export default function WatchingTab({ onOpenDrama }: WatchingTabProps) {
+export default function WatchingTab({ onOpenDrama, activeCount }: WatchingTabProps) {
   const [dramas, setDramas] = useState<UserDrama[]>(() =>
     getSavedDramasSync().filter((d) => d.status === 'watching')
   )
@@ -79,7 +80,11 @@ export default function WatchingTab({ onOpenDrama }: WatchingTabProps) {
         </div>
       </div>
 
-      <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5">
+      <div
+        key={`watching-grid-${activeCount ?? 0}`}
+        style={{ animation: 'smoothGridReveal 0.85s cubic-bezier(0.33, 1, 0.68, 1) both' }}
+        className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5"
+      >
         {dramas.map((drama) => (
           <DramaCard
             key={drama.drama_id}
