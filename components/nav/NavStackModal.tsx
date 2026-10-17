@@ -448,6 +448,34 @@ function DramaPage({
     },
   ]
 
+  const pillRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const [statusIndicator, setStatusIndicator] = useState<{ left: number; top: number; width: number; height: number; ready: boolean }>({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+    ready: false,
+  })
+
+  useEffect(() => {
+    const updateIndicator = () => {
+      const activeIdx = pills.findIndex(p => p.status === currentStatus)
+      const activeBtn = pillRefs.current[activeIdx]
+      if (activeBtn) {
+        setStatusIndicator({
+          left: activeBtn.offsetLeft,
+          top: activeBtn.offsetTop,
+          width: activeBtn.offsetWidth,
+          height: activeBtn.offsetHeight,
+          ready: true,
+        })
+      }
+    }
+    updateIndicator()
+    window.addEventListener('resize', updateIndicator)
+    return () => window.removeEventListener('resize', updateIndicator)
+  }, [currentStatus])
+
   // Image limits for smooth mobile performance
   const allImages = [...(drama?.images ?? []), ...(drama?.backdrops ?? [])]
   const visibleImages = allImages.slice(0, 12)
@@ -594,23 +622,38 @@ function DramaPage({
 
           {/* Segmented Status Pill Bar */}
           <div className="mb-6">
-            <div className="relative rounded-full bg-white/[0.06] backdrop-blur-2xl border border-white/[0.14] p-1.5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] flex items-center gap-1.5 touch-manipulation select-none">
-              {pills.map(({ status, label, icon: Icon, activeGradient }) => {
+            <div className="relative rounded-full bg-white/[0.06] backdrop-blur-2xl border border-white/[0.14] p-1.5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] flex items-center gap-1.5 touch-manipulation select-none overflow-hidden">
+              {/* Skiper UI Liquid Sliding Active Status Pill */}
+              <div
+                className="pointer-events-none absolute rounded-full border border-white/20 shadow-lg transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                style={{
+                  top: statusIndicator.top,
+                  left: 0,
+                  width: statusIndicator.width,
+                  height: statusIndicator.height,
+                  transform: `translate3d(${statusIndicator.left}px, 0, 0)`,
+                  opacity: currentStatus && statusIndicator.ready ? 1 : 0,
+                  transitionProperty: 'transform, width, height, opacity, background',
+                  background: currentStatus === 'watchlist'
+                    ? 'linear-gradient(to right, rgb(14 165 233), rgb(37 99 235))'
+                    : currentStatus === 'watching'
+                    ? 'linear-gradient(to right, rgb(168 85 247), rgb(79 70 229))'
+                    : currentStatus === 'finished'
+                    ? 'linear-gradient(to right, rgb(16 185 129), rgb(13 148 136))'
+                    : 'transparent',
+                }}
+              />
+
+              {pills.map(({ status, label, icon: Icon }, idx) => {
                 const isActive = currentStatus === status
                 return (
                   <button
                     key={status}
+                    ref={(el) => { pillRefs.current[idx] = el }}
                     type="button"
                     onClick={() => handleStatusToggle(status)}
                     className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 px-3 text-xs font-semibold tracking-wide transition-colors duration-150 cursor-pointer touch-manipulation select-none active:scale-95 ${isActive ? 'text-white' : 'text-white/50 hover:text-white/80'}`}
                   >
-                    {isActive && (
-                      <motion.div
-                        layoutId={`activeStatusPill-${tmdbId}`}
-                        className={`absolute inset-0 rounded-full ${activeGradient} border`}
-                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                      />
-                    )}
                     <span className="relative z-10 flex items-center gap-1.5">
                       <Icon size={13} strokeWidth={isActive ? 2.4 : 1.8} />
                       <span>{label}</span>

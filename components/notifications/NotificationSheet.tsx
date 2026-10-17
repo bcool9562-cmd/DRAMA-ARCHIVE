@@ -106,14 +106,15 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
             <button
               onClick={toggleNotificationPermission}
               className="
-                rounded-full bg-white/[0.1] hover:bg-white/[0.15] backdrop-blur-md
+                relative overflow-hidden rounded-full bg-white/[0.1] hover:bg-white/[0.15] backdrop-blur-md
                 border border-white/[0.18] pl-3 pr-2 py-1.5 flex items-center gap-2
                 text-xs font-semibold text-white active:scale-95 transition cursor-pointer select-none
                 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25)]
+                after:absolute after:inset-0 after:-translate-x-full hover:after:translate-x-full after:transition-transform after:duration-700 after:bg-gradient-to-r after:from-transparent after:via-white/15 after:to-transparent
               "
               title={isAlertsActive ? 'Device notifications are active' : 'Click to enable device push alerts'}
             >
-              <span className="flex items-center gap-1.5">
+              <span className="relative z-10 flex items-center gap-1.5">
                 <span
                   className={`w-2 h-2 rounded-full transition-colors ${
                     isAlertsActive
@@ -126,7 +127,7 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                 </span>
               </span>
               <div
-                className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
+                className={`relative z-10 w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
                   isAlertsActive
                     ? 'bg-emerald-400/25 text-emerald-300'
                     : 'bg-white/15 text-white/60'

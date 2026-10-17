@@ -28,11 +28,32 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
   const subline = [regionBadge, year, episodesText].filter(Boolean).join(' · ')
   const posterSrc = tmdbCard(drama.poster_url)
 
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (typeof window === 'undefined' || !window.matchMedia('(hover: hover)').matches) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+    const rotateX = Math.max(-4, Math.min(4, ((y - centerY) / centerY) * -4))
+    const rotateY = Math.max(-4, Math.min(4, ((x - centerX) / centerX) * 4))
+
+    e.currentTarget.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1)`
+    e.currentTarget.style.setProperty('--glare-x', `${x}px`)
+    e.currentTarget.style.setProperty('--glare-y', `${y}px`)
+  }
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.currentTarget.style.transform = ''
+  }
+
   return (
     <div
       role={onOpen ? 'button' : undefined}
       tabIndex={onOpen ? 0 : undefined}
       onClick={onOpen}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       onKeyDown={(e) => {
         if (onOpen && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault()
@@ -41,6 +62,13 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
       }}
       className={`group relative aspect-[2/3] w-full rounded-[24px] overflow-hidden border border-white/[0.18] shadow-[0_16px_36px_-6px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.25)] hover:-translate-y-1.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] text-left touch-manipulation select-none transform-gpu ${onOpen ? 'cursor-pointer' : ''}`}
     >
+      {/* Soft Diagonal Glass Glare Overlay */}
+      <div
+        className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"
+        style={{
+          background: 'radial-gradient(280px circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255,255,255,0.16) 0%, transparent 60%), linear-gradient(135deg, rgba(255,255,255,0.14) 0%, transparent 50%)',
+        }}
+      />
       {/* 1. Full-Bleed 100% Poster Image */}
       {posterSrc ? (
         <Image

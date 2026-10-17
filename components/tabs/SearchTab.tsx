@@ -147,6 +147,25 @@ export default function SearchTab({
     e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`)
   }
 
+  function handleCardMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    if (typeof window === 'undefined' || !window.matchMedia('(hover: hover)').matches) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const centerX = rect.width / 2
+    const centerY = rect.height / 2
+    const rotateX = Math.max(-4, Math.min(4, ((y - centerY) / centerY) * -4))
+    const rotateY = Math.max(-4, Math.min(4, ((x - centerX) / centerX) * 4))
+
+    e.currentTarget.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1)`
+    e.currentTarget.style.setProperty('--glare-x', `${x}px`)
+    e.currentTarget.style.setProperty('--glare-y', `${y}px`)
+  }
+
+  function handleCardMouseLeave(e: React.MouseEvent<HTMLDivElement>) {
+    e.currentTarget.style.transform = ''
+  }
+
   const showResults = query.trim().length > 0
 
   // Collect top editorial dramas
@@ -262,7 +281,18 @@ export default function SearchTab({
                   style={{ animationDelay: `${Math.min(idx * 30, 300)}ms` }}
                   className="group flex flex-col cursor-pointer touch-manipulation select-none hover:-translate-y-1.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
                 >
-                  <div className="relative aspect-[2/3] w-full rounded-[12px] overflow-hidden bg-white/[0.04] shadow-md">
+                  <div
+                    onMouseMove={handleCardMouseMove}
+                    onMouseLeave={handleCardMouseLeave}
+                    className="relative aspect-[2/3] w-full rounded-[12px] overflow-hidden bg-white/[0.04] shadow-md transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] transform-gpu"
+                  >
+                    {/* Soft Diagonal Glass Glare Overlay */}
+                    <div
+                      className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"
+                      style={{
+                        background: 'radial-gradient(260px circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255,255,255,0.16) 0%, transparent 60%), linear-gradient(135deg, rgba(255,255,255,0.14) 0%, transparent 50%)',
+                      }}
+                    />
                     {posterSrc ? (
                       <Image
                         src={posterSrc}
@@ -372,8 +402,19 @@ export default function SearchTab({
                     onClick={() => handleOpenDrama(drama)}
                     className="group flex flex-col cursor-pointer touch-manipulation select-none hover:-translate-y-1.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
                   >
-                    {/* Clean Frameless Poster with NO overlays, badges, or buttons */}
-                    <div className="relative aspect-[2/3] w-full rounded-[12px] overflow-hidden bg-white/[0.04] shadow-md">
+                    {/* Clean Frameless Poster with Apple TV+ 3D Micro-Tilt & Glass Glare */}
+                    <div
+                      onMouseMove={handleCardMouseMove}
+                      onMouseLeave={handleCardMouseLeave}
+                      className="relative aspect-[2/3] w-full rounded-[12px] overflow-hidden bg-white/[0.04] shadow-md transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] transform-gpu"
+                    >
+                      {/* Soft Diagonal Glass Glare Overlay */}
+                      <div
+                        className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20"
+                        style={{
+                          background: 'radial-gradient(260px circle at var(--glare-x, 50%) var(--glare-y, 50%), rgba(255,255,255,0.16) 0%, transparent 60%), linear-gradient(135deg, rgba(255,255,255,0.14) 0%, transparent 50%)',
+                        }}
+                      />
                       {posterSrc ? (
                         <Image
                           src={posterSrc}

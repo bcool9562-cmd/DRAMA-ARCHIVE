@@ -95,7 +95,7 @@ export default function WatchlistTab({ onOpenDrama, activeCount }: WatchlistTabP
                 <button
                   title="Start Watching"
                   onClick={() => handleMove(drama.drama_id, 'watching')}
-                  className="flex-1 h-8 rounded-full bg-white/[0.16] hover:bg-white/[0.26] border border-white/[0.22] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation select-none"
+                  className="relative overflow-hidden flex-1 h-8 rounded-full bg-white/[0.16] hover:bg-white/[0.26] border border-white/[0.22] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all duration-200 active:scale-95 cursor-pointer touch-manipulation select-none after:absolute after:inset-0 after:-translate-x-full hover:after:translate-x-full after:transition-transform after:duration-700 after:bg-gradient-to-r after:from-transparent after:via-white/15 after:to-transparent"
                 >
                   <Play size={11} className="fill-white" />
                   <span>Watch</span>

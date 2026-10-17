@@ -1,7 +1,7 @@
 'use client'
 
 import { Search, Bookmark, Play, CheckCircle } from 'lucide-react'
-import { motion } from 'framer-motion'
+import { useState, useRef, useEffect } from 'react'
 
 export type TabId = 'search' | 'watchlist' | 'watching' | 'finished'
 
@@ -23,6 +23,35 @@ export default function BottomNav({
   activeTab,
   onTabChange,
 }: BottomNavProps) {
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const [indicator, setIndicator] = useState<{ left: number; top: number; width: number; height: number; ready: boolean }>({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+    ready: false,
+  })
+
+  useEffect(() => {
+    const updateIndicator = () => {
+      const activeIndex = TABS.findIndex((t) => t.id === activeTab)
+      const activeBtn = tabRefs.current[activeIndex]
+      if (activeBtn) {
+        setIndicator({
+          left: activeBtn.offsetLeft,
+          top: activeBtn.offsetTop,
+          width: activeBtn.offsetWidth,
+          height: activeBtn.offsetHeight,
+          ready: true,
+        })
+      }
+    }
+
+    updateIndicator()
+    window.addEventListener('resize', updateIndicator)
+    return () => window.removeEventListener('resize', updateIndicator)
+  }, [activeTab])
+
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex justify-center pb-[env(safe-area-inset-bottom,20px)] px-4">
       <nav
@@ -33,11 +62,26 @@ export default function BottomNav({
           backdrop-blur-2xl will-change-transform touch-manipulation select-none overflow-hidden
         "
       >
-        {TABS.map(({ id, label, icon: Icon }) => {
+        {/* Skiper UI Liquid Sliding Active Pill Indicator */}
+        <div
+          className="pointer-events-none absolute rounded-full bg-white/[0.12] border border-white/[0.15] shadow-sm transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+          style={{
+            top: indicator.top,
+            left: 0,
+            width: indicator.width,
+            height: indicator.height,
+            transform: `translate3d(${indicator.left}px, 0, 0)`,
+            opacity: indicator.ready ? 1 : 0,
+            transitionProperty: 'transform, width, height, opacity',
+          }}
+        />
+
+        {TABS.map(({ id, label, icon: Icon }, idx) => {
           const isActive = activeTab === id
           return (
             <button
               key={id}
+              ref={(el) => { tabRefs.current[idx] = el }}
               onClick={() => {
                 if (typeof window !== 'undefined') {
                   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
@@ -54,13 +98,6 @@ export default function BottomNav({
               aria-label={label}
               aria-current={isActive ? 'page' : undefined}
             >
-              {isActive && (
-                <motion.div
-                  layoutId="activeNavTab"
-                  className="absolute inset-0 rounded-full bg-white/[0.12] border border-white/[0.15] shadow-sm"
-                  transition={{ type: 'spring', stiffness: 450, damping: 28, mass: 0.8 }}
-                />
-              )}
               <Icon
                 size={20}
                 strokeWidth={isActive ? 2.4 : 1.8}

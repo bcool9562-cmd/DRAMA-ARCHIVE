@@ -90,6 +90,14 @@ export default function DramaDetailSheet({
   const galleryRef = useRef<HTMLDivElement>(null)
   const mutationIdRef = useRef(0)
   const [lockedStatus, setLockedStatus] = useState<DramaStatus | null | undefined>(undefined)
+  const pillRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const [statusIndicator, setStatusIndicator] = useState<{ left: number; top: number; width: number; height: number; ready: boolean }>({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+    ready: false,
+  })
 
   useEffect(() => {
     setLockedStatus(undefined)
@@ -131,6 +139,26 @@ export default function DramaDetailSheet({
       d.drama_id === (drama?.dramaId ?? `tmdb-${tmdbId}`)
   )
   const currentStatus = lockedStatus !== undefined ? lockedStatus : (matchedSaved?.status ?? null)
+
+  useEffect(() => {
+    const STATUS_KEYS: DramaStatus[] = ['watchlist', 'watching', 'finished']
+    const updateIndicator = () => {
+      const activeIdx = STATUS_KEYS.findIndex((s) => s === currentStatus)
+      const activeBtn = pillRefs.current[activeIdx]
+      if (activeBtn) {
+        setStatusIndicator({
+          left: activeBtn.offsetLeft,
+          top: activeBtn.offsetTop,
+          width: activeBtn.offsetWidth,
+          height: activeBtn.offsetHeight,
+          ready: true,
+        })
+      }
+    }
+    updateIndicator()
+    window.addEventListener('resize', updateIndicator)
+    return () => window.removeEventListener('resize', updateIndicator)
+  }, [currentStatus])
 
   // Instant 1-tap handler: toggles off if active, moves or adds immediately (<1ms)
   function handleStatusToggle(targetStatus: DramaStatus) {
@@ -355,48 +383,60 @@ export default function DramaDetailSheet({
               )}
             </div>
 
-            {/* Segmented Status Pill Bar with iOS Spring Physics */}
+            {/* Segmented Status Pill Bar with Liquid Sliding Indicator */}
             <div className="mb-7">
-              <div className="relative rounded-full bg-black/60 p-1.5 border border-white/[0.14] shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)] flex items-center gap-1 touch-manipulation select-none">
+              <div className="relative rounded-full bg-black/60 p-1.5 border border-white/[0.14] shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)] flex items-center gap-1 touch-manipulation select-none overflow-hidden">
+                {/* Skiper UI Liquid Sliding Active Status Pill */}
+                <div
+                  className="pointer-events-none absolute rounded-full border border-white/20 shadow-lg transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                  style={{
+                    top: statusIndicator.top,
+                    left: 0,
+                    width: statusIndicator.width,
+                    height: statusIndicator.height,
+                    transform: `translate3d(${statusIndicator.left}px, 0, 0)`,
+                    opacity: currentStatus && statusIndicator.ready ? 1 : 0,
+                    transitionProperty: 'transform, width, height, opacity, background',
+                    background: currentStatus === 'watchlist'
+                      ? 'linear-gradient(to right, rgb(14 165 233), rgb(37 99 235))'
+                      : currentStatus === 'watching'
+                      ? 'linear-gradient(to right, rgb(168 85 247), rgb(79 70 229))'
+                      : currentStatus === 'finished'
+                      ? 'linear-gradient(to right, rgb(16 185 129), rgb(13 148 136))'
+                      : 'transparent',
+                  }}
+                />
+
                 {(
                   [
                     {
                       status: 'watchlist' as DramaStatus,
                       label: 'Watchlist',
                       icon: Bookmark,
-                      gradient: 'bg-gradient-to-b from-sky-400 to-blue-600 shadow-blue-500/30',
                     },
                     {
                       status: 'watching' as DramaStatus,
                       label: 'Watching',
                       icon: Play,
-                      gradient: 'bg-gradient-to-b from-purple-500 to-indigo-600 shadow-purple-500/30',
                     },
                     {
                       status: 'finished' as DramaStatus,
                       label: 'Finished',
                       icon: CheckCircle,
-                      gradient: 'bg-gradient-to-b from-emerald-400 to-teal-600 shadow-emerald-500/30',
                     },
                   ] as const
-                ).map(({ status, label, icon: Icon, gradient }) => {
+                ).map(({ status, label, icon: Icon }, idx) => {
                   const isActive = currentStatus === status
                   return (
                     <button
                       key={status}
+                      ref={(el) => { pillRefs.current[idx] = el }}
                       type="button"
                       onClick={() => handleStatusToggle(status)}
                       className={`relative flex flex-1 items-center justify-center gap-2 rounded-full py-2.5 px-3 text-xs font-semibold tracking-wide transition-colors duration-150 cursor-pointer touch-manipulation select-none active:scale-95 ${
                         isActive ? 'text-white' : 'text-white/50 hover:text-white/80'
                       }`}
                     >
-                      {isActive && (
-                        <motion.div
-                          layoutId="activeStatusPill"
-                          className={`absolute inset-0 rounded-full shadow-lg ${gradient}`}
-                          transition={{ type: 'spring', stiffness: 500, damping: 35 }}
-                        />
-                      )}
                       <span className="relative z-10 flex items-center gap-1.5">
                         <Icon
                           size={14}

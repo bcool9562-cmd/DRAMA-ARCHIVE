@@ -180,12 +180,48 @@ export default function VibeChart({
   }, [vibes, drama, savedDramas])
 
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+  const [isMounted, setIsMounted] = useState(false)
+  const [displayPct, setDisplayPct] = useState(0)
+  const prevPctRef = React.useRef(0)
 
   // Determine active item for center readout
   const activeIdx = hoveredIdx !== null
     ? hoveredIdx
     : (selectedVibe ? chartVibes.findIndex(v => v.name.toLowerCase() === selectedVibe.toLowerCase()) : 0)
   const activeItem = chartVibes[activeIdx >= 0 ? activeIdx : 0] || chartVibes[0]
+
+  // Initial Donut Sweep transition trigger
+  React.useEffect(() => {
+    const timer = setTimeout(() => setIsMounted(true), 40)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // Animaster clean requestAnimationFrame count-up (0% to target % over 800ms)
+  React.useEffect(() => {
+    let startTimestamp: number | null = null
+    const duration = 800
+    const startVal = prevPctRef.current
+    const endVal = activeItem.pct
+
+    let animId: number
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp
+      const elapsed = timestamp - startTimestamp
+      const progress = Math.min(elapsed / duration, 1)
+      const easeProgress = 1 - Math.pow(1 - progress, 3)
+      const current = Math.round(startVal + (endVal - startVal) * easeProgress)
+      setDisplayPct(current)
+
+      if (progress < 1) {
+        animId = requestAnimationFrame(step)
+      } else {
+        prevPctRef.current = endVal
+      }
+    }
+
+    animId = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(animId)
+  }, [activeItem.pct])
 
   // Scaled SVG Donut geometry (w-48 h-48 = 192px)
   const size = 192
@@ -244,10 +280,11 @@ export default function VibeChart({
               stroke={seg.color}
               strokeWidth={seg.isCurrent ? strokeWidth + 5 : strokeWidth}
               strokeDasharray={seg.strokeArray}
-              strokeDashoffset={seg.strokeOffset}
+              strokeDashoffset={isMounted ? seg.strokeOffset : seg.strokeOffset - circumference}
               strokeLinecap="round"
-              className="transition-all duration-300 cursor-pointer transform-gpu"
+              className="cursor-pointer transform-gpu"
               style={{
+                transition: 'stroke-dashoffset 1000ms cubic-bezier(0.16, 1, 0.3, 1), stroke-width 300ms ease, opacity 300ms ease, filter 300ms ease',
                 opacity: (hoveredIdx !== null && hoveredIdx !== seg.idx) ? 0.45 : 1,
                 filter: seg.isCurrent ? `drop-shadow(0 0 8px ${seg.color}88)` : undefined,
               }}
@@ -268,8 +305,8 @@ export default function VibeChart({
           <span className="text-xs font-semibold tracking-tight text-white/90 drop-shadow-sm truncate max-w-[110px] px-2">
             {activeItem.name}
           </span>
-          <span className="text-2xl font-black text-white tracking-tight drop-shadow-md mt-0.5">
-            {activeItem.pct}%
+          <span className="text-2xl font-black text-white tracking-tight drop-shadow-md mt-0.5 tabular-nums">
+            {displayPct}%
           </span>
         </div>
       </div>
