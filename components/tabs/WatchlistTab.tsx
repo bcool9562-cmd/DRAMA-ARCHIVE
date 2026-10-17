@@ -80,11 +80,10 @@ export default function WatchlistTab({ onOpenDrama }: WatchlistTabProps) {
       </div>
 
       <div className="relative z-10 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-5">
-        {dramas.map((drama, index) => (
+        {dramas.map((drama) => (
           <DramaCard
             key={drama.drama_id}
             drama={drama}
-            staggerIndex={index}
             onOpen={() => handleOpenDrama(drama)}
             actions={
               <div className="flex items-center gap-1.5 w-full">

@@ -121,17 +121,18 @@ export default function AppShell() {
       {/* ── Ambient Background Layer System: ALL backgrounds stay permanently mounted in DOM and cross-fade smoothly ── */}
       {/* 1. Home (Search) Top-Left Purple-Teal Aurora Bloom */}
       <div
-        className={`pointer-events-none absolute top-16 left-0 right-0 h-[520px] z-0 origin-top-left transition-all duration-[1500ms] ease-out border-0 !border-none outline-none ring-0 rounded-none shadow-none ${
+        className={`pointer-events-none absolute -left-24 -top-12 right-0 h-[560px] z-0 origin-top-left transition-all duration-[1500ms] ease-out border-0 !border-none outline-none ring-0 !rounded-none shadow-none ${
           activeTab === 'search'
-            ? 'opacity-100 scale-100 blur-0'
+            ? 'opacity-100 scale-100 blur-0 animate-aurora-sweep'
             : 'opacity-0 scale-[0.12] blur-[30px]'
         }`}
         style={{
           transformOrigin: '0% 0%',
-          background: 'radial-gradient(ellipse 50% 85% at 15% 0%, rgba(124, 58, 237, 0.52) 0%, rgba(91, 33, 182, 0.24) 50%, transparent 80%), radial-gradient(ellipse 42% 70% at 45% 0%, rgba(13, 148, 136, 0.24) 0%, transparent 75%)',
+          background: 'radial-gradient(ellipse 65% 65% at 20% 15%, rgba(124, 58, 237, 0.52) 0%, rgba(91, 33, 182, 0.22) 40%, transparent 70%), radial-gradient(ellipse 55% 55% at 40% 15%, rgba(13, 148, 136, 0.22) 0%, transparent 65%)',
           border: 'none',
           outline: 'none',
           boxShadow: 'none',
+          borderRadius: '0px',
         }}
       />
 
@@ -212,19 +213,19 @@ export default function AppShell() {
         </div>
 
         <div className={activeTab === 'watchlist' ? 'block' : 'hidden'}>
-          <div key={`watchlist-glide-${tabSwitchCounts.watchlist}`} className="animate-tab-glide">
+          <div key={`watchlist-glide-${tabSwitchCounts.watchlist}`} className="animate-list-tab">
             <WatchlistTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
           </div>
         </div>
 
         <div className={activeTab === 'watching' ? 'block' : 'hidden'}>
-          <div key={`watching-glide-${tabSwitchCounts.watching}`} className="animate-tab-glide">
+          <div key={`watching-glide-${tabSwitchCounts.watching}`} className="animate-list-tab">
             <WatchingTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
           </div>
         </div>
 
         <div className={activeTab === 'finished' ? 'block' : 'hidden'}>
-          <div key={`finished-glide-${tabSwitchCounts.finished}`} className="animate-tab-glide">
+          <div key={`finished-glide-${tabSwitchCounts.finished}`} className="animate-list-tab">
             <FinishedTab onOpenDrama={openDrama} onOpenPerson={openPerson} />
           </div>
         </div>

@@ -81,26 +81,21 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
 
   return (
     <div
-      className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md touch-manipulation"
+      className="fixed inset-0 z-[120] bg-black/75 backdrop-blur-md touch-manipulation"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
-      {/* Floating Luminous Glass Panel */}
+      {/* Floating 4-Corner Rounded Glass Card — IDENTICAL ON PHONE AND PC */}
       <div
-        className="relative flex h-[85dvh] sm:h-[680px] w-full max-w-lg flex-col overflow-hidden rounded-t-[32px] sm:rounded-[32px] bg-[#101018]/85 backdrop-blur-3xl border border-white/[0.18] shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_24px_60px_rgba(0,0,0,0.75)]"
+        className="fixed top-20 left-1/2 -translate-x-1/2 sm:left-auto sm:right-8 sm:translate-x-0 w-[calc(100vw-24px)] max-w-[420px] max-h-[80vh] flex flex-col overflow-hidden rounded-[28px] bg-[#101018]/90 backdrop-blur-3xl border border-white/[0.18] shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_24px_60px_rgba(0,0,0,0.85)] z-[125]"
         onClick={e => e.stopPropagation()}
       >
         {/* Living Flow ambient light header glow */}
         <div className="pointer-events-none absolute -top-20 inset-x-0 h-48 bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.35),rgba(244,63,94,0.18)_50%,transparent_80%)]" />
 
-        {/* Drag handle (mobile) */}
-        <div className="flex justify-center pt-3 pb-1 sm:hidden">
-          <div className="h-1.5 w-11 rounded-full bg-white/20" />
-        </div>
-
         {/* Header Row: Title + Luminous Push Toggle Pill + Close Button */}
-        <div className="relative z-10 px-5 pt-3 pb-4 border-b border-white/[0.10] flex items-center justify-between gap-3">
+        <div className="relative z-10 px-5 pt-4 pb-4 border-b border-white/[0.10] flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
-            <h2 className="text-[20px] font-bold tracking-tight text-white flex items-baseline">
+            <h2 className="text-[18px] sm:text-[20px] font-bold tracking-tight text-white flex items-baseline">
               Airing Alerts
               <span className="w-1.5 h-1.5 rounded-full bg-violet-400 shadow-[0_0_8px_#a78bfa] inline-block ml-1.5 mb-0.5" />
             </h2>

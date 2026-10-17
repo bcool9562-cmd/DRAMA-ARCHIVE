@@ -10,10 +10,9 @@ interface DramaCardProps {
   drama: UserDrama
   actions?: React.ReactNode
   onOpen?: () => void
-  staggerIndex?: number
 }
 
-export default function DramaCard({ drama, actions, onOpen, staggerIndex }: DramaCardProps) {
+export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
   const year = drama.release_year ? String(drama.release_year) : ''
   const regionBadge = drama.country ? REGION_NAMES[drama.country.toUpperCase()]?.badge || drama.country : null
 
@@ -40,14 +39,7 @@ export default function DramaCard({ drama, actions, onOpen, staggerIndex }: Dram
           onOpen()
         }
       }}
-      style={
-        staggerIndex !== undefined
-          ? { animationDelay: `${Math.min(staggerIndex * 65, 650)}ms` }
-          : undefined
-      }
-      className={`group relative aspect-[2/3] w-full rounded-[24px] overflow-hidden border border-white/[0.18] shadow-[0_16px_36px_-6px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.25)] hover:-translate-y-1.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] text-left touch-manipulation select-none transform-gpu ${
-        staggerIndex !== undefined ? 'ios-stagger-card' : ''
-      } ${onOpen ? 'cursor-pointer' : ''}`}
+      className={`group relative aspect-[2/3] w-full rounded-[24px] overflow-hidden border border-white/[0.18] shadow-[0_16px_36px_-6px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.25)] hover:-translate-y-1.5 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] text-left touch-manipulation select-none transform-gpu ${onOpen ? 'cursor-pointer' : ''}`}
     >
       {/* 1. Full-Bleed 100% Poster Image */}
       {posterSrc ? (
