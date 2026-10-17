@@ -177,7 +177,7 @@ export default function AppShell() {
     )
   }
 
-  const modalOpen = navDepth > 0
+  const modalOpen = navDepth > 0 || navStack.length > 0
   const postersWithImages = savedDramas.filter(d => d.poster_url)
   const ambientArt1 = postersWithImages[0]?.poster_url || null
   const ambientArt2 = postersWithImages[1]?.poster_url || postersWithImages[0]?.poster_url || null
@@ -193,6 +193,8 @@ export default function AppShell() {
       <div
         key={`home-aurora-${tabSwitchCounts.search}`}
         className={`pointer-events-none absolute top-0 left-0 right-0 h-[620px] z-0 origin-top-left border-0 !border-none outline-none ring-0 !rounded-none shadow-none ${
+          modalOpen ? 'invisible pointer-events-none' : ''
+        } ${
           activeTab === 'search'
             ? 'opacity-100 animate-aurora-sweep'
             : 'opacity-0 scale-[0.08] transition-opacity duration-700 ease-in-out'
@@ -210,6 +212,8 @@ export default function AppShell() {
       {/* 2. Watchlist Ambient Sky-Blue Glow */}
       <div
         className={`pointer-events-none fixed inset-0 z-0 overflow-hidden transition-opacity duration-700 ease-in-out ${
+          modalOpen ? 'invisible pointer-events-none' : ''
+        } ${
           activeTab === 'watchlist' ? 'opacity-100' : 'opacity-0'
         }`}
       >
@@ -219,6 +223,8 @@ export default function AppShell() {
       {/* 3. Watching Ambient Purple Glow */}
       <div
         className={`pointer-events-none fixed inset-0 z-0 overflow-hidden transition-opacity duration-700 ease-in-out ${
+          modalOpen ? 'invisible pointer-events-none' : ''
+        } ${
           activeTab === 'watching' ? 'opacity-100' : 'opacity-0'
         }`}
       >
@@ -228,6 +234,8 @@ export default function AppShell() {
       {/* 4. Finished Ambient Emerald Glow */}
       <div
         className={`pointer-events-none fixed inset-0 z-0 overflow-hidden transition-opacity duration-700 ease-in-out ${
+          modalOpen ? 'invisible pointer-events-none' : ''
+        } ${
           activeTab === 'finished' ? 'opacity-100' : 'opacity-0'
         }`}
       >
@@ -235,7 +243,7 @@ export default function AppShell() {
       </div>
 
       {/* Global Ambient Artwork Canvas — ensures all frosted glass surfaces visibly refract real artwork */}
-      <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none opacity-40">
+      <div className={`fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none opacity-40 ${modalOpen ? 'invisible pointer-events-none' : ''}`}>
         {ambientArt1 && (
           <div className="absolute -top-[15%] -left-[10%] w-[85vw] h-[85vw] max-w-[750px] max-h-[750px] transform-gpu">
             <Image
@@ -271,8 +279,8 @@ export default function AppShell() {
         onLockClick={handleLock}
       />
 
-      {/* Main content — keep all 4 tab containers mounted in DOM, with activation counter key for smooth glide */}
-      <main className="relative z-10 bg-transparent pt-[calc(4rem+env(safe-area-inset-top,0px))]">
+      {/* Main content — paused/hidden when modal is open so phone GPU does NOT render background elements */}
+      <main className={`relative z-10 bg-transparent pt-[calc(4rem+env(safe-area-inset-top,0px))] ${modalOpen ? 'invisible pointer-events-none' : ''}`}>
         {activeTab === 'search' && (
           <SearchTab
             onOpenDrama={openDrama}

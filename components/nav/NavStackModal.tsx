@@ -12,7 +12,7 @@
  * • Zero-GPU-cost Apple dark glass surfaces with native iOS momentum scrolling.
  */
 
-import { useEffect, useRef, useCallback, useState, useReducer } from 'react'
+import { useEffect, useRef, useCallback, useState, useReducer, startTransition } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import {
@@ -217,11 +217,11 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95 backdrop-blur-2xl p-4 select-none"
+            className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95 max-md:backdrop-blur-none md:backdrop-blur-2xl p-4 select-none"
             onClick={() => { setLightboxSrc(null); setLightboxThumb(null) }}
           >
             <button
-              className="absolute right-6 top-6 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-xl border border-white/20 transition hover:bg-white/20 active:scale-95 cursor-pointer touch-manipulation"
+              className="absolute right-6 top-6 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/20 transition hover:bg-white/20 active:scale-95 cursor-pointer touch-manipulation"
               onClick={() => { setLightboxSrc(null); setLightboxThumb(null) }}
             >
               <X size={20} />
@@ -240,7 +240,7 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
 
               {/* Minimal white partial-ring spinner matching Photo 3 */}
               {!lightboxLoaded && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity duration-200 pointer-events-none">
+                <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 max-md:backdrop-blur-none md:backdrop-blur-sm transition-opacity duration-200 pointer-events-none">
                   <div className="w-9 h-9 rounded-full border-[2.5px] border-white/15 border-t-white animate-spin" />
                 </div>
               )}
@@ -266,7 +266,7 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 18, scale: 0.98 }}
           transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="absolute inset-0 flex items-end justify-center bg-black/80 backdrop-blur-sm"
+          className="absolute inset-0 flex items-end justify-center bg-black/80 max-md:backdrop-blur-none md:backdrop-blur-sm"
           onClick={(e) => { if (e.target === e.currentTarget) popOne() }}
         >
           {current.type === 'drama' ? (
@@ -352,9 +352,11 @@ function DramaPage({
   onPushPhotos, onPushCast,
   onForceUpdate, setLightboxSrc,
 }: DramaPageProps) {
+  const userDramaMatch = savedDramas.find(d => d.tmdb_id === tmdbId)
+  const initialData = preview || userDramaMatch
   const cached = dramaCache.get(tmdbId)
-  const [drama, setDrama] = useState<Drama | null>(cached ?? (() => normalizeDramaPreview(preview, tmdbId)))
-  const [loading, setLoading] = useState(!cached)
+  const [drama, setDrama] = useState<Drama | null>(() => cached ?? normalizeDramaPreview(initialData, tmdbId))
+  const [loading, setLoading] = useState(!cached && !initialData)
   const [backdropLoaded, setBackdropLoaded] = useState(false)
 
   // Background fetch for rich data
@@ -368,9 +370,11 @@ function DramaPage({
     fetch(`/api/drama/${tmdbId}`)
       .then(r => r.json())
       .then(d => {
-        if (!alive || !d) return
-        dramaCache.set(tmdbId, d)
-        setDrama(d)
+        if (!alive) return
+        if (d && !d.error) {
+          dramaCache.set(tmdbId, d)
+          setDrama(d)
+        }
         setLoading(false)
         onForceUpdate()
       })
@@ -379,22 +383,20 @@ function DramaPage({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tmdbId])
 
-  // Single source of truth for user drama status with optimistic locking
-  const mutationIdRef = useRef(0)
-  const [lockedStatus, setLockedStatus] = useState<DramaStatus | null | undefined>(undefined)
+  // Single source of truth for user drama status with instant local status
+  const userDrama = savedDramas.find(d => d.tmdb_id === tmdbId)
+  const [localStatus, setLocalStatus] = useState<DramaStatus | null>(() => userDrama?.status ?? null)
 
   useEffect(() => {
-    setLockedStatus(undefined)
-  }, [tmdbId])
+    setLocalStatus(userDrama?.status ?? null)
+  }, [tmdbId, userDrama?.status])
 
-  const userDrama = savedDramas.find(d => d.tmdb_id === tmdbId)
-  const currentStatus = lockedStatus !== undefined ? lockedStatus : (userDrama?.status ?? null)
+  const currentStatus = localStatus
 
   const handleStatusToggle = (target: DramaStatus) => {
     if (!drama) return
-    mutationIdRef.current += 1
     const nextStatus = currentStatus === target ? null : target
-    setLockedStatus(nextStatus)
+    setLocalStatus(nextStatus)
 
     if (nextStatus === 'finished') {
       haptic.success()
@@ -404,86 +406,34 @@ function DramaPage({
       haptic.warning()
     }
 
-    if (currentStatus === target) {
-      removeDrama(drama.dramaId)
-    } else if (currentStatus) {
-      moveDrama(drama.dramaId, target)
-    } else {
-      addDrama({
-        drama_id: drama.dramaId,
-        tmdb_id: drama.tmdbId,
-        title: drama.title,
-        native_title: drama.nativeTitle,
-        poster_url: drama.posterUrl,
-        country: drama.country,
-        release_year: drama.releaseYear,
-        total_episodes: drama.totalEpisodes,
-        rating: drama.rating,
-        status: target,
-        airing_status: drama.airingStatus,
-        first_air_date: drama.firstAirDate,
-        next_episode_date: drama.nextEpisodeDate,
-        next_episode_number: drama.nextEpisodeNumber,
-      })
-    }
+    startTransition(() => {
+      if (currentStatus === target) {
+        removeDrama(drama.dramaId)
+      } else if (currentStatus) {
+        moveDrama(drama.dramaId, target)
+      } else {
+        addDrama({
+          drama_id: drama.dramaId,
+          tmdb_id: drama.tmdbId,
+          title: drama.title,
+          native_title: drama.nativeTitle,
+          poster_url: drama.posterUrl,
+          country: drama.country,
+          release_year: drama.releaseYear,
+          total_episodes: drama.totalEpisodes,
+          rating: drama.rating,
+          status: target,
+          airing_status: drama.airingStatus,
+          first_air_date: drama.firstAirDate,
+          next_episode_date: drama.nextEpisodeDate,
+          next_episode_number: drama.nextEpisodeNumber,
+        })
+      }
+    })
   }
 
   const regionBadge = drama?.country ? REGION_NAMES[drama.country]?.badge || drama.country : null
   const episodesLabel = drama?.totalEpisodes ? `${drama.totalEpisodes} Episodes` : 'Episodes TBA'
-
-  const pills: {
-    status: DramaStatus
-    label: string
-    icon: typeof Bookmark
-    activeGradient: string
-  }[] = [
-    {
-      status: 'watchlist',
-      label: 'Watchlist',
-      icon: Bookmark,
-      activeGradient: 'bg-gradient-to-r from-sky-400 to-blue-600 text-white shadow-lg shadow-blue-500/35 border-sky-300/40',
-    },
-    {
-      status: 'watching',
-      label: 'Watching',
-      icon: Play,
-      activeGradient: 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg shadow-purple-500/35 border-purple-300/40',
-    },
-    {
-      status: 'finished',
-      label: 'Finished',
-      icon: CheckCircle,
-      activeGradient: 'bg-gradient-to-r from-emerald-400 to-teal-600 text-white shadow-lg shadow-emerald-500/35 border-emerald-300/40',
-    },
-  ]
-
-  const pillRefs = useRef<(HTMLButtonElement | null)[]>([])
-  const [statusIndicator, setStatusIndicator] = useState<{ left: number; top: number; width: number; height: number; ready: boolean }>({
-    left: 0,
-    top: 0,
-    width: 0,
-    height: 0,
-    ready: false,
-  })
-
-  useEffect(() => {
-    const updateIndicator = () => {
-      const activeIdx = pills.findIndex(p => p.status === currentStatus)
-      const activeBtn = pillRefs.current[activeIdx]
-      if (activeBtn) {
-        setStatusIndicator({
-          left: activeBtn.offsetLeft,
-          top: activeBtn.offsetTop,
-          width: activeBtn.offsetWidth,
-          height: activeBtn.offsetHeight,
-          ready: true,
-        })
-      }
-    }
-    updateIndicator()
-    window.addEventListener('resize', updateIndicator)
-    return () => window.removeEventListener('resize', updateIndicator)
-  }, [currentStatus])
 
   // Image limits for smooth mobile performance
   const allImages = [...(drama?.images ?? []), ...(drama?.backdrops ?? [])]
@@ -492,18 +442,18 @@ function DramaPage({
 
   return (
     <div
-      className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.22] bg-[#0c0c12]/95 backdrop-blur-2xl shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] will-change-transform transform-gpu"
+      className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.22] bg-[#07070b] max-md:backdrop-blur-none md:bg-[#0c0c12]/95 md:backdrop-blur-2xl shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)]"
       onClick={e => e.stopPropagation()}
     >
-      {/* Ambient background poster glow */}
+      {/* Ambient background poster glow - desktop only to prevent mobile GPU overflow */}
       {drama?.posterUrl && (
-        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden hidden md:block">
           <Image
             src={drama.posterUrl}
             alt="Ambient Glow"
             fill
-            priority
-            className="scale-150 blur-[100px] saturate-200 opacity-20 object-cover"
+            sizes="100vw"
+            className="scale-150 blur-[80px] saturate-200 opacity-20 object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0c0c12]/30 via-[#0c0c12]/80 to-[#0c0c12]" />
         </div>
@@ -519,7 +469,7 @@ function DramaPage({
         {canGoBack ? (
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 rounded-full border border-white/[0.18] bg-white/[0.08] backdrop-blur-xl px-3 py-1.5 text-xs font-semibold text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] active:scale-95 transition cursor-pointer touch-manipulation select-none"
+            className="flex items-center gap-1.5 rounded-full border border-white/[0.14] bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl px-3 py-1.5 text-xs font-semibold text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] active:scale-95 transition cursor-pointer touch-manipulation select-none"
           >
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-white">
               <ChevronLeft size={13} strokeWidth={2.5} />
@@ -531,7 +481,7 @@ function DramaPage({
         )}
         <button
           onClick={canGoBack ? onBack : onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.18] bg-white/[0.08] backdrop-blur-xl text-white/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] hover:text-white active:scale-90 transition cursor-pointer touch-manipulation"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.14] bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl text-white/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] hover:text-white active:scale-90 transition cursor-pointer touch-manipulation"
         >
           <X size={17} strokeWidth={2.2} />
         </button>
@@ -539,19 +489,19 @@ function DramaPage({
 
       {/* Scrollable body */}
       {loading && !drama?.title ? (
-        <div className="flex flex-1 items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="flex flex-1 items-center justify-center bg-black/60 max-md:backdrop-blur-none md:backdrop-blur-sm">
           <div className="w-9 h-9 rounded-full border-[2.5px] border-white/15 border-t-white animate-spin" />
         </div>
       ) : !drama ? (
         <div className="relative z-10 flex flex-1 items-center justify-center text-white/40">Failed to load drama.</div>
       ) : (
         <div
-          className="relative z-10 flex-1 overflow-y-auto px-6 pb-36 pt-2 scrollbar-hide overscroll-y-contain will-change-scroll transform-gpu"
+          className="relative z-10 flex-1 overflow-y-auto px-6 pb-36 pt-2 scrollbar-hide overscroll-y-contain"
           style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
         >
           {/* Hero Backdrop */}
           {drama.backdropUrl && (
-            <div className="relative -mx-6 -mt-2 mb-6 h-56 w-[calc(100%+3rem)] overflow-hidden bg-black/60">
+            <div className="relative -mx-6 -mt-2 mb-6 h-56 w-[calc(100%+3rem)] overflow-hidden bg-[#07070b]">
               <Image
                 src={drama.backdropUrl}
                 alt={drama.title}
@@ -562,7 +512,7 @@ function DramaPage({
                 onLoad={() => setBackdropLoaded(true)}
                 className={`object-cover transition-opacity duration-300 ${backdropLoaded ? 'opacity-100' : 'opacity-0'}`}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c12] via-[#0c0c12]/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#07070b] via-[#07070b]/80 to-transparent" />
             </div>
           )}
 
@@ -586,14 +536,14 @@ function DramaPage({
           {/* Metadata Ribbon */}
           <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide text-xs font-semibold">
             {regionBadge && (
-              <span className="flex-shrink-0 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/[0.16] px-3.5 py-1 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)]">
+              <span className="flex-shrink-0 rounded-full bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/[0.12] px-3.5 py-1 text-white shadow-sm">
                 {regionBadge}
               </span>
             )}
             {drama.network && (
               <>
                 <span className="text-white/30">•</span>
-                <span className="flex-shrink-0 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/[0.14] px-3.5 py-1 text-white/90">
+                <span className="flex-shrink-0 rounded-full bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/[0.10] px-3.5 py-1 text-white/90">
                   {drama.network}
                 </span>
               </>
@@ -601,7 +551,7 @@ function DramaPage({
             {drama.releaseYear > 0 && (
               <>
                 <span className="text-white/30">•</span>
-                <span className="flex-shrink-0 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/[0.12] px-3.5 py-1 text-white/80">
+                <span className="flex-shrink-0 rounded-full bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/[0.10] px-3.5 py-1 text-white/80">
                   {drama.releaseYear}
                 </span>
               </>
@@ -616,13 +566,13 @@ function DramaPage({
               </>
             )}
             <span className="text-white/30">•</span>
-            <span className="flex-shrink-0 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/[0.12] px-3.5 py-1 text-white/80">
+            <span className="flex-shrink-0 rounded-full bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/[0.10] px-3.5 py-1 text-white/80">
               {episodesLabel}
             </span>
             {drama.runtime && (
               <>
                 <span className="text-white/30">•</span>
-                <span className="flex-shrink-0 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/[0.10] px-3 py-1 text-white/60">
+                <span className="flex-shrink-0 rounded-full bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/[0.08] px-3.5 py-1 text-white/60">
                   {drama.runtime} min/ep
                 </span>
               </>
@@ -631,45 +581,51 @@ function DramaPage({
 
           {/* Segmented Status Pill Bar */}
           <div className="mb-6">
-            <div className="relative rounded-full bg-white/[0.06] backdrop-blur-2xl border border-white/[0.14] p-1.5 shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)] flex items-center gap-1.5 touch-manipulation select-none overflow-hidden">
-              {/* Skiper UI Liquid Sliding Active Status Pill */}
-              <div
-                className="pointer-events-none absolute rounded-full border border-white/20 shadow-lg transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-                style={{
-                  top: statusIndicator.top,
-                  left: 0,
-                  width: statusIndicator.width,
-                  height: statusIndicator.height,
-                  transform: `translate3d(${statusIndicator.left}px, 0, 0)`,
-                  opacity: currentStatus && statusIndicator.ready ? 1 : 0,
-                  transitionProperty: 'transform, width, height, opacity, background',
-                  background: currentStatus === 'watchlist'
-                    ? 'linear-gradient(to right, rgb(14 165 233), rgb(37 99 235))'
-                    : currentStatus === 'watching'
-                    ? 'linear-gradient(to right, rgb(168 85 247), rgb(79 70 229))'
-                    : currentStatus === 'finished'
-                    ? 'linear-gradient(to right, rgb(16 185 129), rgb(13 148 136))'
-                    : 'transparent',
-                }}
-              />
+            <div className="grid grid-cols-3 gap-1.5 p-1.5 rounded-full bg-[#111118] border border-white/10 select-none">
+              <button
+                type="button"
+                onClick={() => handleStatusToggle('watchlist')}
+                className={`relative rounded-full py-2.5 px-1.5 text-center transition-colors duration-150 cursor-pointer touch-manipulation active:scale-[0.98] ${
+                  currentStatus === 'watchlist'
+                    ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold shadow-sm'
+                    : 'bg-transparent text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <span className="relative z-10 inline-flex items-center justify-center gap-2 text-sm leading-none">
+                  <Bookmark size={15} strokeWidth={currentStatus === 'watchlist' ? 2.4 : 1.8} />
+                  <span>Watchlist</span>
+                </span>
+              </button>
 
-              {pills.map(({ status, label, icon: Icon }, idx) => {
-                const isActive = currentStatus === status
-                return (
-                  <button
-                    key={status}
-                    ref={(el) => { pillRefs.current[idx] = el }}
-                    type="button"
-                    onClick={() => handleStatusToggle(status)}
-                    className={`relative flex flex-1 items-center justify-center gap-1.5 rounded-full py-2.5 px-3 text-xs font-semibold tracking-wide transition-colors duration-150 cursor-pointer touch-manipulation select-none active:scale-95 ${isActive ? 'text-white' : 'text-white/50 hover:text-white/80'}`}
-                  >
-                    <span className="relative z-10 flex items-center gap-1.5">
-                      <Icon size={13} strokeWidth={isActive ? 2.4 : 1.8} />
-                      <span>{label}</span>
-                    </span>
-                  </button>
-                )
-              })}
+              <button
+                type="button"
+                onClick={() => handleStatusToggle('watching')}
+                className={`relative rounded-full py-2.5 px-1.5 text-center transition-colors duration-150 cursor-pointer touch-manipulation active:scale-[0.98] ${
+                  currentStatus === 'watching'
+                    ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold shadow-sm'
+                    : 'bg-transparent text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <span className="relative z-10 inline-flex items-center justify-center gap-2 text-sm leading-none">
+                  <Play size={15} strokeWidth={currentStatus === 'watching' ? 2.4 : 1.8} />
+                  <span>Watching</span>
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleStatusToggle('finished')}
+                className={`relative rounded-full py-2.5 px-1.5 text-center transition-colors duration-150 cursor-pointer touch-manipulation active:scale-[0.98] ${
+                  currentStatus === 'finished'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold shadow-sm'
+                    : 'bg-transparent text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <span className="relative z-10 inline-flex items-center justify-center gap-2 text-sm leading-none">
+                  <CheckCircle size={15} strokeWidth={currentStatus === 'finished' ? 2.4 : 1.8} />
+                  <span>Finished</span>
+                </span>
+              </button>
             </div>
           </div>
 
@@ -701,7 +657,7 @@ function DramaPage({
           {drama.synopsis && (
             <div className="mb-7">
               <h3 className="text-xs font-bold uppercase tracking-wider text-white/35 mb-2.5">Storyline</h3>
-              <div className="rounded-[24px] bg-[#14141c] border border-white/[0.10] p-5 leading-relaxed text-[15px] text-white/85 shadow-lg">
+              <div className="rounded-[24px] bg-[#101017] border border-white/[0.08] p-5 leading-relaxed text-[15px] text-white/85 shadow-lg">
                 <p>{drama.synopsis}</p>
               </div>
             </div>
@@ -722,7 +678,7 @@ function DramaPage({
                 </div>
                 <button
                   onClick={() => onPushPhotos(tmdbId, drama.title, allImages)}
-                  className="w-8 h-8 rounded-full bg-white/[0.14] hover:bg-white/[0.24] backdrop-blur-2xl border border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] flex items-center justify-center text-white active:scale-90 transition cursor-pointer touch-manipulation"
+                  className="w-8 h-8 rounded-full bg-[#14141e] hover:bg-white/[0.18] max-md:backdrop-blur-none md:backdrop-blur-2xl border border-white/20 shadow-sm flex items-center justify-center text-white active:scale-90 transition cursor-pointer touch-manipulation"
                 >
                   <ChevronRight size={15} strokeWidth={2.4} />
                 </button>
@@ -759,7 +715,7 @@ function DramaPage({
                         className="object-cover scale-110 blur-sm"
                       />
                     )}
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-2xl bg-white/[0.14] border border-white/25 flex flex-col items-center justify-center p-2 text-center">
+                    <div className="absolute inset-0 bg-black/60 max-md:backdrop-blur-none md:backdrop-blur-2xl bg-white/[0.14] border border-white/25 flex flex-col items-center justify-center p-2 text-center">
                       <span className="text-lg font-black text-white tracking-tight">+{allImages.length - 12}</span>
                       <span className="text-[10px] font-bold text-white/85 mt-0.5 tracking-tight">View Gallery</span>
                     </div>
@@ -778,7 +734,7 @@ function DramaPage({
                   <button
                     key={d.id}
                     onClick={() => onPersonClick(d.id, d.name)}
-                    className="flex items-center gap-2.5 rounded-full bg-white/[0.08] backdrop-blur-xl border border-white/20 px-4 py-2 hover:bg-white/[0.16] transition-transform duration-150 active:scale-95 cursor-pointer touch-manipulation shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
+                    className="flex items-center gap-2.5 rounded-full bg-[#101017] border border-white/[0.08] px-4 py-2 hover:bg-white/[0.14] transition-transform duration-150 active:scale-95 cursor-pointer touch-manipulation shadow-sm"
                   >
                     {d.profile_path ? (
                       <div className="relative h-6 w-6 overflow-hidden rounded-full border border-white/25">
@@ -804,7 +760,7 @@ function DramaPage({
                 </div>
                 <button
                   onClick={() => onPushCast(tmdbId, drama.title, drama.cast!, drama.directors || [])}
-                  className="w-8 h-8 rounded-full bg-white/[0.14] hover:bg-white/[0.24] backdrop-blur-2xl border border-white/25 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] flex items-center justify-center text-white active:scale-90 transition cursor-pointer touch-manipulation"
+                  className="w-8 h-8 rounded-full bg-[#14141e] hover:bg-white/[0.18] max-md:backdrop-blur-none md:backdrop-blur-2xl border border-white/20 shadow-sm flex items-center justify-center text-white active:scale-90 transition cursor-pointer touch-manipulation"
                 >
                   <ChevronRight size={15} strokeWidth={2.4} />
                 </button>
@@ -850,7 +806,7 @@ function DramaPage({
                         className="object-cover scale-110 blur-sm"
                       />
                     )}
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-2xl bg-white/[0.14] border border-white/25 flex flex-col items-center justify-center p-1 text-center">
+                    <div className="absolute inset-0 bg-black/60 max-md:backdrop-blur-none md:backdrop-blur-2xl bg-white/[0.14] border border-white/25 flex flex-col items-center justify-center p-1 text-center">
                       <span className="text-base font-black text-white tracking-tight">+{drama.cast.length - 15}</span>
                       <span className="text-[10px] font-bold text-white/85 mt-0.5 tracking-tight">All Cast</span>
                     </div>
@@ -920,7 +876,7 @@ function PersonPage({ personId, personCache, backLabel, canGoBack, onBack, onClo
 
   return (
     <div
-      className="relative flex h-[88dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-[32px] border-t border-white/[0.22] bg-[#0c0c12]/95 backdrop-blur-2xl shadow-2xl will-change-transform transform-gpu"
+      className="relative flex h-[88dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-[32px] border-t border-white/[0.22] bg-[#07070b] max-md:backdrop-blur-none md:bg-[#0c0c12]/95 md:backdrop-blur-2xl shadow-2xl"
       onClick={e => e.stopPropagation()}
     >
       {/* Drag handle */}
@@ -933,7 +889,7 @@ function PersonPage({ personId, personCache, backLabel, canGoBack, onBack, onClo
         {canGoBack ? (
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 rounded-full border border-white/[0.18] bg-white/[0.08] backdrop-blur-xl px-3 py-1.5 text-xs font-semibold text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] active:scale-95 transition cursor-pointer touch-manipulation select-none"
+            className="flex items-center gap-1.5 rounded-full border border-white/[0.14] bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl px-3 py-1.5 text-xs font-semibold text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] active:scale-95 transition cursor-pointer touch-manipulation select-none"
           >
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-white">
               <ChevronLeft size={13} strokeWidth={2.5} />
@@ -945,7 +901,7 @@ function PersonPage({ personId, personCache, backLabel, canGoBack, onBack, onClo
         )}
         <button
           onClick={canGoBack ? onBack : onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.18] bg-white/[0.08] backdrop-blur-xl text-white/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] hover:text-white active:scale-90 transition cursor-pointer touch-manipulation"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.14] bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl text-white/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] hover:text-white active:scale-90 transition cursor-pointer touch-manipulation"
         >
           <X size={17} strokeWidth={2.2} />
         </button>
@@ -953,12 +909,12 @@ function PersonPage({ personId, personCache, backLabel, canGoBack, onBack, onClo
 
       {/* Content */}
       {loading ? (
-        <div className="flex flex-1 items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div className="flex flex-1 items-center justify-center bg-black/60 max-md:backdrop-blur-none md:backdrop-blur-sm">
           <div className="w-9 h-9 rounded-full border-[2.5px] border-white/15 border-t-white animate-spin" />
         </div>
       ) : person ? (
         <div
-          className="flex-1 overflow-y-auto px-5 pb-8 pt-4 scrollbar-hide overscroll-y-contain will-change-scroll"
+          className="flex-1 overflow-y-auto px-5 pb-8 pt-4 scrollbar-hide overscroll-y-contain"
           style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
         >
           {/* Header */}
@@ -1075,7 +1031,7 @@ function PhotosGridPage({
 }) {
   return (
     <div
-      className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.22] bg-[#0c0c12]/95 backdrop-blur-2xl shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] will-change-transform transform-gpu"
+      className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.22] bg-[#07070b] max-md:backdrop-blur-none md:bg-[#0c0c12]/95 md:backdrop-blur-2xl shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)]"
       onClick={e => e.stopPropagation()}
     >
       <div className="relative z-10 flex justify-center pt-3 pb-0">
@@ -1085,7 +1041,7 @@ function PhotosGridPage({
         {canGoBack ? (
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 rounded-full border border-white/[0.18] bg-white/[0.08] backdrop-blur-xl px-3 py-1.5 text-xs font-semibold text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] active:scale-95 transition cursor-pointer touch-manipulation select-none"
+            className="flex items-center gap-1.5 rounded-full border border-white/[0.14] bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl px-3 py-1.5 text-xs font-semibold text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] active:scale-95 transition cursor-pointer touch-manipulation select-none"
           >
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-white">
               <ChevronLeft size={13} strokeWidth={2.5} />
@@ -1095,7 +1051,7 @@ function PhotosGridPage({
         ) : <div />}
         <button
           onClick={canGoBack ? onBack : onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.18] bg-white/[0.08] backdrop-blur-xl text-white/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] hover:text-white active:scale-90 transition cursor-pointer touch-manipulation"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.14] bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl text-white/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] hover:text-white active:scale-90 transition cursor-pointer touch-manipulation"
         >
           <X size={17} strokeWidth={2.2} />
         </button>
@@ -1105,7 +1061,7 @@ function PhotosGridPage({
         <p className="text-xs text-white/40 mt-0.5">{photos.length} Stills & Posters</p>
       </div>
       <div
-        className="flex-1 overflow-y-auto px-4 pb-12 scrollbar-hide overscroll-y-contain will-change-scroll"
+        className="flex-1 overflow-y-auto px-4 pb-12 scrollbar-hide overscroll-y-contain"
         style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
       >
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5">
@@ -1141,7 +1097,7 @@ function CastGridPage({
 }) {
   return (
     <div
-      className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.22] bg-[#0c0c12]/95 backdrop-blur-2xl shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] will-change-transform transform-gpu"
+      className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.22] bg-[#07070b] max-md:backdrop-blur-none md:bg-[#0c0c12]/95 md:backdrop-blur-2xl shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)]"
       onClick={e => e.stopPropagation()}
     >
       <div className="relative z-10 flex justify-center pt-3 pb-0">
@@ -1151,7 +1107,7 @@ function CastGridPage({
         {canGoBack ? (
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 rounded-full border border-white/[0.18] bg-white/[0.08] backdrop-blur-xl px-3 py-1.5 text-xs font-semibold text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] active:scale-95 transition cursor-pointer touch-manipulation select-none"
+            className="flex items-center gap-1.5 rounded-full border border-white/[0.14] bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl px-3 py-1.5 text-xs font-semibold text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] active:scale-95 transition cursor-pointer touch-manipulation select-none"
           >
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-white">
               <ChevronLeft size={13} strokeWidth={2.5} />
@@ -1161,7 +1117,7 @@ function CastGridPage({
         ) : <div />}
         <button
           onClick={canGoBack ? onBack : onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.18] bg-white/[0.08] backdrop-blur-xl text-white/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] hover:text-white active:scale-90 transition cursor-pointer touch-manipulation"
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.14] bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl text-white/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] hover:text-white active:scale-90 transition cursor-pointer touch-manipulation"
         >
           <X size={17} strokeWidth={2.2} />
         </button>
@@ -1171,7 +1127,7 @@ function CastGridPage({
         <p className="text-xs text-white/40 mt-0.5">{cast.length} Cast Members{directors.length > 0 ? ` · ${directors.length} Director${directors.length > 1 ? 's' : ''}` : ''}</p>
       </div>
       <div
-        className="flex-1 overflow-y-auto px-4 pb-12 scrollbar-hide overscroll-y-contain will-change-scroll"
+        className="flex-1 overflow-y-auto px-4 pb-12 scrollbar-hide overscroll-y-contain"
         style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
       >
         {directors.length > 0 && (

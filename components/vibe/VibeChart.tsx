@@ -252,7 +252,7 @@ export default function VibeChart({
 
   const containerClasses = borderless
     ? `w-full h-full flex flex-col justify-between ${className}`
-    : `rounded-[28px] bg-[#101016]/85 backdrop-blur-2xl border border-white/[0.08] p-6 shadow-2xl transition-all duration-200 ${className}`
+    : `rounded-[28px] bg-[#101016] max-md:backdrop-blur-none md:bg-[#101016]/85 md:backdrop-blur-2xl border border-white/[0.08] p-6 shadow-2xl transition-all duration-200 ${className}`
 
   return (
     <div className={containerClasses}>

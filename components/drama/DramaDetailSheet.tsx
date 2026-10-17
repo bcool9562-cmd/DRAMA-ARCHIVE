@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, startTransition } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -88,20 +88,6 @@ export default function DramaDetailSheet({
   const [backdropLoaded, setBackdropLoaded] = useState(false)
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
   const galleryRef = useRef<HTMLDivElement>(null)
-  const mutationIdRef = useRef(0)
-  const [lockedStatus, setLockedStatus] = useState<DramaStatus | null | undefined>(undefined)
-  const pillRefs = useRef<(HTMLButtonElement | null)[]>([])
-  const [statusIndicator, setStatusIndicator] = useState<{ left: number; top: number; width: number; height: number; ready: boolean }>({
-    left: 0,
-    top: 0,
-    width: 0,
-    height: 0,
-    ready: false,
-  })
-
-  useEffect(() => {
-    setLockedStatus(undefined)
-  }, [tmdbId])
 
   // Single Source of Truth: derive status directly from savedDramas (0ms synchronous lookup)
   const [savedDramas, setSavedDramas] = useState<UserDrama[]>(() => getSavedDramasSync())
@@ -132,68 +118,55 @@ export default function DramaDetailSheet({
     }
   }, [tmdbId])
 
-  // Single Source of Truth calculation with optimistic lock precedence
+  // Single Source of Truth calculation with instant local state
   const matchedSaved = savedDramas.find(
     (d) =>
       String(d.tmdb_id) === String(tmdbId) ||
       d.drama_id === (drama?.dramaId ?? `tmdb-${tmdbId}`)
   )
-  const currentStatus = lockedStatus !== undefined ? lockedStatus : (matchedSaved?.status ?? null)
+  const [localStatus, setLocalStatus] = useState<DramaStatus | null>(() => matchedSaved?.status ?? null)
 
   useEffect(() => {
-    const STATUS_KEYS: DramaStatus[] = ['watchlist', 'watching', 'finished']
-    const updateIndicator = () => {
-      const activeIdx = STATUS_KEYS.findIndex((s) => s === currentStatus)
-      const activeBtn = pillRefs.current[activeIdx]
-      if (activeBtn) {
-        setStatusIndicator({
-          left: activeBtn.offsetLeft,
-          top: activeBtn.offsetTop,
-          width: activeBtn.offsetWidth,
-          height: activeBtn.offsetHeight,
-          ready: true,
-        })
-      }
-    }
-    updateIndicator()
-    window.addEventListener('resize', updateIndicator)
-    return () => window.removeEventListener('resize', updateIndicator)
-  }, [currentStatus])
+    setLocalStatus(matchedSaved?.status ?? null)
+  }, [tmdbId, matchedSaved?.status])
+
+  const currentStatus = localStatus
 
   // Instant 1-tap handler: toggles off if active, moves or adds immediately (<1ms)
   function handleStatusToggle(targetStatus: DramaStatus) {
     if (!drama) return
-    mutationIdRef.current += 1
     const nextStatus = currentStatus === targetStatus ? null : targetStatus
-    setLockedStatus(nextStatus)
+    setLocalStatus(nextStatus)
 
     const dramaId = drama.dramaId || `tmdb-${tmdbId}`
 
-    if (currentStatus === targetStatus) {
-      // Single tap on currently active pill removes it
-      removeDrama(dramaId)
-    } else if (currentStatus) {
-      // Single tap on another pill switches status immediately
-      moveDrama(dramaId, targetStatus)
-    } else {
-      // Single tap on inactive pill adds it immediately
-      addDrama({
-        drama_id: dramaId,
-        tmdb_id: tmdbId,
-        title: drama.title,
-        native_title: drama.nativeTitle || '',
-        poster_url: drama.posterUrl || '',
-        country: drama.country || 'KR',
-        release_year: drama.releaseYear || 0,
-        total_episodes: drama.totalEpisodes || 0,
-        rating: drama.rating || 0,
-        status: targetStatus,
-        airing_status: drama.airingStatus || 'completed',
-        first_air_date: drama.firstAirDate || null,
-        next_episode_date: drama.nextEpisodeDate || null,
-        next_episode_number: drama.nextEpisodeNumber || null,
-      })
-    }
+    startTransition(() => {
+      if (currentStatus === targetStatus) {
+        // Single tap on currently active pill removes it
+        removeDrama(dramaId)
+      } else if (currentStatus) {
+        // Single tap on another pill switches status immediately
+        moveDrama(dramaId, targetStatus)
+      } else {
+        // Single tap on inactive pill adds it immediately
+        addDrama({
+          drama_id: dramaId,
+          tmdb_id: tmdbId,
+          title: drama.title,
+          native_title: drama.nativeTitle || '',
+          poster_url: drama.posterUrl || '',
+          country: drama.country || 'KR',
+          release_year: drama.releaseYear || 0,
+          total_episodes: drama.totalEpisodes || 0,
+          rating: drama.rating || 0,
+          status: targetStatus,
+          airing_status: drama.airingStatus || 'completed',
+          first_air_date: drama.firstAirDate || null,
+          next_episode_date: drama.nextEpisodeDate || null,
+          next_episode_number: drama.nextEpisodeNumber || null,
+        })
+      }
+    })
   }
 
   const allImages = [...(drama?.images ?? []), ...(drama?.backdrops ?? [])]
@@ -216,7 +189,7 @@ export default function DramaDetailSheet({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 backdrop-blur-md touch-manipulation"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 max-md:backdrop-blur-none md:backdrop-blur-md touch-manipulation"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
@@ -228,11 +201,11 @@ export default function DramaDetailSheet({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-2xl p-4"
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 max-md:backdrop-blur-none md:backdrop-blur-2xl p-4"
             onClick={() => setLightboxSrc(null)}
           >
             <button
-              className="absolute right-6 top-6 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white backdrop-blur-xl border border-white/20 transition hover:bg-white/20 active:scale-95 cursor-pointer touch-manipulation"
+              className="absolute right-6 top-6 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/20 transition hover:bg-white/20 active:scale-95 cursor-pointer touch-manipulation"
               onClick={() => setLightboxSrc(null)}
             >
               <X size={20} />
@@ -250,11 +223,11 @@ export default function DramaDetailSheet({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 24, scale: 0.98 }}
         transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-        className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#0c0c12] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] will-change-transform touch-manipulation"
+        className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#07070b] max-md:backdrop-blur-none md:bg-[#0c0c12] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] touch-manipulation"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Hardware-accelerated radial ambient layer (60 FPS on mobile GPUs) */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden z-0">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden z-0 hidden md:block">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(88,28,135,0.28),_transparent_70%)]" />
         </div>
 
@@ -383,71 +356,53 @@ export default function DramaDetailSheet({
               )}
             </div>
 
-            {/* Segmented Status Pill Bar with Liquid Sliding Indicator */}
+            {/* Segmented Status Pill Bar */}
             <div className="mb-7">
-              <div className="relative rounded-full bg-black/60 p-1.5 border border-white/[0.14] shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)] flex items-center gap-1 touch-manipulation select-none overflow-hidden">
-                {/* Skiper UI Liquid Sliding Active Status Pill */}
-                <div
-                  className="pointer-events-none absolute rounded-full border border-white/20 shadow-lg transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
-                  style={{
-                    top: statusIndicator.top,
-                    left: 0,
-                    width: statusIndicator.width,
-                    height: statusIndicator.height,
-                    transform: `translate3d(${statusIndicator.left}px, 0, 0)`,
-                    opacity: currentStatus && statusIndicator.ready ? 1 : 0,
-                    transitionProperty: 'transform, width, height, opacity, background',
-                    background: currentStatus === 'watchlist'
-                      ? 'linear-gradient(to right, rgb(14 165 233), rgb(37 99 235))'
-                      : currentStatus === 'watching'
-                      ? 'linear-gradient(to right, rgb(168 85 247), rgb(79 70 229))'
-                      : currentStatus === 'finished'
-                      ? 'linear-gradient(to right, rgb(16 185 129), rgb(13 148 136))'
-                      : 'transparent',
-                  }}
-                />
+              <div className="grid grid-cols-3 gap-1.5 p-1.5 rounded-full bg-[#111118] border border-white/10 select-none">
+                <button
+                  type="button"
+                  onClick={() => handleStatusToggle('watchlist')}
+                  className={`relative rounded-full py-2.5 px-1.5 text-center transition-colors duration-150 cursor-pointer touch-manipulation active:scale-[0.98] ${
+                    currentStatus === 'watchlist'
+                      ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold shadow-sm'
+                      : 'bg-transparent text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <span className="relative z-10 inline-flex items-center justify-center gap-2 text-sm leading-none">
+                    <Bookmark size={15} strokeWidth={currentStatus === 'watchlist' ? 2.4 : 1.8} />
+                    <span>Watchlist</span>
+                  </span>
+                </button>
 
-                {(
-                  [
-                    {
-                      status: 'watchlist' as DramaStatus,
-                      label: 'Watchlist',
-                      icon: Bookmark,
-                    },
-                    {
-                      status: 'watching' as DramaStatus,
-                      label: 'Watching',
-                      icon: Play,
-                    },
-                    {
-                      status: 'finished' as DramaStatus,
-                      label: 'Finished',
-                      icon: CheckCircle,
-                    },
-                  ] as const
-                ).map(({ status, label, icon: Icon }, idx) => {
-                  const isActive = currentStatus === status
-                  return (
-                    <button
-                      key={status}
-                      ref={(el) => { pillRefs.current[idx] = el }}
-                      type="button"
-                      onClick={() => handleStatusToggle(status)}
-                      className={`relative flex flex-1 items-center justify-center gap-2 rounded-full py-2.5 px-3 text-xs font-semibold tracking-wide transition-colors duration-150 cursor-pointer touch-manipulation select-none active:scale-95 ${
-                        isActive ? 'text-white' : 'text-white/50 hover:text-white/80'
-                      }`}
-                    >
-                      <span className="relative z-10 flex items-center gap-1.5">
-                        <Icon
-                          size={14}
-                          fill={isActive && status === 'watchlist' ? 'currentColor' : 'none'}
-                          strokeWidth={isActive ? 2.4 : 1.8}
-                        />
-                        <span>{label}</span>
-                      </span>
-                    </button>
-                  )
-                })}
+                <button
+                  type="button"
+                  onClick={() => handleStatusToggle('watching')}
+                  className={`relative rounded-full py-2.5 px-1.5 text-center transition-colors duration-150 cursor-pointer touch-manipulation active:scale-[0.98] ${
+                    currentStatus === 'watching'
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold shadow-sm'
+                      : 'bg-transparent text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <span className="relative z-10 inline-flex items-center justify-center gap-2 text-sm leading-none">
+                    <Play size={15} strokeWidth={currentStatus === 'watching' ? 2.4 : 1.8} />
+                    <span>Watching</span>
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleStatusToggle('finished')}
+                  className={`relative rounded-full py-2.5 px-1.5 text-center transition-colors duration-150 cursor-pointer touch-manipulation active:scale-[0.98] ${
+                    currentStatus === 'finished'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold shadow-sm'
+                      : 'bg-transparent text-zinc-400 hover:text-zinc-200'
+                  }`}
+                >
+                  <span className="relative z-10 inline-flex items-center justify-center gap-2 text-sm leading-none">
+                    <CheckCircle size={15} strokeWidth={currentStatus === 'finished' ? 2.4 : 1.8} />
+                    <span>Finished</span>
+                  </span>
+                </button>
               </div>
             </div>
 
