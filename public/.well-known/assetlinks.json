@@ -1,0 +1,10 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.drama_archive_pearl",
+      "sha256_cert_fingerprints": ["FF:77:F4:D3:CF:58:8F:DD:E6:AF:AC:FE:C2:BC:36:13:CA:BD:60:3E:66:45:62:85:C6:D9:12:E8:D4:16:99:F2"]
+    }
+  }
+]
