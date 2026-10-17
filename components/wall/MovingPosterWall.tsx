@@ -12,32 +12,32 @@ interface PosterItem {
   country?: string
 }
 
-// 100% verified, live East Asian drama posters on TMDB CDN in crisp HD w780 (strictly 2026 dramas)
+// 100% verified, live East Asian drama posters on TMDB CDN in mobile-optimized w342 (strictly 2026 dramas)
 const DEFAULT_COL_1: PosterItem[] = [
-  { id: 300146, title: 'Where the Mask Ends', posterUrl: 'https://image.tmdb.org/t/p/w780/cE9Og0lCCRCP2RArarzJXmu6xEB.jpg', year: 2026, country: 'CN' },
-  { id: 279246, title: 'The Remarried Empress', posterUrl: 'https://image.tmdb.org/t/p/w780/3x6c9ybt0762idyzIifUZeTD5MZ.jpg', year: 2026, country: 'KR' },
-  { id: 316702, title: 'Final Table', posterUrl: 'https://image.tmdb.org/t/p/w780/uaMjtALuvZC7dGkYllGKKWEWW1J.jpg', year: 2026, country: 'KR' },
-  { id: 301354, title: 'Sword & Silence', posterUrl: 'https://image.tmdb.org/t/p/w780/2uHBCDBnSjBlvNgXJ5ceORgX8FL.jpg', year: 2026, country: 'KR' },
-  { id: 334517, title: 'Oh! My Guard', posterUrl: 'https://image.tmdb.org/t/p/w780/dg4IIruyBEtSgjW5fdXi46xrSzC.jpg', year: 2026, country: 'KR' },
-  { id: 303552, title: 'The Substitute', posterUrl: 'https://image.tmdb.org/t/p/w780/q464FdzW2edGsyNYAbueYuTEBMR.jpg', year: 2026, country: 'KR' },
+  { id: 300146, title: 'Where the Mask Ends', posterUrl: 'https://image.tmdb.org/t/p/w342/cE9Og0lCCRCP2RArarzJXmu6xEB.jpg', year: 2026, country: 'CN' },
+  { id: 279246, title: 'The Remarried Empress', posterUrl: 'https://image.tmdb.org/t/p/w342/3x6c9ybt0762idyzIifUZeTD5MZ.jpg', year: 2026, country: 'KR' },
+  { id: 316702, title: 'Final Table', posterUrl: 'https://image.tmdb.org/t/p/w342/uaMjtALuvZC7dGkYllGKKWEWW1J.jpg', year: 2026, country: 'KR' },
+  { id: 301354, title: 'Sword & Silence', posterUrl: 'https://image.tmdb.org/t/p/w342/2uHBCDBnSjBlvNgXJ5ceORgX8FL.jpg', year: 2026, country: 'KR' },
+  { id: 334517, title: 'Oh! My Guard', posterUrl: 'https://image.tmdb.org/t/p/w342/dg4IIruyBEtSgjW5fdXi46xrSzC.jpg', year: 2026, country: 'KR' },
+  { id: 303552, title: 'The Substitute', posterUrl: 'https://image.tmdb.org/t/p/w342/q464FdzW2edGsyNYAbueYuTEBMR.jpg', year: 2026, country: 'KR' },
 ]
 
 const DEFAULT_COL_2: PosterItem[] = [
-  { id: 303745, title: 'Love in Disguise', posterUrl: 'https://image.tmdb.org/t/p/w780/kSAXIAovLC4z7Wp2Hy8oqLmpkox.jpg', year: 2026, country: 'KR' },
-  { id: 307478, title: 'The Perfect Lie', posterUrl: 'https://image.tmdb.org/t/p/w780/lrFE7DdRXu6ofhCm9dLNzsyLg92.jpg', year: 2026, country: 'KR' },
-  { id: 322051, title: 'The Sound of Sugar Cubes', posterUrl: 'https://image.tmdb.org/t/p/w780/h5rPKIREqKHYPvVUl8sBJyna2vq.jpg', year: 2026, country: 'KR' },
-  { id: 313738, title: 'One of a Kind Romance', posterUrl: 'https://image.tmdb.org/t/p/w780/l9oQ1Ql8DJqYnrDyU85fAPYTmrD.jpg', year: 2026, country: 'KR' },
-  { id: 335951, title: 'Summer Vacation', posterUrl: 'https://image.tmdb.org/t/p/w780/ru4oyTVoPVQZPUE5rI3YPMgLHBY.jpg', year: 2026, country: 'KR' },
-  { id: 334321, title: 'SQUALL', posterUrl: 'https://image.tmdb.org/t/p/w780/sqbMChPp0aXNmkcMw2zjHjUpleB.jpg', year: 2026, country: 'JP' },
+  { id: 303745, title: 'Love in Disguise', posterUrl: 'https://image.tmdb.org/t/p/w342/kSAXIAovLC4z7Wp2Hy8oqLmpkox.jpg', year: 2026, country: 'KR' },
+  { id: 307478, title: 'The Perfect Lie', posterUrl: 'https://image.tmdb.org/t/p/w342/lrFE7DdRXu6ofhCm9dLNzsyLg92.jpg', year: 2026, country: 'KR' },
+  { id: 322051, title: 'The Sound of Sugar Cubes', posterUrl: 'https://image.tmdb.org/t/p/w342/h5rPKIREqKHYPvVUl8sBJyna2vq.jpg', year: 2026, country: 'KR' },
+  { id: 313738, title: 'One of a Kind Romance', posterUrl: 'https://image.tmdb.org/t/p/w342/l9oQ1Ql8DJqYnrDyU85fAPYTmrD.jpg', year: 2026, country: 'KR' },
+  { id: 335951, title: 'Summer Vacation', posterUrl: 'https://image.tmdb.org/t/p/w342/ru4oyTVoPVQZPUE5rI3YPMgLHBY.jpg', year: 2026, country: 'KR' },
+  { id: 334321, title: 'SQUALL', posterUrl: 'https://image.tmdb.org/t/p/w342/sqbMChPp0aXNmkcMw2zjHjUpleB.jpg', year: 2026, country: 'JP' },
 ]
 
 const DEFAULT_COL_3: PosterItem[] = [
-  { id: 289517, title: 'Dead-End Job', posterUrl: 'https://image.tmdb.org/t/p/w780/1yobke0bpfNOazuF9wW7QbM2GER.jpg', year: 2026, country: 'KR' },
-  { id: 300523, title: 'Blue Road', posterUrl: 'https://image.tmdb.org/t/p/w780/rHgC4wYhpI8Vx7kSwA1OTvwQRh0.jpg', year: 2026, country: 'KR' },
-  { id: 256726, title: 'Tantara', posterUrl: 'https://image.tmdb.org/t/p/w780/733Vm8e0bzUbjbDuATgR4Ol7vqd.jpg', year: 2026, country: 'KR' },
-  { id: 258862, title: 'Sacred Jewel', posterUrl: 'https://image.tmdb.org/t/p/w780/2mDpdgBOH52W91wgzqXtxD7ajiZ.jpg', year: 2026, country: 'KR' },
-  { id: 326975, title: 'What a Boss Wants', posterUrl: 'https://image.tmdb.org/t/p/w780/ldqsRIHnjdCf72TRtXtdlaWlbsI.jpg', year: 2026, country: 'KR' },
-  { id: 283220, title: 'Quiztopia', posterUrl: 'https://image.tmdb.org/t/p/w780/yvkEL51xnhAuKpaycMU1dOnozwN.jpg', year: 2026, country: 'JP' },
+  { id: 289517, title: 'Dead-End Job', posterUrl: 'https://image.tmdb.org/t/p/w342/1yobke0bpfNOazuF9wW7QbM2GER.jpg', year: 2026, country: 'KR' },
+  { id: 300523, title: 'Blue Road', posterUrl: 'https://image.tmdb.org/t/p/w342/rHgC4wYhpI8Vx7kSwA1OTvwQRh0.jpg', year: 2026, country: 'KR' },
+  { id: 256726, title: 'Tantara', posterUrl: 'https://image.tmdb.org/t/p/w342/733Vm8e0bzUbjbDuATgR4Ol7vqd.jpg', year: 2026, country: 'KR' },
+  { id: 258862, title: 'Sacred Jewel', posterUrl: 'https://image.tmdb.org/t/p/w342/2mDpdgBOH52W91wgzqXtxD7ajiZ.jpg', year: 2026, country: 'KR' },
+  { id: 326975, title: 'What a Boss Wants', posterUrl: 'https://image.tmdb.org/t/p/w342/ldqsRIHnjdCf72TRtXtdlaWlbsI.jpg', year: 2026, country: 'KR' },
+  { id: 283220, title: 'Quiztopia', posterUrl: 'https://image.tmdb.org/t/p/w342/yvkEL51xnhAuKpaycMU1dOnozwN.jpg', year: 2026, country: 'JP' },
 ]
 
 function extractColumns(items?: Drama[]) {
@@ -52,7 +52,7 @@ function extractColumns(items?: Drama[]) {
     const pItem: PosterItem = {
       id: d.tmdbId,
       title: d.title,
-      posterUrl: d.posterUrl.replace('/original/', '/w780/').replace('/w500/', '/w780/'),
+      posterUrl: d.posterUrl.replace(/\/t\/p\/(original|w780|w500)\//, '/t/p/w342/'),
       year: d.releaseYear,
       country: d.country,
     }
@@ -216,6 +216,7 @@ function PosterCard({
         fill
         sizes="(max-width: 640px) 30vw, (max-width: 1024px) 25vw, 240px"
         loading="lazy"
+        decoding="async"
         onError={() => setHasError(true)}
         className="object-cover"
       />

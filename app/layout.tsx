@@ -1,21 +1,19 @@
 import type { Metadata, Viewport } from 'next'
-import { Geist, Geist_Mono, Unbounded } from 'next/font/google'
+import { Plus_Jakarta_Sans, Unbounded } from 'next/font/google'
 import './globals.css'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-sans',
+  display: 'swap',
 })
 
 const unbounded = Unbounded({
   variable: '--font-unbounded',
   subsets: ['latin'],
   weight: ['800', '900'],
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
@@ -64,7 +62,7 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className={`${geistSans.variable} ${geistMono.variable} ${unbounded.variable} antialiased min-h-screen bg-[#050507] text-white`}
+        className={`${plusJakartaSans.className} ${plusJakartaSans.variable} ${unbounded.variable} font-sans antialiased min-h-screen bg-[#050507] text-white selection:bg-pink-500/30 selection:text-white`}
       >
         {children}
       </body>

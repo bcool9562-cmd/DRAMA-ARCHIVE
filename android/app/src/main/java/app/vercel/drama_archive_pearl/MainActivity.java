@@ -34,8 +34,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Edge-to-edge immersive full-screen display
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        // Respect system windows so content starts below Android status bar
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
         getWindow().setStatusBarColor(Color.parseColor("#050507"));
         getWindow().setNavigationBarColor(Color.parseColor("#050507"));
 
@@ -63,15 +63,30 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Back button navigation handler
+        // Back button navigation handler — closes modal or goes back cleanly
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (webView != null && webView.canGoBack()) {
-                    webView.goBack();
+                if (webView != null) {
+                    webView.evaluateJavascript(
+                        "(function() { " +
+                        "  var closeBtn = document.querySelector('[aria-label=\"Close modal\"], [aria-label=\"Close\"], button[title=\"Close\"]'); " +
+                        "  if (closeBtn) { closeBtn.click(); return 'closed_modal'; } " +
+                        "  return 'none'; " +
+                        "})()",
+                        value -> {
+                            if (value != null && value.contains("closed_modal")) {
+                                return;
+                            }
+                            if (webView.canGoBack()) {
+                                webView.goBack();
+                            } else {
+                                finish();
+                            }
+                        }
+                    );
                 } else {
-                    setEnabled(false);
-                    getOnBackPressedDispatcher().onBackPressed();
+                    finish();
                 }
             }
         });
@@ -96,10 +111,14 @@ public class MainActivity extends AppCompatActivity {
         settings.setAllowContentAccess(true);
         settings.setUseWideViewPort(true);
         settings.setLoadWithOverviewMode(true);
+        settings.setTextZoom(100);
 
         String defaultUa = settings.getUserAgentString();
         settings.setUserAgentString(defaultUa + " SCENOVA-Android/1.0");
 
+        webView.setVerticalScrollBarEnabled(false);
+        webView.setHorizontalScrollBarEnabled(false);
+        webView.setOverScrollMode(android.view.View.OVER_SCROLL_NEVER);
         webView.setBackgroundColor(Color.parseColor("#050507"));
 
         webView.setWebViewClient(new WebViewClient() {

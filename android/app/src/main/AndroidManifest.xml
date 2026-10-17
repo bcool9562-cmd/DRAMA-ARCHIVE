@@ -15,12 +15,14 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.SCENOVA"
+        android:hardwareAccelerated="true"
         android:usesCleartextTraffic="false"
         tools:targetApi="34">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:hardwareAccelerated="true"
             android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize"

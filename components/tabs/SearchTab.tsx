@@ -144,13 +144,14 @@ export default function SearchTab({
   }
 
   function handleSpotlightMove(e: React.MouseEvent<HTMLDivElement>) {
+    if (typeof window === 'undefined' || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
     const rect = e.currentTarget.getBoundingClientRect()
     e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`)
     e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`)
   }
 
   function handleCardMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-    if (typeof window === 'undefined' || !window.matchMedia('(hover: hover)').matches) return
+    if (typeof window === 'undefined' || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top

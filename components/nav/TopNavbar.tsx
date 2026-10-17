@@ -35,14 +35,14 @@ export default function TopNavbar({
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 h-16 w-full transition-all duration-300 ease-out select-none ${
+      className={`fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top,0px)] h-[calc(4rem+env(safe-area-inset-top,0px))] w-full transition-all duration-300 ease-out select-none ${
         isScrolled
           ? 'bg-[#030305]/78 backdrop-blur-3xl border-b border-white/[0.05] shadow-[0_10px_30px_rgba(0,0,0,0.8)]'
           : 'bg-[#050507] border-b border-white/[0.08]'
       }`}
     >
       {/* Inner centered container matches max-w-6xl mx-auto w-full px-6 */}
-      <div className="max-w-6xl mx-auto w-full h-full px-6 flex items-center justify-between">
+      <div className="max-w-6xl mx-auto w-full h-16 px-6 flex items-center justify-between">
         {/* Brand Identity: -ml-3 sm:-ml-4 offsets logo slightly to the left of Explore without drifting far left */}
         <button
           type="button"

@@ -30,7 +30,7 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
   const posterSrc = tmdbCard(drama.poster_url)
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (typeof window === 'undefined' || !window.matchMedia('(hover: hover)').matches) return
+    if (typeof window === 'undefined' || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return
     const rect = e.currentTarget.getBoundingClientRect()
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
@@ -83,7 +83,7 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
           alt={drama.title}
           fill
           sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 22vw"
-          loading="eager"
+          loading="lazy"
           decoding="async"
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           priority={false}
@@ -97,21 +97,21 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
       {/* Top Floating Glass Badges */}
       <div className="absolute inset-x-2.5 top-2.5 z-10 flex items-center justify-between gap-1 pointer-events-none">
         {regionBadge ? (
-          <span className="rounded-full bg-black/45 backdrop-blur-xl border border-white/25 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md">
+          <span className="rounded-full bg-[#0a0a10]/90 md:bg-black/45 max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/25 px-2.5 py-0.5 text-[10px] font-bold text-white shadow-md">
             {regionBadge}
           </span>
         ) : <span />}
 
         {drama.rating > 0 && (
-          <span className="flex items-center gap-1 rounded-full bg-black/45 backdrop-blur-xl border border-amber-400/35 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-300 shadow-md">
+          <span className="flex items-center gap-1 rounded-full bg-[#0a0a10]/90 md:bg-black/45 max-md:backdrop-blur-none md:backdrop-blur-xl border border-amber-400/35 px-2.5 py-0.5 text-[10px] font-extrabold text-amber-300 shadow-md">
             <Star size={10} className="fill-amber-300 text-amber-300" />
             {drama.rating.toFixed(1)}
           </span>
         )}
       </div>
 
-      {/* 2. Colorless Gaussian-Blurred Glass Overlay Box */}
-      <div className="absolute inset-x-2.5 bottom-2.5 z-10 rounded-[18px] bg-black/35 backdrop-blur-xl border border-white/[0.18] p-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_8px_24px_rgba(0,0,0,0.45)] flex flex-col gap-2">
+      {/* 2. High-Performance Dark Glass Overlay Box (Opaque gradient on mobile, frosted glass blur on desktop) */}
+      <div className="absolute inset-x-2.5 bottom-2.5 z-10 rounded-[18px] max-md:backdrop-blur-none md:backdrop-blur-md bg-gradient-to-t from-[#07070b] via-[#0e0e14]/95 to-[#151520]/90 md:bg-black/35 border border-white/[0.18] p-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25),0_8px_24px_rgba(0,0,0,0.45)] flex flex-col gap-2">
         <div className="flex flex-col min-w-0">
           <h3 className="text-[13px] sm:text-[14px] font-bold tracking-tight text-white truncate leading-tight group-hover:text-white/90">
             {drama.title}

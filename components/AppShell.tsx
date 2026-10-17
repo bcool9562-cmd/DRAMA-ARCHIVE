@@ -19,15 +19,8 @@ import { getSavedDramasSync, onArchiveSync, type UserDrama } from '@/lib/supabas
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
 export default function AppShell() {
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const val = localStorage.getItem('drama_archive_unlocked')
-        if (val === 'false') return false
-      } catch { /* ignore */ }
-    }
-    return true
-  })
+  const [isLockChecked, setIsLockChecked] = useState(false)
+  const [isLocked, setIsLocked] = useState(true)
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -49,6 +42,58 @@ export default function AppShell() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [savedDramas, setSavedDramas] = useState<UserDrama[]>(() => getSavedDramasSync())
   const [discoverData, setDiscoverData] = useState<DiscoverData | null>(null)
+
+  // Pre-paint synchronous lock check — ensures zero open-screen blink on PC & Phone
+  useIsomorphicLayoutEffect(() => {
+    try {
+      const pin = localStorage.getItem('scenova_pin')
+      if (pin) {
+        // If a pin is configured, fresh app launch or reload MUST start locked
+        setIsLocked(true)
+        try {
+          sessionStorage.removeItem('scenova_unlocked_session')
+        } catch { /* ignore */ }
+      } else {
+        // No pin configured yet
+        setIsLocked(false)
+      }
+    } catch {
+      setIsLocked(false)
+    }
+    setIsLockChecked(true)
+  }, [])
+
+  // Auto-lock whenever app is backgrounded, closed, or visibility changes
+  useEffect(() => {
+    function handleLockOnBackground() {
+      if (typeof window !== 'undefined' && localStorage.getItem('scenova_pin')) {
+        if (document.visibilityState === 'hidden') {
+          setIsLocked(true)
+          try {
+            sessionStorage.removeItem('scenova_unlocked_session')
+          } catch { /* ignore */ }
+        }
+      }
+    }
+
+    function handlePageHide() {
+      if (typeof window !== 'undefined' && localStorage.getItem('scenova_pin')) {
+        setIsLocked(true)
+        try {
+          sessionStorage.removeItem('scenova_unlocked_session')
+        } catch { /* ignore */ }
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleLockOnBackground)
+    window.addEventListener('pagehide', handlePageHide)
+    window.addEventListener('beforeunload', handlePageHide)
+    return () => {
+      document.removeEventListener('visibilitychange', handleLockOnBackground)
+      window.removeEventListener('pagehide', handlePageHide)
+      window.removeEventListener('beforeunload', handlePageHide)
+    }
+  }, [])
 
   // Synchronous tab switching with instant scroll reset before browser paint
   const handleTabChange = useCallback((tab: TabId) => {
@@ -86,28 +131,19 @@ export default function AppShell() {
   }, [])
 
   useEffect(() => {
-    fetch('/api/auth/session')
-      .then(res => res.json())
-      .then(data => {
-        const unlocked = !!data.unlocked
-        setIsUnlocked(unlocked)
-        try {
-          localStorage.setItem('drama_archive_unlocked', unlocked ? 'true' : 'false')
-        } catch { /* ignore */ }
-      })
-      .catch(() => {})
-  }, [])
-
-  useEffect(() => {
     autoSyncPushSubscription()
   }, [])
 
   async function handleLock() {
+    setIsLocked(true)
     try {
+      if (!localStorage.getItem('scenova_pin')) {
+        localStorage.setItem('scenova_pin', '@MyPrivate')
+      }
+      sessionStorage.removeItem('scenova_unlocked_session')
       localStorage.setItem('drama_archive_unlocked', 'false')
-      await fetch('/api/auth/lock', { method: 'POST' })
+      fetch('/api/auth/lock', { method: 'POST' }).catch(() => {})
     } catch { /* ignore */ }
-    setIsUnlocked(false)
   }
 
   const handleNavEmpty = useCallback(() => setNavStack([]), [])
@@ -121,14 +157,21 @@ export default function AppShell() {
     setNavStack([{ type: 'person', id, name }])
   }
 
-  if (!isUnlocked) {
+  // 1. While determining lock state, render solid black screen (NO BLINK)
+  if (!isLockChecked) {
+    return <div className="fixed inset-0 bg-[#050507] z-[9999]" />
+  }
+
+  // 2. While locked, render ONLY AuthScreen — never render navbar, dock, or tabs
+  if (isLocked) {
     return (
       <AuthScreen
         onAuthenticated={() => {
           try {
+            sessionStorage.setItem('scenova_unlocked_session', 'true')
             localStorage.setItem('drama_archive_unlocked', 'true')
           } catch { /* ignore */ }
-          setIsUnlocked(true)
+          setIsLocked(false)
         }}
       />
     )
@@ -229,8 +272,8 @@ export default function AppShell() {
       />
 
       {/* Main content — keep all 4 tab containers mounted in DOM, with activation counter key for smooth glide */}
-      <main className="relative z-10 bg-transparent pt-16">
-        <div className={activeTab === 'search' ? 'block' : 'hidden'}>
+      <main className="relative z-10 bg-transparent pt-[calc(4rem+env(safe-area-inset-top,0px))]">
+        {activeTab === 'search' && (
           <SearchTab
             onOpenDrama={openDrama}
             onOpenPerson={openPerson}
@@ -238,31 +281,31 @@ export default function AppShell() {
             discoverData={discoverData}
             onDiscoverLoaded={setDiscoverData}
           />
-        </div>
+        )}
 
-        <div className={activeTab === 'watchlist' ? 'block' : 'hidden'}>
+        {activeTab === 'watchlist' && (
           <WatchlistTab
             onOpenDrama={openDrama}
             onOpenPerson={openPerson}
             activeCount={tabSwitchCounts.watchlist}
           />
-        </div>
+        )}
 
-        <div className={activeTab === 'watching' ? 'block' : 'hidden'}>
+        {activeTab === 'watching' && (
           <WatchingTab
             onOpenDrama={openDrama}
             onOpenPerson={openPerson}
             activeCount={tabSwitchCounts.watching}
           />
-        </div>
+        )}
 
-        <div className={activeTab === 'finished' ? 'block' : 'hidden'}>
+        {activeTab === 'finished' && (
           <FinishedTab
             onOpenDrama={openDrama}
             onOpenPerson={openPerson}
             activeCount={tabSwitchCounts.finished}
           />
-        </div>
+        )}
       </main>
 
       {/* Bottom dock — hidden when modal is open to prevent GPU compositing */}
