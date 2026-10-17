@@ -1,0 +1,103 @@
+name: Build Native Android SCENOVA.apk
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'android/**'
+      - '.github/workflows/build-android-apk.yml'
+      - 'app/manifest.ts'
+      - 'public/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build Signed Full-Screen SCENOVA.apk
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Bubblewrap CLI
+        run: npm install -g @bubblewrap/cli
+
+      - name: Generate Android Signing Keystore
+        run: |
+          mkdir -p android
+          keytool -genkeypair -v \
+            -keystore android/scenova-release-key.keystore \
+            -alias scenova \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass scenova123 \
+            -keypass scenova123 \
+            -dname "CN=SCENOVA, OU=Mobile, O=SCENOVA, L=SanFrancisco, S=CA, C=US"
+
+      - name: Build Signed Native Android APK with Bubblewrap
+        working-directory: ./android
+        env:
+          BUBBLEWRAP_KEYSTORE_PASSWORD: scenova123
+          BUBBLEWRAP_KEY_PASSWORD: scenova123
+        run: |
+          # Configure bubblewrap config
+          bubblewrap doctor || true
+          # Build project from twa-manifest
+          bubblewrap build --manifest=./twa-manifest.json --skipPwaValidation || {
+            echo "Direct build fallback: regenerating android project"
+            bubblewrap init --manifest="https://drama-archive-pearl.vercel.app/manifest.webmanifest" --skipPwaValidation
+            bubblewrap build --skipPwaValidation
+          }
+          
+          # Find output apk and copy to SCENOVA.apk
+          find . -name "*.apk" -type f
+          APK_PATH=$(find . -name "*signed*.apk" -o -name "*release*.apk" | head -n 1)
+          if [ -n "$APK_PATH" ]; then
+            cp "$APK_PATH" ../SCENOVA.apk
+            echo "Successfully generated SCENOVA.apk"
+          else
+            echo "No APK found, copying default output"
+            cp app-release-signed.apk ../SCENOVA.apk || true
+          fi
+
+      - name: Upload SCENOVA.apk as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SCENOVA-Android-APK
+          path: SCENOVA.apk
+          if-no-files-found: warn
+
+      - name: Publish SCENOVA.apk to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: success()
+        with:
+          tag_name: latest
+          name: "SCENOVA Native Android App"
+          body: |
+            ### 📱 SCENOVA Android APK Release
+            - Native full-screen immersive portrait app
+            - Real background Web Push notifications (delivers when closed)
+            - Tactile haptic feedback engine
+            - Direct download: [`SCENOVA.apk`](https://github.com/${{ github.repository }}/releases/latest/download/SCENOVA.apk)
+          files: SCENOVA.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

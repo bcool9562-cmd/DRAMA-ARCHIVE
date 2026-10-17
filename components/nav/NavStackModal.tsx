@@ -27,6 +27,7 @@ import {
   type DramaStatus, type UserDrama,
 } from '@/lib/supabase/archive'
 import { REGION_NAMES } from '@/components/drama/DramaDetailSheet'
+import { haptic } from '@/lib/haptics'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -394,6 +395,14 @@ function DramaPage({
     mutationIdRef.current += 1
     const nextStatus = currentStatus === target ? null : target
     setLockedStatus(nextStatus)
+
+    if (nextStatus === 'finished') {
+      haptic.success()
+    } else if (nextStatus) {
+      haptic.medium()
+    } else {
+      haptic.warning()
+    }
 
     if (currentStatus === target) {
       removeDrama(drama.dramaId)

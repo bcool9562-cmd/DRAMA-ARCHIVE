@@ -2,6 +2,7 @@
 
 import { Search, Bookmark, Play, CheckCircle } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
+import { haptic } from '@/lib/haptics'
 
 export type TabId = 'search' | 'watchlist' | 'watching' | 'finished'
 
@@ -83,6 +84,7 @@ export default function BottomNav({
               key={id}
               ref={(el) => { tabRefs.current[idx] = el }}
               onClick={() => {
+                haptic.light()
                 if (typeof window !== 'undefined') {
                   window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
                 }

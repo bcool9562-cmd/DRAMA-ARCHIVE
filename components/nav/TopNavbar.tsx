@@ -4,6 +4,7 @@ import { Bell } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { getNotifiableDramas } from '@/lib/supabase/archive'
 import ScenovaLogo from '@/components/brand/ScenovaLogo'
+import { haptic } from '@/lib/haptics'
 
 interface TopNavbarProps {
   onLogoClick?: () => void
@@ -62,7 +63,10 @@ export default function TopNavbar({
           {/* Airing Alerts Capsule */}
           <button
             type="button"
-            onClick={onNotificationsClick}
+            onClick={() => {
+              haptic.light()
+              onNotificationsClick()
+            }}
             className="
               relative h-9 px-3.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14]
               backdrop-blur-xl border border-white/[0.14] text-white/90
@@ -94,7 +98,10 @@ export default function TopNavbar({
           {/* Lock Archive Capsule */}
           <button
             type="button"
-            onClick={onLockClick}
+            onClick={() => {
+              haptic.light()
+              onLockClick()
+            }}
             title="Lock Archive"
             className="
               relative h-9 px-3.5 rounded-full bg-white/[0.08] hover:bg-white/[0.14]

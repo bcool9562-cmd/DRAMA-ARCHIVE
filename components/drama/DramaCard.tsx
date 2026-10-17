@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { Star } from 'lucide-react'
 import { REGION_NAMES } from './DramaDetailSheet'
 import { tmdbCard } from '@/lib/image-utils'
+import { haptic } from '@/lib/haptics'
 
 interface DramaCardProps {
   drama: UserDrama
@@ -51,12 +52,18 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
     <div
       role={onOpen ? 'button' : undefined}
       tabIndex={onOpen ? 0 : undefined}
-      onClick={onOpen}
+      onClick={() => {
+        if (onOpen) {
+          haptic.light()
+          onOpen()
+        }
+      }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onKeyDown={(e) => {
         if (onOpen && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault()
+          haptic.light()
           onOpen()
         }
       }}

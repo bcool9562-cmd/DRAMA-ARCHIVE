@@ -15,6 +15,7 @@ import {
 import { REGION_NAMES } from '@/components/drama/DramaDetailSheet'
 import MovingPosterWall from '@/components/wall/MovingPosterWall'
 import VibeChart from '@/components/vibe/VibeChart'
+import { haptic } from '@/lib/haptics'
 
 interface SearchTabProps {
   onOpenDrama: (id: number, preview?: Drama) => void
@@ -137,6 +138,7 @@ export default function SearchTab({
   }, [query, doSearch])
 
   function handleOpenDrama(drama: Drama) {
+    haptic.light()
     ;(document.activeElement as HTMLElement)?.blur()
     onOpenDrama(drama.tmdbId, drama)
   }

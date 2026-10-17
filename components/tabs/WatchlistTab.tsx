@@ -4,6 +4,7 @@ import { getUserDramas, moveDrama, removeDrama, onArchiveSync, getSavedDramasSyn
 import { Bookmark, Play, CheckCircle, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import DramaCard from '@/components/drama/DramaCard'
+import { haptic } from '@/lib/haptics'
 
 interface WatchlistTabProps {
   onOpenDrama: (id: number, preview?: UserDrama) => void
@@ -37,10 +38,13 @@ export default function WatchlistTab({ onOpenDrama, activeCount }: WatchlistTabP
   }
 
   async function handleMove(dramaId: string, status: 'watching' | 'finished') {
+    if (status === 'watching') haptic.medium()
+    else if (status === 'finished') haptic.success()
     await moveDrama(dramaId, status)
   }
 
   async function handleRemove(dramaId: string) {
+    haptic.warning()
     await removeDrama(dramaId)
   }
 

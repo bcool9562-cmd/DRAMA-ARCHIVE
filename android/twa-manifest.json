@@ -1,0 +1,39 @@
+{
+  "packageId": "app.vercel.drama_archive_pearl.twa",
+  "host": "drama-archive-pearl.vercel.app",
+  "name": "SCENOVA",
+  "launcherName": "SCENOVA",
+  "themeColor": "#050507",
+  "navigationColor": "#050507",
+  "backgroundColor": "#050507",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://drama-archive-pearl.vercel.app/icon?v=pink3",
+  "maskableIconUrl": "https://drama-archive-pearl.vercel.app/icon?v=pink3",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./scenova-release-key.keystore",
+    "alias": "scenova"
+  },
+  "appVersionCode": 1,
+  "appVersionName": "1.0.0",
+  "display": "fullscreen",
+  "orientation": "portrait",
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://drama-archive-pearl.vercel.app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {
+    "locationDelegation": {
+      "enabled": false
+    },
+    "playBilling": {
+      "enabled": false
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false
+}

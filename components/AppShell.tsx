@@ -12,6 +12,8 @@ import FinishedTab from '@/components/tabs/FinishedTab'
 import NotificationSheet from '@/components/notifications/NotificationSheet'
 import NavStackModal, { type StackItem } from '@/components/nav/NavStackModal'
 import ToastContainer from '@/components/Toast'
+import DynamicIslandBanner from '@/components/notifications/DynamicIslandBanner'
+import { autoSyncPushSubscription } from '@/lib/pushClient'
 import { getSavedDramasSync, onArchiveSync, type UserDrama } from '@/lib/supabase/archive'
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
@@ -83,6 +85,10 @@ export default function AppShell() {
       .catch(() => { setIsUnlocked(false); setAuthChecked(true) })
   }, [])
 
+  useEffect(() => {
+    autoSyncPushSubscription()
+  }, [])
+
   async function handleLock() {
     try { await fetch('/api/auth/lock', { method: 'POST' }) } catch { /* ignore */ }
     setIsUnlocked(false)
@@ -118,6 +124,10 @@ export default function AppShell() {
 
   return (
     <div className={`bg-[#050507] relative min-h-screen overflow-x-hidden text-white ${modalOpen ? 'overflow-hidden' : ''}`}>
+      {/* iPhone Dynamic Island Floating Glass Banner */}
+      <DynamicIslandBanner />
+      <ToastContainer />
+
       {/* ── Ambient Background Layer System: ALL backgrounds stay permanently mounted in DOM and cross-fade smoothly ── */}
       {/* 1. Home (Search) Top-Left Purple-Teal Aurora Bloom */}
       <div

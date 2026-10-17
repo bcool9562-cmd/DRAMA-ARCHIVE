@@ -13,6 +13,7 @@ body {
   font-family: var(--font-apple);
   letter-spacing: -0.015em;
   overscroll-behavior: none;
+  overscroll-behavior-y: none;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

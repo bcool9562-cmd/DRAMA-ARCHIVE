@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react'
 import { Eye, EyeOff, Lock, Unlock, Loader2, Sparkles } from 'lucide-react'
 import MovingPosterWall from '@/components/wall/MovingPosterWall'
 import ScenovaLogo from '@/components/brand/ScenovaLogo'
+import { haptic } from '@/lib/haptics'
 
 interface AuthScreenProps {
   onAuthenticated: () => void
@@ -36,13 +37,16 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
       const data = await res.json()
 
       if (!res.ok) {
+        haptic.warning()
         setError(data.error || 'Incorrect passcode.')
         return
       }
 
       // Successful unlock
+      haptic.success()
       onAuthenticated()
     } catch {
+      haptic.warning()
       setError('Connection error. Please try again.')
     } finally {
       setLoading(false)

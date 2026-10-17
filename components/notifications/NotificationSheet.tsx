@@ -2,8 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { X, Sparkles, ChevronRight } from 'lucide-react'
+import { X, Sparkles, ChevronRight, Bell, BellRing } from 'lucide-react'
 import { getNotifiableDramas, UserDrama } from '@/lib/supabase/archive'
+import { haptic } from '@/lib/haptics'
+import { subscribeToPush, unsubscribeFromPush } from '@/lib/pushClient'
+import { generateWittyDramaNotification } from '@/lib/dramaNotifications'
+import { showDynamicIsland } from './DynamicIslandBanner'
 
 interface NotificationSheetProps {
   onClose: () => void
@@ -37,10 +41,16 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
   const [dramas, setDramas] = useState<UserDrama[]>([])
   const [loading, setLoading] = useState(true)
   const [permission, setPermission] = useState<NotificationPermission>('default')
+  const [alertsActive, setAlertsActive] = useState<boolean>(false)
+  const [testingPush, setTestingPush] = useState(false)
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window) {
       setPermission(Notification.permission)
+      const isEnabled =
+        localStorage.getItem('scenova_alerts_enabled') !== 'false' &&
+        Notification.permission === 'granted'
+      setAlertsActive(isEnabled)
     }
 
     getNotifiableDramas().then((data) => {
@@ -64,20 +74,71 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
     })
   }, [])
 
-  async function toggleNotificationPermission() {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      if (permission === 'default') {
-        const perm = await Notification.requestPermission()
-        setPermission(perm)
-      } else if (permission === 'granted') {
-        // Already active
+  async function toggleAlerts() {
+    if (alertsActive) {
+      haptic.light()
+      await unsubscribeFromPush()
+      setAlertsActive(false)
+      showDynamicIsland({
+        title: '🔕 Alerts Paused',
+        body: 'Background drama notifications turned off. Tap to re-enable anytime.',
+      })
+    } else {
+      haptic.success()
+      const success = await subscribeToPush()
+      if (success) {
+        setAlertsActive(true)
+        if (typeof window !== 'undefined' && 'Notification' in window) {
+          setPermission(Notification.permission)
+        }
+        showDynamicIsland({
+          title: '🔔 Alerts Activated!',
+          body: 'You will receive witty drama updates even when SCENOVA is closed.',
+        })
+      } else {
+        haptic.warning()
+        showDynamicIsland({
+          title: 'Permission Needed',
+          body: 'Please allow notification permission in your browser or device settings.',
+        })
       }
+    }
+  }
+
+  async function handleTestNotification() {
+    haptic.light()
+    setTestingPush(true)
+
+    const upcomingPremieres = dramas.filter(d => d.status === 'watchlist').map(d => ({ title: d.title, tmdb_id: d.tmdb_id }))
+    const newEpisodes = dramas.filter(d => d.status === 'watching').map(d => ({ title: d.title, tmdb_id: d.tmdb_id }))
+
+    const witty = generateWittyDramaNotification({
+      watchlist: upcomingPremieres,
+      watching: newEpisodes,
+    })
+
+    // 1. Show immediate in-app Dynamic Island banner
+    showDynamicIsland({
+      title: witty.title,
+      body: witty.body,
+    })
+
+    // 2. Schedule 5-second background push (so user can lock their phone to test)
+    try {
+      await fetch('/api/push/send?delay=5000', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(witty),
+      })
+    } catch {
+      // ignore
+    } finally {
+      setTimeout(() => setTestingPush(false), 2500)
     }
   }
 
   const upcomingPremieres = dramas.filter(d => d.status === 'watchlist')
   const newEpisodes = dramas.filter(d => d.status === 'watching')
-  const isAlertsActive = permission === 'granted'
 
   return (
     <div
@@ -92,7 +153,7 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
         {/* Living Flow ambient light header glow */}
         <div className="pointer-events-none absolute -top-20 inset-x-0 h-48 bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.35),rgba(244,63,94,0.18)_50%,transparent_80%)]" />
 
-        {/* Header Row: Title + Luminous Push Toggle Pill + Close Button */}
+        {/* Header Row: Title + Test Bell + Luminous Push Toggle Pill + Close Button */}
         <div className="relative z-10 px-5 pt-4 pb-4 border-b border-white/[0.10] flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <h2 className="text-[18px] sm:text-[20px] font-bold tracking-tight text-white flex items-baseline">
@@ -102,44 +163,67 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Luminous Push Toggle Pill */}
+            {/* Small Bell Test Button (5s delayed background push & in-app Dynamic Island) */}
             <button
-              onClick={toggleNotificationPermission}
+              type="button"
+              onClick={handleTestNotification}
+              disabled={testingPush}
+              title="Test Alert (Shows Dynamic Island banner & triggers a 5s background push to lock screen)"
+              className="
+                relative overflow-hidden flex h-8 w-8 items-center justify-center rounded-full
+                bg-white/[0.08] hover:bg-white/[0.16] border border-white/[0.14] text-white/80
+                hover:text-white transition active:scale-90 cursor-pointer shadow-sm
+              "
+              aria-label="Test Alert"
+            >
+              <BellRing
+                size={14}
+                className={testingPush ? 'animate-spin text-purple-400' : 'text-pink-300 animate-pulse'}
+              />
+            </button>
+
+            {/* Luminous Push Toggle Pill: True ON / OFF Switch */}
+            <button
+              type="button"
+              onClick={toggleAlerts}
               className="
                 relative overflow-hidden rounded-full bg-white/[0.1] hover:bg-white/[0.15] backdrop-blur-md
-                border border-white/[0.18] pl-3 pr-2 py-1.5 flex items-center gap-2
+                border border-white/[0.18] pl-3 pr-2.5 py-1.5 flex items-center gap-2
                 text-xs font-semibold text-white active:scale-95 transition cursor-pointer select-none
                 shadow-[inset_0_1px_1px_rgba(255,255,255,0.25)]
                 after:absolute after:inset-0 after:-translate-x-full hover:after:translate-x-full after:transition-transform after:duration-700 after:bg-gradient-to-r after:from-transparent after:via-white/15 after:to-transparent
               "
-              title={isAlertsActive ? 'Device notifications are active' : 'Click to enable device push alerts'}
+              title={alertsActive ? 'Push alerts are ON. Tap to pause' : 'Push alerts are OFF. Tap to enable'}
             >
               <span className="relative z-10 flex items-center gap-1.5">
                 <span
                   className={`w-2 h-2 rounded-full transition-colors ${
-                    isAlertsActive
+                    alertsActive
                       ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
-                      : 'bg-white/40'
+                      : 'bg-white/30'
                   }`}
                 />
                 <span className="text-[11px] font-semibold tracking-tight">
-                  {isAlertsActive ? 'Alerts On' : 'Enable Alerts'}
+                  {alertsActive ? 'Alerts ON' : 'Alerts OFF'}
                 </span>
               </span>
               <div
                 className={`relative z-10 w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
-                  isAlertsActive
-                    ? 'bg-emerald-400/25 text-emerald-300'
-                    : 'bg-white/15 text-white/60'
+                  alertsActive
+                    ? 'bg-emerald-400/25 text-emerald-300 font-bold'
+                    : 'bg-white/10 text-white/40'
                 }`}
               >
-                ✓
+                {alertsActive ? '✓' : '✕'}
               </div>
             </button>
 
             {/* Close button */}
             <button
-              onClick={onClose}
+              onClick={() => {
+                haptic.light()
+                onClose()
+              }}
               className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.08] hover:bg-white/[0.16] border border-white/[0.12] text-white/70 hover:text-white transition active:scale-90 cursor-pointer"
               aria-label="Close"
             >
@@ -189,7 +273,10 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                       return (
                         <div
                           key={d.drama_id}
-                          onClick={() => onDramaClick(d.tmdb_id)}
+                          onClick={() => {
+                            haptic.light()
+                            onDramaClick(d.tmdb_id)
+                          }}
                           className="
                             relative overflow-hidden rounded-[22px] bg-white/[0.06] hover:bg-white/[0.10]
                             backdrop-blur-xl border border-white/[0.14] p-3 flex items-center justify-between gap-3.5
@@ -264,7 +351,10 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                       return (
                         <div
                           key={d.drama_id}
-                          onClick={() => onDramaClick(d.tmdb_id)}
+                          onClick={() => {
+                            haptic.light()
+                            onDramaClick(d.tmdb_id)
+                          }}
                           className="
                             relative overflow-hidden rounded-[22px] bg-white/[0.06] hover:bg-white/[0.10]
                             backdrop-blur-xl border border-white/[0.14] p-3 flex items-center justify-between gap-3.5
