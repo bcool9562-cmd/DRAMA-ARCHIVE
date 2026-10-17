@@ -46,8 +46,9 @@ export default function BottomNav({
               }}
               className={`
                 relative flex flex-col items-center gap-0.5 rounded-full px-4 py-2
-                transition-all duration-200 ease-out
-                cursor-pointer touch-manipulation select-none active:scale-90
+                transition-transform duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]
+                cursor-pointer touch-manipulation select-none
+                hover:scale-[1.05] active:scale-[0.94]
                 ${isActive ? 'text-white' : 'text-white/40 hover:text-white/70'}
               `}
               aria-label={label}

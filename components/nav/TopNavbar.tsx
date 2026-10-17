@@ -68,8 +68,8 @@ export default function TopNavbar({
               backdrop-blur-xl border border-white/[0.14] text-white/90
               flex items-center gap-2 text-xs font-semibold
               overflow-hidden cursor-pointer touch-manipulation select-none group
-              hover:-translate-y-0.5 hover:scale-[1.04] active:scale-95
-              transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
+              hover:scale-[1.05] active:scale-[0.94]
+              transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]
               before:absolute before:inset-0 before:-translate-x-full hover:before:translate-x-full
               before:transition-transform before:duration-700
               before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent
@@ -101,8 +101,8 @@ export default function TopNavbar({
               backdrop-blur-xl border border-white/[0.14] text-white/90
               flex items-center gap-2 text-xs font-semibold
               overflow-hidden cursor-pointer touch-manipulation select-none group
-              hover:-translate-y-0.5 hover:scale-[1.04] active:scale-95
-              transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]
+              hover:scale-[1.05] active:scale-[0.94]
+              transition-all duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]
               before:absolute before:inset-0 before:-translate-x-full hover:before:translate-x-full
               before:transition-transform before:duration-700
               before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent

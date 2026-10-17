@@ -141,6 +141,12 @@ export default function SearchTab({
     onOpenDrama(drama.tmdbId, drama)
   }
 
+  function handleSpotlightMove(e: React.MouseEvent<HTMLDivElement>) {
+    const rect = e.currentTarget.getBoundingClientRect()
+    e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`)
+    e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`)
+  }
+
   const showResults = query.trim().length > 0
 
   // Collect top editorial dramas
@@ -199,7 +205,7 @@ export default function SearchTab({
 
       {/* 2. FLOATING iOS SPOTLIGHT SEARCH BAR */}
       <div className="sticky top-16 z-30 px-6 pt-2 pb-3 max-w-6xl mx-auto w-full">
-        <div className="relative flex items-center rounded-full bg-black/50 backdrop-blur-3xl border border-white/20 px-4 py-3 gap-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_12px_32px_rgba(0,0,0,0.6)] transform-gpu hover:border-white/25 focus-within:scale-[1.01] focus-within:border-white/35 transition-all duration-300">
+        <div className="relative flex items-center rounded-full bg-black/50 backdrop-blur-3xl border border-white/20 px-4 py-3 gap-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_12px_32px_rgba(0,0,0,0.6)] transform-gpu hover:border-white/25 focus-within:scale-[1.01] focus-within:border-pink-400/40 focus-within:shadow-[0_0_25px_-5px_rgba(244,114,182,0.25)] transition-all duration-500">
           {searching ? (
             <Loader2 size={17} className="text-white/80 flex-shrink-0 animate-spin" />
           ) : (
@@ -290,7 +296,17 @@ export default function SearchTab({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch mt-4">
             
             {/* Left Card: 3-Column Moving Poster Wall (100% clean artwork, no overlay bar - PHOTO 6) */}
-            <div className="lg:col-span-6 h-[460px] rounded-[28px] bg-[#101016]/85 border border-white/[0.08] overflow-hidden relative shadow-2xl">
+            <div
+              onMouseMove={handleSpotlightMove}
+              className="group lg:col-span-6 h-[460px] rounded-[28px] bg-[#101016]/85 border border-white/[0.08] overflow-hidden relative shadow-2xl"
+            >
+              {/* Aceternity UI Cursor-Following Border Spotlight */}
+              <div
+                className="pointer-events-none absolute -inset-px rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+                style={{
+                  background: 'radial-gradient(320px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(244, 114, 182, 0.14), transparent 70%)',
+                }}
+              />
               <MovingPosterWall
                 dramas={allDiscoverDramas}
                 onPosterClick={(id, preview) => {
@@ -302,7 +318,17 @@ export default function SearchTab({
             </div>
 
             {/* Right Card: Vibe Chart (No double border, simply "Vibe Chart", scaled w-48 h-48 donut - PHOTO 5) */}
-            <div className="lg:col-span-6 h-[460px] rounded-[28px] bg-[#101016]/85 border border-white/[0.08] shadow-2xl p-6 flex flex-col justify-between overflow-hidden">
+            <div
+              onMouseMove={handleSpotlightMove}
+              className="group lg:col-span-6 h-[460px] rounded-[28px] bg-[#101016]/85 border border-white/[0.08] shadow-2xl p-6 flex flex-col justify-between overflow-hidden relative"
+            >
+              {/* Aceternity UI Cursor-Following Border Spotlight */}
+              <div
+                className="pointer-events-none absolute -inset-px rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10"
+                style={{
+                  background: 'radial-gradient(320px circle at var(--mouse-x, -999px) var(--mouse-y, -999px), rgba(244, 114, 182, 0.14), transparent 70%)',
+                }}
+              />
               <VibeChart
                 savedDramas={userDramas}
                 title="Vibe Chart"
