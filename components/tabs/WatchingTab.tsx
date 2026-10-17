@@ -47,13 +47,6 @@ export default function WatchingTab({ onOpenDrama, activeCount }: WatchingTabPro
     await removeDrama(dramaId)
   }
 
-  if (loading && dramas.length === 0) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-9 w-9 animate-spin rounded-full border-2 border-white/20 border-t-purple-500" />
-      </div>
-    )
-  }
 
   if (dramas.length === 0) {
     return (

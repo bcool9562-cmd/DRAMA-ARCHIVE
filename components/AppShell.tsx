@@ -19,8 +19,15 @@ import { getSavedDramasSync, onArchiveSync, type UserDrama } from '@/lib/supabas
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
 export default function AppShell() {
-  const [isUnlocked, setIsUnlocked] = useState(false)
-  const [authChecked, setAuthChecked] = useState(false)
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const val = localStorage.getItem('drama_archive_unlocked')
+        if (val === 'false') return false
+      } catch { /* ignore */ }
+    }
+    return true
+  })
   const [activeTab, setActiveTab] = useState<TabId>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -81,8 +88,14 @@ export default function AppShell() {
   useEffect(() => {
     fetch('/api/auth/session')
       .then(res => res.json())
-      .then(data => { setIsUnlocked(!!data.unlocked); setAuthChecked(true) })
-      .catch(() => { setIsUnlocked(false); setAuthChecked(true) })
+      .then(data => {
+        const unlocked = !!data.unlocked
+        setIsUnlocked(unlocked)
+        try {
+          localStorage.setItem('drama_archive_unlocked', unlocked ? 'true' : 'false')
+        } catch { /* ignore */ }
+      })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -90,7 +103,10 @@ export default function AppShell() {
   }, [])
 
   async function handleLock() {
-    try { await fetch('/api/auth/lock', { method: 'POST' }) } catch { /* ignore */ }
+    try {
+      localStorage.setItem('drama_archive_unlocked', 'false')
+      await fetch('/api/auth/lock', { method: 'POST' })
+    } catch { /* ignore */ }
     setIsUnlocked(false)
   }
 
@@ -105,16 +121,17 @@ export default function AppShell() {
     setNavStack([{ type: 'person', id, name }])
   }
 
-  if (!authChecked) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[#060608]">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-white" />
-      </div>
-    )
-  }
-
   if (!isUnlocked) {
-    return <AuthScreen onAuthenticated={() => setIsUnlocked(true)} />
+    return (
+      <AuthScreen
+        onAuthenticated={() => {
+          try {
+            localStorage.setItem('drama_archive_unlocked', 'true')
+          } catch { /* ignore */ }
+          setIsUnlocked(true)
+        }}
+      />
+    )
   }
 
   const modalOpen = navDepth > 0

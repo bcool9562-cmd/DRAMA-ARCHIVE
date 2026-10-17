@@ -48,13 +48,6 @@ export default function WatchlistTab({ onOpenDrama, activeCount }: WatchlistTabP
     await removeDrama(dramaId)
   }
 
-  if (loading && dramas.length === 0) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <div className="h-9 w-9 animate-spin rounded-full border-2 border-white/20 border-t-sky-400" />
-      </div>
-    )
-  }
 
   if (dramas.length === 0) {
     return (

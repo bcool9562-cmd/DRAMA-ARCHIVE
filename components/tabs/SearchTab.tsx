@@ -389,8 +389,14 @@ export default function SearchTab({
 
           {/* 5. 5-COLUMN POSTER GRID (FRAMELESS POSTER + BOLD TITLE + BUZZ LABEL) */}
           {discoverLoading && talkOfTheTownDramas.length === 0 ? (
-            <div className="flex items-center justify-center py-24">
-              <div className="h-9 w-9 animate-spin rounded-full border-2 border-white/15 border-t-white" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-5 gap-y-8 animate-pulse">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex flex-col space-y-2.5">
+                  <div className="aspect-[2/3] w-full rounded-[12px] bg-white/[0.04] border border-white/5" />
+                  <div className="h-4 w-3/4 rounded-md bg-white/[0.06]" />
+                  <div className="h-3 w-1/2 rounded-md bg-white/[0.04]" />
+                </div>
+              ))}
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-5 gap-y-8">
