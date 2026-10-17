@@ -115,7 +115,6 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
   // ── Sync saved dramas ──────────────────────────────────────────────────────
   useEffect(() => {
     const unsub = onArchiveSync(setSavedDramas)
-    getUserDramas().then(d => { if (Array.isArray(d)) setSavedDramas(d) })
     return unsub
   }, [])
 
@@ -379,12 +378,23 @@ function DramaPage({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tmdbId])
 
-  // Single source of truth for user drama status
+  // Single source of truth for user drama status with optimistic locking
+  const mutationIdRef = useRef(0)
+  const [lockedStatus, setLockedStatus] = useState<DramaStatus | null | undefined>(undefined)
+
+  useEffect(() => {
+    setLockedStatus(undefined)
+  }, [tmdbId])
+
   const userDrama = savedDramas.find(d => d.tmdb_id === tmdbId)
-  const currentStatus = userDrama?.status ?? null
+  const currentStatus = lockedStatus !== undefined ? lockedStatus : (userDrama?.status ?? null)
 
   const handleStatusToggle = (target: DramaStatus) => {
     if (!drama) return
+    mutationIdRef.current += 1
+    const nextStatus = currentStatus === target ? null : target
+    setLockedStatus(nextStatus)
+
     if (currentStatus === target) {
       removeDrama(drama.dramaId)
     } else if (currentStatus) {

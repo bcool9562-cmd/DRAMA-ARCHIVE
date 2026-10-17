@@ -31,6 +31,7 @@ export interface UserDrama {
 
 // In-memory client cache for instantaneous 0ms optimistic UI updates
 let memoryCache: UserDrama[] | null = null
+let activeMutationCount = 0
 
 function getStoredCache(): UserDrama[] {
   if (memoryCache) return memoryCache
@@ -92,12 +93,14 @@ export async function getUserDramas(status?: DramaStatus): Promise<UserDrama[]> 
 
     const liveData = (await res.json()) as UserDrama[]
     if (Array.isArray(liveData)) {
-      if (!status) {
-        setStoredCache(liveData)
-      } else {
-        // Merge into cache
-        const all = getStoredCache().filter((d) => d.status !== status)
-        setStoredCache([...liveData, ...all])
+      if (activeMutationCount === 0) {
+        if (!status) {
+          setStoredCache(liveData)
+        } else {
+          // Merge into cache
+          const all = getStoredCache().filter((d) => d.status !== status)
+          setStoredCache([...liveData, ...all])
+        }
       }
       return liveData
     }
@@ -141,6 +144,7 @@ export async function addDrama(
   showToast(`Added to ${statusLabel}`, 'success')
 
   // 2. Background Sync to /api/archive
+  activeMutationCount++
   try {
     const res = await fetch('/api/archive', {
       method: 'POST',
@@ -160,6 +164,8 @@ export async function addDrama(
     console.error('[archive] addDrama network error:', err)
     showToast('Network error while saving drama', 'error')
     return false
+  } finally {
+    activeMutationCount = Math.max(0, activeMutationCount - 1)
   }
 }
 
@@ -186,6 +192,7 @@ export async function moveDrama(dramaId: string, newStatus: DramaStatus): Promis
   }
 
   // 2. Background Sync
+  activeMutationCount++
   try {
     const res = await fetch('/api/archive', {
       method: 'PATCH',
@@ -204,6 +211,8 @@ export async function moveDrama(dramaId: string, newStatus: DramaStatus): Promis
     console.error('[archive] moveDrama network error:', err)
     showToast('Network error while moving drama', 'error')
     return false
+  } finally {
+    activeMutationCount = Math.max(0, activeMutationCount - 1)
   }
 }
 
@@ -254,6 +263,7 @@ export async function removeDrama(dramaId: string): Promise<boolean> {
   showToast('Removed from archive', 'info')
 
   // 2. Background Sync
+  activeMutationCount++
   try {
     const res = await fetch(`/api/archive?id=${encodeURIComponent(dramaId)}`, {
       method: 'DELETE',
@@ -270,6 +280,8 @@ export async function removeDrama(dramaId: string): Promise<boolean> {
     console.error('[archive] removeDrama network error:', err)
     showToast('Network error while removing drama', 'error')
     return false
+  } finally {
+    activeMutationCount = Math.max(0, activeMutationCount - 1)
   }
 }
 

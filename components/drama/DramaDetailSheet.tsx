@@ -88,6 +88,12 @@ export default function DramaDetailSheet({
   const [backdropLoaded, setBackdropLoaded] = useState(false)
   const [lightboxSrc, setLightboxSrc] = useState<string | null>(null)
   const galleryRef = useRef<HTMLDivElement>(null)
+  const mutationIdRef = useRef(0)
+  const [lockedStatus, setLockedStatus] = useState<DramaStatus | null | undefined>(undefined)
+
+  useEffect(() => {
+    setLockedStatus(undefined)
+  }, [tmdbId])
 
   // Single Source of Truth: derive status directly from savedDramas (0ms synchronous lookup)
   const [savedDramas, setSavedDramas] = useState<UserDrama[]>(() => getSavedDramasSync())
@@ -97,9 +103,6 @@ export default function DramaDetailSheet({
     (document.activeElement as HTMLElement)?.blur()
 
     const unsubscribe = onArchiveSync((updated) => setSavedDramas(updated))
-    getUserDramas().then((data) => {
-      if (Array.isArray(data)) setSavedDramas(data)
-    })
     return () => unsubscribe()
   }, [])
 
@@ -121,17 +124,21 @@ export default function DramaDetailSheet({
     }
   }, [tmdbId])
 
-  // Single Source of Truth calculation
-  const currentStatus =
-    savedDramas.find(
-      (d) =>
-        String(d.tmdb_id) === String(tmdbId) ||
-        d.drama_id === (drama?.dramaId ?? `tmdb-${tmdbId}`)
-    )?.status ?? null
+  // Single Source of Truth calculation with optimistic lock precedence
+  const matchedSaved = savedDramas.find(
+    (d) =>
+      String(d.tmdb_id) === String(tmdbId) ||
+      d.drama_id === (drama?.dramaId ?? `tmdb-${tmdbId}`)
+  )
+  const currentStatus = lockedStatus !== undefined ? lockedStatus : (matchedSaved?.status ?? null)
 
   // Instant 1-tap handler: toggles off if active, moves or adds immediately (<1ms)
   function handleStatusToggle(targetStatus: DramaStatus) {
     if (!drama) return
+    mutationIdRef.current += 1
+    const nextStatus = currentStatus === targetStatus ? null : targetStatus
+    setLockedStatus(nextStatus)
+
     const dramaId = drama.dramaId || `tmdb-${tmdbId}`
 
     if (currentStatus === targetStatus) {

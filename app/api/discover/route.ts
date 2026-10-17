@@ -3,9 +3,9 @@ import { tmdbFetch, type Drama } from '@/lib/tmdb'
 
 export const dynamic = 'force-dynamic'
 
-// Server-side in-memory cache (15 minutes TTL)
+// Server-side in-memory cache (1 hour TTL / 3600s)
 const cache = new Map<string, { data: DiscoverResponse; ts: number }>()
-const TTL = 15 * 60 * 1000 // 15 minutes
+const TTL = 60 * 60 * 1000 // 1 hour (3600 seconds)
 
 export interface DiscoverRow {
   id: string
@@ -41,7 +41,7 @@ async function fetchTmdb<T>(endpoint: string, params: Record<string, string> = {
     url.searchParams.set('api_key', key)
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v)
     try {
-      const r = await fetch(url.toString(), { next: { revalidate: 900 } })
+      const r = await fetch(url.toString(), { next: { revalidate: 3600 } })
       if (r.ok) return (await r.json()) as T
     } catch {
       // fall back to tmdbFetch
@@ -246,13 +246,21 @@ export async function GET(req: NextRequest) {
 
   const cached = cache.get(region)
   if (cached && Date.now() - cached.ts < TTL) {
-    return NextResponse.json(cached.data)
+    return NextResponse.json(cached.data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    })
   }
 
   try {
     const data = await buildDiscover(region)
     cache.set(region, { data, ts: Date.now() })
-    return NextResponse.json(data)
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
+    })
   } catch (err: any) {
     return NextResponse.json(
       { error: 'Failed to build discover feed', details: err?.message || String(err) },
