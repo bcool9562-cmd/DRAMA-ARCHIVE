@@ -226,10 +226,21 @@ export default function DramaDetailSheet({
         className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#07070b] max-md:backdrop-blur-none md:bg-[#0c0c12] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] touch-manipulation"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Hardware-accelerated radial ambient layer (60 FPS on mobile GPUs) */}
-        <div className="pointer-events-none absolute inset-0 overflow-hidden z-0 hidden md:block">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(88,28,135,0.28),_transparent_70%)]" />
-        </div>
+        {/* Creamy Gaussian-blurred ambient backdrop using tiny 92px thumbnail (Zero GPU lag on Vivo V20 SE / Adreno 610) */}
+        {drama?.posterUrl && (
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-96 z-0 overflow-hidden transform-gpu">
+            <Image
+              src={drama.posterUrl.replace(/\/w\d+\//, '/w92/').replace('/original/', '/w92/')}
+              alt=""
+              fill
+              sizes="92px"
+              unoptimized
+              className="scale-110 blur-xl opacity-35 object-cover pointer-events-none transform-gpu"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#07070b]/75 to-[#07070b]" />
+          </div>
+        )}
 
         {/* Drag handle */}
         <div className="relative z-10 flex justify-center pt-3 pb-1">
@@ -356,51 +367,51 @@ export default function DramaDetailSheet({
               )}
             </div>
 
-            {/* Segmented Status Pill Bar */}
+            {/* Segmented Status Pill Bar — Crisp frosted glass with relative z-10 text-white */}
             <div className="mb-7">
-              <div className="grid grid-cols-3 gap-1.5 p-1.5 rounded-full bg-[#111118] border border-white/10 select-none">
+              <div className="grid grid-cols-3 gap-2 p-1.5 rounded-full bg-[#111118]/80 border border-white/[0.12] select-none backdrop-blur-md">
                 <button
                   type="button"
                   onClick={() => handleStatusToggle('watchlist')}
-                  className={`relative rounded-full py-2.5 px-1.5 text-center transition-colors duration-150 cursor-pointer touch-manipulation active:scale-[0.98] ${
+                  className={`relative rounded-full py-2.5 px-2 text-center transition-all duration-150 cursor-pointer touch-manipulation active:scale-[0.98] border ${
                     currentStatus === 'watchlist'
-                      ? 'bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold shadow-sm'
-                      : 'bg-transparent text-zinc-400 hover:text-zinc-200'
+                      ? 'bg-gradient-to-r from-sky-500 to-blue-600 border-sky-400/50 shadow-md shadow-sky-900/30 text-white font-bold'
+                      : 'bg-white/[0.04] border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08]'
                   }`}
                 >
-                  <span className="relative z-10 inline-flex items-center justify-center gap-2 text-sm leading-none">
-                    <Bookmark size={15} strokeWidth={currentStatus === 'watchlist' ? 2.4 : 1.8} />
-                    <span>Watchlist</span>
+                  <span className="relative z-10 inline-flex items-center justify-center gap-1.5 text-xs sm:text-sm leading-none text-white">
+                    <Bookmark size={15} strokeWidth={currentStatus === 'watchlist' ? 2.4 : 1.8} className={currentStatus === 'watchlist' ? 'text-white' : 'text-white/70'} />
+                    <span className={currentStatus === 'watchlist' ? 'text-white font-bold' : 'text-white/80'}>Watchlist</span>
                   </span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleStatusToggle('watching')}
-                  className={`relative rounded-full py-2.5 px-1.5 text-center transition-colors duration-150 cursor-pointer touch-manipulation active:scale-[0.98] ${
+                  className={`relative rounded-full py-2.5 px-2 text-center transition-all duration-150 cursor-pointer touch-manipulation active:scale-[0.98] border ${
                     currentStatus === 'watching'
-                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-semibold shadow-sm'
-                      : 'bg-transparent text-zinc-400 hover:text-zinc-200'
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600 border-purple-400/50 shadow-md shadow-purple-900/30 text-white font-bold'
+                      : 'bg-white/[0.04] border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08]'
                   }`}
                 >
-                  <span className="relative z-10 inline-flex items-center justify-center gap-2 text-sm leading-none">
-                    <Play size={15} strokeWidth={currentStatus === 'watching' ? 2.4 : 1.8} />
-                    <span>Watching</span>
+                  <span className="relative z-10 inline-flex items-center justify-center gap-1.5 text-xs sm:text-sm leading-none text-white">
+                    <Play size={15} strokeWidth={currentStatus === 'watching' ? 2.4 : 1.8} className={currentStatus === 'watching' ? 'text-white' : 'text-white/70'} />
+                    <span className={currentStatus === 'watching' ? 'text-white font-bold' : 'text-white/80'}>Watching</span>
                   </span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleStatusToggle('finished')}
-                  className={`relative rounded-full py-2.5 px-1.5 text-center transition-colors duration-150 cursor-pointer touch-manipulation active:scale-[0.98] ${
+                  className={`relative rounded-full py-2.5 px-2 text-center transition-all duration-150 cursor-pointer touch-manipulation active:scale-[0.98] border ${
                     currentStatus === 'finished'
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold shadow-sm'
-                      : 'bg-transparent text-zinc-400 hover:text-zinc-200'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 border-emerald-400/50 shadow-md shadow-emerald-900/30 text-white font-bold'
+                      : 'bg-white/[0.04] border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08]'
                   }`}
                 >
-                  <span className="relative z-10 inline-flex items-center justify-center gap-2 text-sm leading-none">
-                    <CheckCircle size={15} strokeWidth={currentStatus === 'finished' ? 2.4 : 1.8} />
-                    <span>Finished</span>
+                  <span className="relative z-10 inline-flex items-center justify-center gap-1.5 text-xs sm:text-sm leading-none text-white">
+                    <CheckCircle size={15} strokeWidth={currentStatus === 'finished' ? 2.4 : 1.8} className={currentStatus === 'finished' ? 'text-white' : 'text-white/70'} />
+                    <span className={currentStatus === 'finished' ? 'text-white font-bold' : 'text-white/80'}>Finished</span>
                   </span>
                 </button>
               </div>
