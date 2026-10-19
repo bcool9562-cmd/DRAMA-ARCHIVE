@@ -6,6 +6,7 @@ import SafeImage from '@/components/ui/SafeImage'
 import { X, Sparkles, ChevronRight } from 'lucide-react'
 import type { UserDrama } from '@/lib/supabase/archive'
 import { haptic } from '@/lib/haptics'
+import seedAiring from '@/data/seed_airing.json'
 
 interface NotificationSheetProps {
   onClose: () => void
@@ -35,15 +36,33 @@ function formatAiringCountdown(dateStr?: string | null): { text: string; isHot: 
   }
 }
 
+function getInitialAiringCache(): UserDrama[] {
+  if (typeof window !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('scenova_airing_cache')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      }
+    } catch { /* ignore */ }
+  }
+  return (seedAiring as any as UserDrama[]) || []
+}
+
 export default function NotificationSheet({ onClose, onDramaClick }: NotificationSheetProps) {
-  const [dramas, setDramas] = useState<UserDrama[]>([])
-  const [loading, setLoading] = useState(true)
+  const [dramas, setDramas] = useState<UserDrama[]>(() => getInitialAiringCache())
+  const [loading, setLoading] = useState(dramas.length === 0)
 
   useEffect(() => {
-    fetch('/api/airing', { cache: 'no-store' })
+    fetch('/api/airing')
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
-        setDramas(Array.isArray(data) ? data : [])
+        if (Array.isArray(data) && data.length > 0) {
+          setDramas(data)
+          try {
+            localStorage.setItem('scenova_airing_cache', JSON.stringify(data))
+          } catch { /* ignore */ }
+        }
         setLoading(false)
       })
       .catch(() => setLoading(false))

@@ -126,6 +126,18 @@ export default function AppShell() {
       .then(res => res.ok ? res.json() : null)
       .then(data => { if (data) setDiscoverData(data) })
       .catch(() => {})
+
+    // Silently pre-fetch airing alerts on app mount for 0ms instant display
+    fetch('/api/airing')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0 && typeof window !== 'undefined') {
+          try {
+            localStorage.setItem('scenova_airing_cache', JSON.stringify(data))
+          } catch { /* ignore */ }
+        }
+      })
+      .catch(() => {})
   }, [])
 
 

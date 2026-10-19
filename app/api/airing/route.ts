@@ -3,9 +3,10 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getDramaDetail, getDramaSeason, type TmdbSeasonEpisode } from '@/lib/tmdb'
 import fs from 'fs'
 import path from 'path'
+import seedDramas from '@/data/user_dramas.json'
 
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
+export const revalidate = 900 // 15 minutes
 
 const FIXED_USER_ID = '00000000-0000-0000-0000-000000000001'
 const TABLE = 'user_dramas_v2'
@@ -15,15 +16,20 @@ const STORAGE_FILE = 'user_dramas.json'
 const DATA_DIR = path.join(process.cwd(), 'data')
 const DATA_FILE = path.join(DATA_DIR, 'user_dramas.json')
 
+let airingCache: { data: any[]; timestamp: number } | null = null
+const AIRING_CACHE_TTL = 15 * 60 * 1000 // 15 minutes
+
 function readLocalArchive(): any[] {
   try {
     if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true })
-    if (!fs.existsSync(DATA_FILE)) return []
-    const content = fs.readFileSync(DATA_FILE, 'utf-8')
-    return JSON.parse(content) || []
-  } catch {
-    return []
-  }
+    if (fs.existsSync(DATA_FILE)) {
+      const content = fs.readFileSync(DATA_FILE, 'utf-8')
+      const parsed = JSON.parse(content)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    }
+  } catch {}
+  if (Array.isArray(seedDramas) && seedDramas.length > 0) return seedDramas
+  return []
 }
 
 async function readFromStorage(supabase: ReturnType<typeof createAdminClient>): Promise<any[]> {
@@ -32,7 +38,7 @@ async function readFromStorage(supabase: ReturnType<typeof createAdminClient>): 
     if (!error && data) {
       const text = await data.text()
       const parsed = JSON.parse(text)
-      if (Array.isArray(parsed)) return parsed
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
     }
   } catch (e) {
     console.error('[airing storage read error]:', e)
@@ -69,6 +75,18 @@ function addDays(dateStr: string, days: number): string {
 
 export async function GET(req: NextRequest) {
   try {
+    // 0. Return instant cached result if fresh (<15 minutes)
+    if (airingCache && Date.now() - airingCache.timestamp < AIRING_CACHE_TTL) {
+      return new NextResponse(JSON.stringify(airingCache.data), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=1800',
+          'X-Cache': 'HIT',
+        },
+      })
+    }
+
     const supabase = createAdminClient()
     const todayStr = getSeoulTodayStr()
 
@@ -88,6 +106,9 @@ export async function GET(req: NextRequest) {
 
     if (rawDramas.length === 0) {
       rawDramas = await readFromStorage(supabase)
+    }
+    if (rawDramas.length === 0) {
+      rawDramas = readLocalArchive()
     }
 
     const watchingDramas = rawDramas.filter(d => d.status === 'watching')
@@ -200,12 +221,13 @@ export async function GET(req: NextRequest) {
     }
 
     const allNotifiable = [...newEpisodes, ...upcomingPremieres]
+    airingCache = { data: allNotifiable, timestamp: Date.now() }
 
     return new NextResponse(JSON.stringify(allNotifiable), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+        'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=1800',
       },
     })
   } catch (err: any) {

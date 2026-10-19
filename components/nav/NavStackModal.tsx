@@ -66,7 +66,7 @@ function normalizeDramaPreview(
     title: (isUser ? (init as UserDrama).title : (init as Drama).title) || '',
     nativeTitle: (isUser ? (init as UserDrama).native_title : (init as Drama).nativeTitle) || '',
     posterUrl: (isUser ? (init as UserDrama).poster_url : (init as Drama).posterUrl) || '',
-    backdropUrl: (init as any).backdropUrl || (init as any).backdrop_url || '',
+    backdropUrl: (init as any).backdropUrl || (init as any).backdrop_url || (init as any).backdrop || (isUser ? (init as UserDrama).poster_url : (init as Drama).posterUrl) || '',
     country: (isUser ? (init as UserDrama).country : (init as Drama).country) || 'KR',
     releaseYear: (isUser ? (init as UserDrama).release_year : (init as Drama).releaseYear) || 0,
     totalEpisodes: (isUser ? (init as UserDrama).total_episodes : (init as Drama).totalEpisodes) || 0,
@@ -526,9 +526,15 @@ function DramaPage({
           className="relative z-10 flex-1 overflow-y-auto px-6 pb-36 pt-16 -mt-16 scrollbar-hide overscroll-y-contain"
           style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
         >
-          {/* Natural-Scrolling Cinematic Hero Backdrop */}
+          {/* Natural-Scrolling Cinematic Hero Backdrop with Alpha Mask fade (0ms Instant & Zero Cutoff Line) */}
           {(drama?.backdropUrl || drama?.posterUrl) && (
-            <div className="absolute inset-x-0 top-0 h-80 sm:h-96 overflow-hidden pointer-events-none z-0">
+            <div
+              className="absolute inset-x-0 top-0 h-96 sm:h-[420px] overflow-hidden pointer-events-none z-0"
+              style={{
+                WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 35%, rgba(0,0,0,0) 92%)',
+                maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 35%, rgba(0,0,0,0) 92%)',
+              }}
+            >
               <SafeImage
                 src={drama.backdropUrl || drama.posterUrl}
                 size="w780"
@@ -537,7 +543,7 @@ function DramaPage({
                 priority
                 className="w-full h-full object-cover object-center opacity-65 pointer-events-none transform-gpu animate-ken-burns-settle"
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#08080c]/80 to-[#08080c] pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#08080c]/75 to-[#08080c] pointer-events-none" />
             </div>
           )}
 

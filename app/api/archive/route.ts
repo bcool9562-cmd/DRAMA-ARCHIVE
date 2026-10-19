@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import fs from 'fs'
 import path from 'path'
+import seedDramas from '@/data/user_dramas.json'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -34,12 +35,16 @@ function readLocalArchive(): any[] {
     if (fs.existsSync(TMP_FILE)) {
       const content = fs.readFileSync(TMP_FILE, 'utf-8')
       const parsed = JSON.parse(content)
-      if (Array.isArray(parsed)) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
         memoryArchive = parsed
         return parsed
       }
     }
   } catch {}
+  if (Array.isArray(seedDramas) && seedDramas.length > 0) {
+    memoryArchive = [...seedDramas]
+    return memoryArchive
+  }
   return memoryArchive || []
 }
 
@@ -203,7 +208,9 @@ export async function POST(req: NextRequest) {
     let tableSaved = false
     try {
       const supabase = createAdminClient()
-      const { error: fullErr } = await supabase.from(TABLE).upsert(fullRecord, {
+      const dbRecord = { ...fullRecord }
+      delete (dbRecord as any).watched_episodes
+      const { error: fullErr } = await supabase.from(TABLE).upsert(dbRecord, {
         onConflict: 'user_id,drama_id',
       })
       if (!fullErr) {
