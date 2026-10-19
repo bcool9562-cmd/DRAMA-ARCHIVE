@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
+import SafeImage from '@/components/ui/SafeImage'
 import { X, Sparkles, ChevronRight } from 'lucide-react'
 import type { UserDrama } from '@/lib/supabase/archive'
 import { haptic } from '@/lib/haptics'
@@ -97,8 +98,13 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
         {/* Content list */}
         <div className="flex-1 overflow-y-auto px-5 py-5 scrollbar-hide space-y-6">
           {loading ? (
-            <div className="flex min-h-[30vh] items-center justify-center">
-              <div className="h-9 w-9 animate-spin rounded-full border-2 border-white/15 border-t-purple-400" />
+            <div className="space-y-3 pt-2">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-20 rounded-[22px] bg-white/[0.04] border border-white/[0.08] animate-pulse"
+                />
+              ))}
             </div>
           ) : dramas.length === 0 ? (
             <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3.5 text-center px-4">
@@ -145,12 +151,17 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
 
                           {/* Left: Poster + Title + Episode label */}
                           <div className="relative z-10 flex items-center gap-3 min-w-0">
-                            <div className="relative h-16 w-12 flex-shrink-0 overflow-hidden rounded-[12px] bg-white/[0.05] shadow-md border border-white/[0.12]">
-                              {d.poster_url ? (
-                                <Image src={d.poster_url} alt={d.title} fill className="object-cover" sizes="48px" />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center text-[10px] text-white/30">?</div>
-                              )}
+                            <div className="relative h-16 w-12 flex-shrink-0 overflow-hidden rounded-[12px] bg-[#14141e] shadow-md border border-white/[0.12]">
+                              <SafeImage
+                                src={d.poster_url}
+                                alt={d.title}
+                                size="w342"
+                                proxyWidth={342}
+                                fill
+                                className="object-cover"
+                                sizes="48px"
+                                fallbackText="?"
+                              />
                             </div>
                             <div className="min-w-0 flex-1">
                               <h4 className="text-[14px] font-bold text-white tracking-tight truncate group-hover:text-purple-200 transition-colors">
@@ -223,12 +234,17 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
 
                           {/* Left: Poster + Title + Premiere badge */}
                           <div className="relative z-10 flex items-center gap-3 min-w-0">
-                            <div className="relative h-16 w-12 flex-shrink-0 overflow-hidden rounded-[12px] bg-white/[0.05] shadow-md border border-white/[0.12]">
-                              {d.poster_url ? (
-                                <Image src={d.poster_url} alt={d.title} fill className="object-cover" sizes="48px" />
-                              ) : (
-                                <div className="flex h-full w-full items-center justify-center text-[10px] text-white/30">?</div>
-                              )}
+                            <div className="relative h-16 w-12 flex-shrink-0 overflow-hidden rounded-[12px] bg-[#14141e] shadow-md border border-white/[0.12]">
+                              <SafeImage
+                                src={d.poster_url}
+                                alt={d.title}
+                                size="w342"
+                                proxyWidth={342}
+                                fill
+                                className="object-cover"
+                                sizes="48px"
+                                fallbackText="?"
+                              />
                             </div>
                             <div className="min-w-0 flex-1">
                               <h4 className="text-[14px] font-bold text-white tracking-tight truncate group-hover:text-rose-200 transition-colors">

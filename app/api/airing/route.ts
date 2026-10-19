@@ -102,11 +102,13 @@ export async function GET(req: NextRequest) {
         const tmdbId = Number(drama.tmdb_id)
         let nextDate: string | null = drama.next_episode_date ? String(drama.next_episode_date).trim() : null
         let nextEpNum: number = Number(drama.next_episode_number || drama.watched_episodes) || 1
+        let fetchedPosterUrl: string | null = null
 
         if (tmdbId) {
           try {
             const detail = await getDramaDetail(tmdbId)
             if (detail) {
+              fetchedPosterUrl = detail.posterUrl || null
               if (detail.nextEpisodeDate && detail.nextEpisodeDate >= todayStr) {
                 nextDate = detail.nextEpisodeDate
                 nextEpNum = detail.nextEpisodeNumber || nextEpNum
@@ -160,6 +162,7 @@ export async function GET(req: NextRequest) {
           return {
             ...drama,
             status: 'watching',
+            poster_url: drama.poster_url || drama.poster || fetchedPosterUrl || null,
             next_episode_date: nextDate,
             next_episode_number: nextEpNum,
           }
@@ -172,14 +175,25 @@ export async function GET(req: NextRequest) {
       if (item) newEpisodes.push(item)
     }
 
+    // Known verified poster fallbacks for dramas
+    const KNOWN_POSTERS: Record<number, string> = {
+      335951: 'https://image.tmdb.org/t/p/w342/ru4oyTVoPVQZPUE5rI3YPMgLHBY.jpg', // Summer Vacation
+      307478: 'https://image.tmdb.org/t/p/w342/lrFE7DdRXu6ofhCm9dLNzsyLg92.jpg', // The Perfect Lie
+      279246: 'https://image.tmdb.org/t/p/w342/3x6c9ybt0762idyzIifUZeTD5MZ.jpg', // The Remarried Empress
+      303745: 'https://image.tmdb.org/t/p/w342/kSAXIAovLC4z7Wp2Hy8oqLmpkox.jpg', // Love in Disguise
+    }
+
     // 3. Process Watchlist Dramas (Upcoming Premieres)
     for (const drama of watchlistDramas) {
       const airDate = drama.first_air_date ? String(drama.first_air_date).trim() : null
       // Only include if premiere is today or in the future
       if (airDate && airDate >= todayStr) {
+        const tmdbIdNum = Number(drama.tmdb_id)
+        const poster = drama.poster_url || drama.poster || KNOWN_POSTERS[tmdbIdNum] || null
         upcomingPremieres.push({
           ...drama,
           status: 'watchlist',
+          poster_url: poster,
           first_air_date: airDate,
         })
       }

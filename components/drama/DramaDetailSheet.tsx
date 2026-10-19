@@ -228,18 +228,18 @@ export default function DramaDetailSheet({
         className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#08080c] max-md:backdrop-blur-none md:bg-[#0c0c12]/85 md:backdrop-blur-2xl md:border md:border-white/[0.18] md:rounded-[36px] md:my-auto md:max-h-[92dvh] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] touch-manipulation"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Ambient Blurred Hero Backdrop (Full Top Hero Area) */}
+        {/* Clear Cinematic Hero Backdrop (Full Top Hero Area) */}
         {(drama?.backdropUrl || drama?.posterUrl) && (
-          <div className="absolute inset-x-0 top-0 h-72 sm:h-88 overflow-hidden pointer-events-none z-0 transform-gpu">
+          <div className="absolute inset-x-0 top-0 h-64 sm:h-80 overflow-hidden pointer-events-none z-0">
             <SafeImage
               src={drama.backdropUrl || drama.posterUrl}
               size="w780"
               alt=""
               fill
               priority
-              className="w-full h-full object-cover scale-110 blur-xl md:blur-2xl opacity-45 md:opacity-75 pointer-events-none transform-gpu"
+              className="w-full h-full object-cover object-center opacity-65 pointer-events-none transform-gpu animate-ken-burns-settle"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[#08080c]/75 to-[#08080c] md:via-[#0c0c12]/75 md:to-[#0c0c12]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#08080c]/75 to-[#08080c] pointer-events-none" />
           </div>
         )}
 
@@ -257,8 +257,10 @@ export default function DramaDetailSheet({
         </button>
 
         {loading && !drama ? (
-          <div className="relative z-10 flex flex-1 items-center justify-center">
-            <div className="h-11 w-11 animate-spin rounded-full border-2 border-white/10 border-t-purple-400" />
+          <div className="relative z-10 flex flex-1 flex-col items-center justify-center p-6 space-y-4">
+            <div className="w-28 h-40 rounded-[22px] bg-white/[0.05] border border-white/[0.10] animate-pulse" />
+            <div className="w-48 h-5 rounded-full bg-white/[0.06] animate-pulse" />
+            <div className="w-32 h-3.5 rounded-full bg-white/[0.04] animate-pulse" />
           </div>
         ) : !drama ? (
           <div className="relative z-10 flex flex-1 items-center justify-center text-white/40">

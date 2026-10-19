@@ -88,6 +88,82 @@ function normalizeDramaPreview(
   }
 }
 
+// ─── Instant Lightbox Viewer (Zero Black Screen, Zero Spinners) ───────────────
+
+function LightboxViewer({
+  src,
+  thumb,
+  onClose,
+}: {
+  src: string
+  thumb?: string | null
+  onClose: () => void
+}) {
+  const initialUrl = resolveImageUrl(src, 'original') || src
+  const thumbUrl = thumb ? resolveImageUrl(thumb, 'w780') : resolveImageUrl(src, 'w500')
+  const [currentSrc, setCurrentSrc] = useState(initialUrl)
+  const [stage, setStage] = useState<'full' | 'proxy' | 'thumb'>('full')
+  const [loaded, setLoaded] = useState(false)
+
+  const handleError = () => {
+    if (stage === 'full') {
+      setStage('proxy')
+      setCurrentSrc(getProxyImageUrl(initialUrl, 1200))
+    } else if (stage === 'proxy' && thumbUrl) {
+      setStage('thumb')
+      setCurrentSrc(thumbUrl)
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+      className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95 max-md:backdrop-blur-none md:backdrop-blur-2xl p-4 select-none"
+      onClick={onClose}
+    >
+      <button
+        className="absolute right-6 top-6 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/20 transition hover:bg-white/20 active:scale-95 cursor-pointer touch-manipulation"
+        onClick={onClose}
+      >
+        <X size={20} />
+      </button>
+
+      <div
+        className="relative h-[85vh] w-full max-w-4xl flex items-center justify-center"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Instant crisp thumbnail layer — zero black screen, visible from frame 1 */}
+        {thumbUrl && (
+          <Image
+            src={thumbUrl}
+            alt="Preview"
+            fill
+            unoptimized
+            className="object-contain pointer-events-none"
+            priority
+          />
+        )}
+
+        {/* High-res image layer with proxy fallback */}
+        <Image
+          src={currentSrc}
+          alt="Gallery Still"
+          fill
+          unoptimized
+          sizes="(max-width: 1024px) 100vw, 1200px"
+          className={`object-contain transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          priority
+          onLoad={() => setLoaded(true)}
+          onError={handleError}
+        />
+      </div>
+    </motion.div>
+  )
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function NavStackModal({ initialStack, onEmpty, onStackChange }: NavStackModalProps) {
@@ -215,59 +291,21 @@ export default function NavStackModal({ initialStack, onEmpty, onStackChange }: 
       {/* Lightbox */}
       <AnimatePresence>
         {lightboxSrc && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[300] flex items-center justify-center bg-black/95 max-md:backdrop-blur-none md:backdrop-blur-2xl p-4 select-none"
-            onClick={() => { setLightboxSrc(null); setLightboxThumb(null) }}
-          >
-            <button
-              className="absolute right-6 top-6 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/20 transition hover:bg-white/20 active:scale-95 cursor-pointer touch-manipulation"
-              onClick={() => { setLightboxSrc(null); setLightboxThumb(null) }}
-            >
-              <X size={20} />
-            </button>
-            <div className="relative h-[85vh] w-full max-w-4xl flex items-center justify-center">
-              {/* Dimmed thumbnail behind while 4K loads */}
-              {lightboxThumb && !lightboxLoaded && (
-                <Image
-                  src={lightboxThumb}
-                  alt="Gallery Thumbnail"
-                  fill
-                  className="object-contain opacity-35 blur-sm pointer-events-none"
-                  priority
-                />
-              )}
-
-              {/* Minimal white partial-ring spinner matching Photo 3 */}
-              {!lightboxLoaded && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 max-md:backdrop-blur-none md:backdrop-blur-sm transition-opacity duration-200 pointer-events-none">
-                  <div className="w-9 h-9 rounded-full border-[2.5px] border-white/15 border-t-white animate-spin" />
-                </div>
-              )}
-
-              <Image
-                src={lightboxSrc}
-                alt="Gallery Still"
-                fill
-                sizes="(max-width: 1024px) 100vw, 1200px"
-                className={`object-contain transition-opacity duration-300 ${lightboxLoaded ? 'opacity-100' : 'opacity-0'}`}
-                priority
-                onLoad={() => setLightboxLoaded(true)}
-              />
-            </div>
-          </motion.div>
+          <LightboxViewer
+            src={lightboxSrc}
+            thumb={lightboxThumb}
+            onClose={() => { setLightboxSrc(null); setLightboxThumb(null) }}
+          />
         )}
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
         <motion.div
           key={`${current.type}-${current.id}`}
-          initial={{ opacity: 0, y: 28, scale: 0.98 }}
+          initial={{ opacity: 0, y: 32, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 18, scale: 0.98 }}
-          transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ duration: 0.48, ease: [0.16, 1, 0.3, 1] }}
           className="absolute inset-0 flex items-end justify-center bg-black/80 max-md:backdrop-blur-none md:bg-black/60 md:backdrop-blur-2xl"
           onClick={(e) => { if (e.target === e.currentTarget) popOne() }}
         >
@@ -446,18 +484,18 @@ function DramaPage({
       className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.22] bg-[#08080c] max-md:backdrop-blur-none md:bg-[#0c0c12]/85 md:backdrop-blur-2xl md:border md:border-white/[0.18] md:rounded-[36px] md:my-auto md:max-h-[92dvh] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)]"
       onClick={e => e.stopPropagation()}
     >
-      {/* Ambient Blurred Hero Backdrop (Full Top Hero Area) */}
+      {/* Clear Cinematic Hero Backdrop (Full Top Hero Area) */}
       {(drama?.backdropUrl || drama?.posterUrl) && (
-        <div className="absolute inset-x-0 top-0 h-72 sm:h-88 overflow-hidden pointer-events-none z-0 transform-gpu">
+        <div className="absolute inset-x-0 top-0 h-64 sm:h-80 overflow-hidden pointer-events-none z-0">
           <SafeImage
             src={drama.backdropUrl || drama.posterUrl}
             size="w780"
             alt=""
             fill
             priority
-            className="w-full h-full object-cover scale-110 blur-xl md:blur-2xl opacity-45 md:opacity-75 pointer-events-none transform-gpu"
+            className="w-full h-full object-cover object-center opacity-65 pointer-events-none transform-gpu animate-ken-burns-settle"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[#08080c]/75 to-[#08080c] md:via-[#0c0c12]/75 md:to-[#0c0c12]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#08080c]/75 to-[#08080c] pointer-events-none" />
         </div>
       )}
 
@@ -491,8 +529,10 @@ function DramaPage({
 
       {/* Scrollable body */}
       {loading && !drama?.title ? (
-        <div className="flex flex-1 items-center justify-center bg-black/60 max-md:backdrop-blur-none md:backdrop-blur-sm">
-          <div className="w-9 h-9 rounded-full border-[2.5px] border-white/15 border-t-white animate-spin" />
+        <div className="flex flex-1 flex-col items-center justify-center p-6 space-y-4">
+          <div className="w-28 h-40 rounded-[22px] bg-white/[0.05] border border-white/[0.10] animate-pulse" />
+          <div className="w-48 h-5 rounded-full bg-white/[0.06] animate-pulse" />
+          <div className="w-32 h-3.5 rounded-full bg-white/[0.04] animate-pulse" />
         </div>
       ) : !drama ? (
         <div className="relative z-10 flex flex-1 items-center justify-center text-white/40">Failed to load drama.</div>
@@ -503,7 +543,7 @@ function DramaPage({
         >
           {/* Poster + Title */}
           <div className="flex gap-5 items-end mb-6 mt-4 relative z-10">
-            <div className="relative h-44 w-30 flex-shrink-0 overflow-hidden rounded-[22px] border border-white/[0.22] shadow-[0_16px_36px_-6px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.3)] bg-black/60">
+            <div className="relative h-44 w-30 flex-shrink-0 overflow-hidden rounded-[22px] border border-white/[0.22] shadow-[0_16px_36px_-6px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.3)] bg-black/60 animate-modal-section-1">
               {drama.posterUrl ? (
                 <SafeImage
                   src={drama.posterUrl}
@@ -518,7 +558,7 @@ function DramaPage({
                 <div className="flex h-full w-full items-center justify-center text-white/20 text-xs font-medium">No Poster</div>
               )}
             </div>
-            <div className="flex flex-col justify-end flex-1 min-w-0 pb-1">
+            <div className="flex flex-col justify-end flex-1 min-w-0 pb-1 animate-modal-section-2">
               <h1 className="text-2xl font-extrabold tracking-tight text-white leading-tight">{drama.title}</h1>
               {drama.nativeTitle && (
                 <p className="text-sm font-medium text-white/55 mt-1 leading-snug">{drama.nativeTitle}</p>
@@ -527,7 +567,7 @@ function DramaPage({
           </div>
 
           {/* Metadata Ribbon */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide text-xs font-semibold">
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide text-xs font-semibold animate-modal-section-2">
             {regionBadge && (
               <span className="flex-shrink-0 rounded-full bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/[0.12] px-3.5 py-1 text-white shadow-sm">
                 {regionBadge}
@@ -573,7 +613,7 @@ function DramaPage({
           </div>
 
           {/* Segmented Status Pill Bar — Single sleek track with sliding active pill on PC */}
-          <div className="mb-6">
+          <div className="mb-6 animate-modal-section-3">
             <div className="relative grid grid-cols-3 gap-1 p-1.5 rounded-full bg-white/[0.04] border border-white/10 select-none overflow-hidden max-md:backdrop-blur-none md:backdrop-blur-md">
               {/* Skiper UI Liquid Sliding Active Pill (PC only) */}
               <div
@@ -652,7 +692,7 @@ function DramaPage({
 
           {/* Genres */}
           {drama.genres && drama.genres.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-6 animate-modal-section-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-white/35 mb-2.5">Genres</h3>
               <div className="flex flex-wrap gap-2">
                 {drama.genres.map(g => (
@@ -664,7 +704,7 @@ function DramaPage({
 
           {/* Tags */}
           {drama.tags && drama.tags.length > 0 && (
-            <div className="mb-6">
+            <div className="mb-6 animate-modal-section-3">
               <h3 className="text-xs font-bold uppercase tracking-wider text-white/35 mb-2.5">Themes & Tags</h3>
               <div className="flex flex-wrap gap-2">
                 {drama.tags.slice(0, 14).map(t => (
@@ -676,7 +716,7 @@ function DramaPage({
 
           {/* Synopsis */}
           {drama.synopsis && (
-            <div className="mb-7">
+            <div className="mb-7 animate-modal-section-4">
               <h3 className="text-xs font-bold uppercase tracking-wider text-white/35 mb-2.5">Storyline</h3>
               <div className="rounded-[24px] bg-[#101017] border border-white/[0.08] p-5 leading-relaxed text-[15px] text-white/85 shadow-lg">
                 <p>{drama.synopsis}</p>
@@ -685,13 +725,13 @@ function DramaPage({
           )}
 
           {/* Drama Vibe Chart (Moctale Aesthetic) */}
-          <div className="mb-7">
+          <div className="mb-7 animate-modal-section-4">
             <VibeChart drama={drama} title="Drama Vibe Breakdown" subtitle="Aesthetic & Emotional Spectrum" />
           </div>
 
           {/* Gallery — Stills & Posters */}
           {allImages.length > 0 && (
-            <div className="mb-7">
+            <div className="mb-7 animate-modal-section-5">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-baseline">
                   <h3 className="text-sm font-bold tracking-tight text-white">Stills & Posters</h3>
@@ -750,7 +790,7 @@ function DramaPage({
 
           {/* Directors */}
           {drama.directors && drama.directors.length > 0 && (
-            <div className="mb-7">
+            <div className="mb-7 animate-modal-section-5">
               <h3 className="text-xs font-bold uppercase tracking-wider text-white/35 mb-3">Direction</h3>
               <div className="flex flex-wrap gap-2.5">
                 {drama.directors.map(d => (
@@ -783,7 +823,7 @@ function DramaPage({
 
           {/* Cast */}
           {drama.cast && drama.cast.length > 0 && (
-            <div className="mb-8">
+            <div className="mb-8 animate-modal-section-5">
               <div className="flex items-center justify-between mb-3.5">
                 <div className="flex items-baseline">
                   <h3 className="text-sm font-bold tracking-tight text-white">Main & Supporting Cast</h3>
@@ -943,8 +983,19 @@ function PersonPage({ personId, personCache, backLabel, canGoBack, onBack, onClo
 
       {/* Content */}
       {loading ? (
-        <div className="flex flex-1 items-center justify-center bg-black/60 max-md:backdrop-blur-none md:backdrop-blur-sm">
-          <div className="w-9 h-9 rounded-full border-[2.5px] border-white/15 border-t-white animate-spin" />
+        <div className="flex flex-1 flex-col p-6 space-y-4">
+          <div className="flex gap-4">
+            <div className="h-28 w-20 rounded-2xl bg-white/[0.05] border border-white/[0.10] animate-pulse" />
+            <div className="flex-1 space-y-2 pt-2">
+              <div className="h-5 w-3/4 rounded-full bg-white/[0.06] animate-pulse" />
+              <div className="h-3.5 w-1/2 rounded-full bg-white/[0.04] animate-pulse" />
+            </div>
+          </div>
+          <div className="space-y-2 pt-4">
+            <div className="h-3 w-full rounded-full bg-white/[0.04] animate-pulse" />
+            <div className="h-3 w-5/6 rounded-full bg-white/[0.04] animate-pulse" />
+            <div className="h-3 w-2/3 rounded-full bg-white/[0.04] animate-pulse" />
+          </div>
         </div>
       ) : person ? (
         <div
