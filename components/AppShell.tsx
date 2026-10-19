@@ -12,8 +12,6 @@ import FinishedTab from '@/components/tabs/FinishedTab'
 import NotificationSheet from '@/components/notifications/NotificationSheet'
 import NavStackModal, { type StackItem } from '@/components/nav/NavStackModal'
 import ToastContainer from '@/components/Toast'
-import DynamicIslandBanner from '@/components/notifications/DynamicIslandBanner'
-import { autoSyncPushSubscription } from '@/lib/pushClient'
 import { getSavedDramasSync, onArchiveSync, type UserDrama } from '@/lib/supabase/archive'
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
@@ -130,9 +128,6 @@ export default function AppShell() {
       .catch(() => {})
   }, [])
 
-  useEffect(() => {
-    autoSyncPushSubscription()
-  }, [])
 
   async function handleLock() {
     setIsLocked(true)
@@ -191,8 +186,6 @@ export default function AppShell() {
 
   return (
     <div className={`bg-[#050507] relative min-h-screen overflow-x-hidden text-white ${modalOpen ? 'overflow-hidden' : ''}`}>
-      {/* iPhone Dynamic Island Floating Glass Banner */}
-      <DynamicIslandBanner />
       <ToastContainer />
 
       {/* ── Ambient Background Layer System: ALL backgrounds stay permanently mounted in DOM and cross-fade smoothly ── */}
@@ -200,7 +193,7 @@ export default function AppShell() {
       <div
         key={`home-aurora-${tabSwitchCounts.search}`}
         className={`pointer-events-none absolute top-0 left-0 right-0 h-[620px] z-0 origin-top-left border-0 !border-none outline-none ring-0 !rounded-none shadow-none ${
-          modalOpen ? 'invisible pointer-events-none' : ''
+          modalOpen ? 'max-md:invisible max-md:pointer-events-none' : ''
         } ${
           activeTab === 'search'
             ? 'opacity-100 animate-aurora-sweep'
@@ -219,7 +212,7 @@ export default function AppShell() {
       {/* 2. Watchlist Ambient Sky-Blue Glow */}
       <div
         className={`pointer-events-none fixed inset-0 z-0 overflow-hidden transition-opacity duration-700 ease-in-out ${
-          modalOpen ? 'invisible pointer-events-none' : ''
+          modalOpen ? 'max-md:invisible max-md:pointer-events-none' : ''
         } ${
           activeTab === 'watchlist' ? 'opacity-100' : 'opacity-0'
         }`}
@@ -230,7 +223,7 @@ export default function AppShell() {
       {/* 3. Watching Ambient Purple Glow */}
       <div
         className={`pointer-events-none fixed inset-0 z-0 overflow-hidden transition-opacity duration-700 ease-in-out ${
-          modalOpen ? 'invisible pointer-events-none' : ''
+          modalOpen ? 'max-md:invisible max-md:pointer-events-none' : ''
         } ${
           activeTab === 'watching' ? 'opacity-100' : 'opacity-0'
         }`}
@@ -241,7 +234,7 @@ export default function AppShell() {
       {/* 4. Finished Ambient Emerald Glow */}
       <div
         className={`pointer-events-none fixed inset-0 z-0 overflow-hidden transition-opacity duration-700 ease-in-out ${
-          modalOpen ? 'invisible pointer-events-none' : ''
+          modalOpen ? 'max-md:invisible max-md:pointer-events-none' : ''
         } ${
           activeTab === 'finished' ? 'opacity-100' : 'opacity-0'
         }`}
@@ -250,7 +243,7 @@ export default function AppShell() {
       </div>
 
       {/* Global Ambient Artwork Canvas — ensures all frosted glass surfaces visibly refract real artwork */}
-      <div className={`fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none opacity-40 ${modalOpen ? 'invisible pointer-events-none' : ''}`}>
+      <div className={`fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none opacity-40 ${modalOpen ? 'max-md:invisible max-md:pointer-events-none' : ''}`}>
         {ambientArt1 && (
           <div className="absolute -top-[15%] -left-[10%] w-[85vw] h-[85vw] max-w-[750px] max-h-[750px] transform-gpu">
             <Image
@@ -275,8 +268,6 @@ export default function AppShell() {
         )}
       </div>
 
-      <ToastContainer />
-
       {/* Full-Width Solid Black Top Navbar Strip */}
       <TopNavbar
         onLogoClick={() => {
@@ -286,8 +277,8 @@ export default function AppShell() {
         onLockClick={handleLock}
       />
 
-      {/* Main content — paused/hidden when modal is open so phone GPU does NOT render background elements */}
-      <main className={`relative z-10 bg-transparent pt-[calc(4rem+env(safe-area-inset-top,0px))] ${modalOpen ? 'invisible pointer-events-none' : ''}`}>
+      {/* Main content — paused/hidden only on mobile when modal is open so phone GPU does NOT render background elements, but visible on PC for genuine Gaussian blur */}
+      <main className={`relative z-10 bg-transparent pt-[calc(4rem+env(safe-area-inset-top,0px))] ${modalOpen ? 'max-md:invisible max-md:pointer-events-none' : ''}`}>
         {activeTab === 'search' && (
           <SearchTab
             onOpenDrama={openDrama}

@@ -2,12 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { X, Sparkles, ChevronRight, Bell, BellRing } from 'lucide-react'
-import { getNotifiableDramas, UserDrama } from '@/lib/supabase/archive'
+import { X, Sparkles, ChevronRight } from 'lucide-react'
+import type { UserDrama } from '@/lib/supabase/archive'
 import { haptic } from '@/lib/haptics'
-import { subscribeToPush, unsubscribeFromPush } from '@/lib/pushClient'
-import { generateWittyDramaNotification } from '@/lib/dramaNotifications'
-import { showDynamicIsland } from './DynamicIslandBanner'
 
 interface NotificationSheetProps {
   onClose: () => void
@@ -26,10 +23,10 @@ function formatAiringCountdown(dateStr?: string | null): { text: string; isHot: 
 
   if (diffDays === 0) return { text: 'Today', isHot: true }
   if (diffDays === 1) return { text: 'Tomorrow', isHot: true }
-  if (diffDays === -1) return { text: 'Yesterday', isHot: false }
   if (diffDays > 1 && diffDays <= 7) return { text: `In ${diffDays} Days`, isHot: true }
   if (diffDays > 7 && diffDays <= 30) return { text: `In ${diffDays} Days`, isHot: false }
-  if (diffDays < -1) return { text: `${Math.abs(diffDays)}d Ago`, isHot: false }
+  // Never show "Xd Ago" or past badges in airing alerts
+  if (diffDays < 0) return { text: 'Today', isHot: true }
 
   return {
     text: target.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
@@ -40,120 +37,36 @@ function formatAiringCountdown(dateStr?: string | null): { text: string; isHot: 
 export default function NotificationSheet({ onClose, onDramaClick }: NotificationSheetProps) {
   const [dramas, setDramas] = useState<UserDrama[]>([])
   const [loading, setLoading] = useState(true)
-  const [permission, setPermission] = useState<NotificationPermission>('default')
-  const [alertsActive, setAlertsActive] = useState<boolean>(false)
-  const [testingPush, setTestingPush] = useState(false)
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      setPermission(Notification.permission)
-      const isEnabled =
-        localStorage.getItem('scenova_alerts_enabled') !== 'false' &&
-        Notification.permission === 'granted'
-      setAlertsActive(isEnabled)
-    }
-
-    getNotifiableDramas().then((data) => {
-      setDramas(data)
-      setLoading(false)
-
-      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-        const todayStr = new Date().toISOString().slice(0, 10)
-        data.forEach(d => {
-          const airDate = d.next_episode_date || d.first_air_date
-          if (airDate && airDate <= todayStr) {
-            new Notification(`Drama Airing Alert: ${d.title}`, {
-              body: d.status === 'watchlist'
-                ? `Premiere is here! Episode 1 has aired.`
-                : `New Episode ${d.next_episode_number || ''} is now airing!`,
-              icon: d.poster_url || '/icon-192.png'
-            })
-          }
-        })
-      }
-    })
+    fetch('/api/airing', { cache: 'no-store' })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => {
+        setDramas(Array.isArray(data) ? data : [])
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
   }, [])
 
-  async function toggleAlerts() {
-    if (alertsActive) {
-      haptic.light()
-      await unsubscribeFromPush()
-      setAlertsActive(false)
-      showDynamicIsland({
-        title: '🔕 Alerts Paused',
-        body: 'Background drama notifications turned off. Tap to re-enable anytime.',
-      })
-    } else {
-      haptic.success()
-      const success = await subscribeToPush()
-      if (success) {
-        setAlertsActive(true)
-        if (typeof window !== 'undefined' && 'Notification' in window) {
-          setPermission(Notification.permission)
-        }
-        showDynamicIsland({
-          title: '🔔 Alerts Activated!',
-          body: 'You will receive witty drama updates even when SCENOVA is closed.',
-        })
-      } else {
-        haptic.warning()
-        showDynamicIsland({
-          title: 'Permission Needed',
-          body: 'Please allow notification permission in your browser or device settings.',
-        })
-      }
-    }
-  }
-
-  async function handleTestNotification() {
-    haptic.light()
-    setTestingPush(true)
-
-    const upcomingPremieres = dramas.filter(d => d.status === 'watchlist').map(d => ({ title: d.title, tmdb_id: d.tmdb_id }))
-    const newEpisodes = dramas.filter(d => d.status === 'watching').map(d => ({ title: d.title, tmdb_id: d.tmdb_id }))
-
-    const witty = generateWittyDramaNotification({
-      watchlist: upcomingPremieres,
-      watching: newEpisodes,
-    })
-
-    // 1. Show immediate in-app Dynamic Island banner
-    showDynamicIsland({
-      title: witty.title,
-      body: witty.body,
-    })
-
-    // 2. Schedule 5-second background push (so user can lock their phone to test)
-    try {
-      await fetch('/api/push/send?delay=5000', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(witty),
-      })
-    } catch {
-      // ignore
-    } finally {
-      setTimeout(() => setTestingPush(false), 2500)
-    }
-  }
-
-  const upcomingPremieres = dramas.filter(d => d.status === 'watchlist')
-  const newEpisodes = dramas.filter(d => d.status === 'watching')
+  const upcomingPremieres = dramas.filter((d) => d.status === 'watchlist')
+  const newEpisodes = dramas.filter((d) => d.status === 'watching')
 
   return (
     <div
-      className="fixed inset-0 z-[120] bg-black/75 backdrop-blur-md touch-manipulation"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      className="fixed inset-0 z-[120] bg-black/75 max-md:backdrop-blur-none md:backdrop-blur-md touch-manipulation"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
     >
-      {/* Floating 4-Corner Rounded Glass Card — IDENTICAL ON PHONE AND PC */}
+      {/* Floating 4-Corner Rounded Glass Card */}
       <div
-        className="fixed top-20 left-1/2 -translate-x-1/2 sm:left-auto sm:right-8 sm:translate-x-0 w-[calc(100vw-24px)] max-w-[420px] max-h-[80vh] flex flex-col overflow-hidden rounded-[28px] bg-[#101018]/90 backdrop-blur-3xl border border-white/[0.18] shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_24px_60px_rgba(0,0,0,0.85)] z-[125]"
-        onClick={e => e.stopPropagation()}
+        className="fixed top-20 left-1/2 -translate-x-1/2 sm:left-auto sm:right-8 sm:translate-x-0 w-[calc(100vw-24px)] max-w-[420px] max-h-[80vh] flex flex-col overflow-hidden rounded-[28px] bg-[#101018]/90 max-md:backdrop-blur-none md:backdrop-blur-3xl border border-white/[0.18] shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_24px_60px_rgba(0,0,0,0.85)] z-[125]"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Living Flow ambient light header glow */}
         <div className="pointer-events-none absolute -top-20 inset-x-0 h-48 bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.35),rgba(244,63,94,0.18)_50%,transparent_80%)]" />
 
-        {/* Header Row: Title + Test Bell + Luminous Push Toggle Pill + Close Button */}
+        {/* Clean Header Row: Title + Close Button (No Toggle / No Test Buttons) */}
         <div className="relative z-10 px-5 pt-4 pb-4 border-b border-white/[0.10] flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <h2 className="text-[18px] sm:text-[20px] font-bold tracking-tight text-white flex items-baseline">
@@ -162,74 +75,17 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
             </h2>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Small Bell Test Button (5s delayed background push & in-app Dynamic Island) */}
-            <button
-              type="button"
-              onClick={handleTestNotification}
-              disabled={testingPush}
-              title="Test Alert (Shows Dynamic Island banner & triggers a 5s background push to lock screen)"
-              className="
-                relative overflow-hidden flex h-8 w-8 items-center justify-center rounded-full
-                bg-white/[0.08] hover:bg-white/[0.16] border border-white/[0.14] text-white/80
-                hover:text-white transition active:scale-90 cursor-pointer shadow-sm
-              "
-              aria-label="Test Alert"
-            >
-              <BellRing
-                size={14}
-                className={testingPush ? 'animate-spin text-purple-400' : 'text-pink-300 animate-pulse'}
-              />
-            </button>
-
-            {/* Luminous Push Toggle Pill: True ON / OFF Switch */}
-            <button
-              type="button"
-              onClick={toggleAlerts}
-              className="
-                relative overflow-hidden rounded-full bg-white/[0.1] hover:bg-white/[0.15] backdrop-blur-md
-                border border-white/[0.18] pl-3 pr-2.5 py-1.5 flex items-center gap-2
-                text-xs font-semibold text-white active:scale-95 transition cursor-pointer select-none
-                shadow-[inset_0_1px_1px_rgba(255,255,255,0.25)]
-                after:absolute after:inset-0 after:-translate-x-full hover:after:translate-x-full after:transition-transform after:duration-700 after:bg-gradient-to-r after:from-transparent after:via-white/15 after:to-transparent
-              "
-              title={alertsActive ? 'Push alerts are ON. Tap to pause' : 'Push alerts are OFF. Tap to enable'}
-            >
-              <span className="relative z-10 flex items-center gap-1.5">
-                <span
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    alertsActive
-                      ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]'
-                      : 'bg-white/30'
-                  }`}
-                />
-                <span className="text-[11px] font-semibold tracking-tight">
-                  {alertsActive ? 'Alerts ON' : 'Alerts OFF'}
-                </span>
-              </span>
-              <div
-                className={`relative z-10 w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
-                  alertsActive
-                    ? 'bg-emerald-400/25 text-emerald-300 font-bold'
-                    : 'bg-white/10 text-white/40'
-                }`}
-              >
-                {alertsActive ? '✓' : '✕'}
-              </div>
-            </button>
-
-            {/* Close button */}
-            <button
-              onClick={() => {
-                haptic.light()
-                onClose()
-              }}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.08] hover:bg-white/[0.16] border border-white/[0.12] text-white/70 hover:text-white transition active:scale-90 cursor-pointer"
-              aria-label="Close"
-            >
-              <X size={16} />
-            </button>
-          </div>
+          {/* Close button */}
+          <button
+            onClick={() => {
+              haptic.light()
+              onClose()
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-full bg-white/[0.08] hover:bg-white/[0.16] border border-white/[0.12] text-white/70 hover:text-white transition active:scale-90 cursor-pointer"
+            aria-label="Close"
+          >
+            <X size={16} />
+          </button>
         </div>
 
         {/* Subtitle Bar */}
@@ -268,7 +124,7 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                     </h3>
                   </div>
                   <div className="space-y-2.5">
-                    {newEpisodes.map(d => {
+                    {newEpisodes.map((d) => {
                       const countdown = formatAiringCountdown(d.next_episode_date)
                       return (
                         <div
@@ -279,7 +135,7 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                           }}
                           className="
                             relative overflow-hidden rounded-[22px] bg-white/[0.06] hover:bg-white/[0.10]
-                            backdrop-blur-xl border border-white/[0.14] p-3 flex items-center justify-between gap-3.5
+                            max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/[0.14] p-3 flex items-center justify-between gap-3.5
                             shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.35)]
                             transition-all duration-250 active:scale-[0.98] cursor-pointer group
                           "
@@ -346,7 +202,7 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                     </h3>
                   </div>
                   <div className="space-y-2.5">
-                    {upcomingPremieres.map(d => {
+                    {upcomingPremieres.map((d) => {
                       const countdown = formatAiringCountdown(d.first_air_date)
                       return (
                         <div
@@ -357,7 +213,7 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                           }}
                           className="
                             relative overflow-hidden rounded-[22px] bg-white/[0.06] hover:bg-white/[0.10]
-                            backdrop-blur-xl border border-white/[0.14] p-3 flex items-center justify-between gap-3.5
+                            max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/[0.14] p-3 flex items-center justify-between gap-3.5
                             shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.35)]
                             transition-all duration-250 active:scale-[0.98] cursor-pointer group
                           "

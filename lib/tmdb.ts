@@ -546,3 +546,35 @@ export async function getPersonDetail(personId: number): Promise<TmdbPerson | nu
     },
   }
 }
+
+export interface TmdbSeasonEpisode {
+  air_date: string | null
+  episode_number: number
+  id: number
+  name: string
+  overview: string
+  season_number: number
+  still_path: string | null
+  vote_average: number
+}
+
+export interface TmdbSeasonDetail {
+  _id: string
+  air_date: string
+  episodes: TmdbSeasonEpisode[]
+  name: string
+  overview: string
+  id: number
+  poster_path: string | null
+  season_number: number
+}
+
+/**
+ * Get full season episode listing
+ */
+export async function getDramaSeason(tmdbId: number, seasonNumber: number = 1): Promise<TmdbSeasonDetail | null> {
+  return await tmdbFetch<TmdbSeasonDetail>(`/tv/${tmdbId}/season/${seasonNumber}`, {
+    language: 'en-US',
+  })
+}
+

@@ -37,7 +37,7 @@ export default function TopNavbar({
     <header
       className={`fixed top-0 left-0 right-0 z-50 pt-[env(safe-area-inset-top,0px)] h-[calc(4rem+env(safe-area-inset-top,0px))] w-full transition-all duration-300 ease-out select-none transform-gpu translate-z-0 ${
         isScrolled
-          ? 'backdrop-blur-md bg-[#050507]/68 border-b border-white/[0.08] shadow-[0_10px_30px_rgba(0,0,0,0.8)]'
+          ? 'max-md:backdrop-blur-md md:backdrop-blur-xl bg-[#050507]/68 border-b border-white/[0.08] shadow-[0_10px_30px_rgba(0,0,0,0.8)]'
           : 'bg-[#050507] border-b border-white/[0.08]'
       }`}
     >

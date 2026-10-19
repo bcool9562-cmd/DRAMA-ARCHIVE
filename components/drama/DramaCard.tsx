@@ -114,7 +114,7 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
       </div>
 
       {/* 2. High-Performance Multi-Layered Frosted Glass Overlay Box */}
-      <div className="absolute inset-x-2.5 bottom-2.5 z-10 rounded-[18px] bg-gradient-to-t from-[#08080d]/95 via-[#12121c]/88 to-[#1c1c2b]/80 border border-white/[0.14] p-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.16),0_8px_20px_rgba(0,0,0,0.5)] flex flex-col gap-2">
+      <div className="absolute inset-x-2.5 bottom-2.5 z-10 rounded-[18px] bg-gradient-to-t from-[#08080d]/95 via-[#12121c]/88 to-[#1c1c2b]/80 max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/[0.14] p-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.16),0_8px_20px_rgba(0,0,0,0.5)] flex flex-col gap-2">
         <div className="flex flex-col min-w-0">
           <h3 className="text-[13px] sm:text-[14px] font-bold tracking-tight text-white truncate leading-tight group-hover:text-white/90">
             {drama.title}

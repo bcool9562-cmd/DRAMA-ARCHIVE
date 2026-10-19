@@ -288,9 +288,10 @@ export async function removeDrama(dramaId: string): Promise<boolean> {
 /** Fetch dramas that need airing notifications */
 export async function getNotifiableDramas(): Promise<UserDrama[]> {
   try {
-    const res = await fetch('/api/archive?notifiable=true', { cache: 'no-store' })
+    const res = await fetch('/api/airing', { cache: 'no-store' })
     if (!res.ok) return []
-    return (await res.json()) as UserDrama[]
+    const data = await res.json()
+    return Array.isArray(data) ? (data as UserDrama[]) : []
   } catch (err) {
     console.error('[archive] getNotifiableDramas error:', err)
     return []

@@ -225,7 +225,7 @@ export default function DramaDetailSheet({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 24, scale: 0.98 }}
         transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-        className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#08080c] max-md:backdrop-blur-none md:bg-[#0c0c12] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] touch-manipulation"
+        className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#08080c] max-md:backdrop-blur-none md:bg-[#0c0c12]/85 md:backdrop-blur-2xl md:border md:border-white/[0.18] md:rounded-[36px] md:my-auto md:max-h-[92dvh] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] touch-manipulation"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Ambient Blurred Hero Backdrop (Full Top Hero Area) */}
@@ -237,9 +237,9 @@ export default function DramaDetailSheet({
               alt=""
               fill
               priority
-              className="w-full h-full object-cover scale-110 blur-xl opacity-45 pointer-events-none transform-gpu"
+              className="w-full h-full object-cover scale-110 blur-xl md:blur-2xl opacity-45 md:opacity-75 pointer-events-none transform-gpu"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[#08080c]/75 to-[#08080c]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[#08080c]/75 to-[#08080c] md:via-[#0c0c12]/75 md:to-[#0c0c12]" />
           </div>
         )}
 
@@ -350,16 +350,44 @@ export default function DramaDetailSheet({
               )}
             </div>
 
-            {/* Segmented Status Pill Bar — Crisp frosted glass with relative z-10 text-white */}
+            {/* Segmented Status Pill Bar — Single sleek track with sliding active pill on PC */}
             <div className="mb-7">
-              <div className="grid grid-cols-3 gap-2 p-1.5 rounded-full bg-[#111118]/80 border border-white/[0.12] select-none backdrop-blur-md">
+              <div className="relative grid grid-cols-3 gap-1 p-1.5 rounded-full bg-white/[0.04] border border-white/10 select-none overflow-hidden max-md:backdrop-blur-none md:backdrop-blur-md">
+                {/* Skiper UI Liquid Sliding Active Pill (PC only) */}
+                <div
+                  className={`hidden md:block absolute rounded-full shadow-lg transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-none ${
+                    currentStatus === 'watchlist'
+                      ? 'bg-gradient-to-r from-sky-500 to-blue-600 border border-sky-400/50 shadow-sky-900/40'
+                      : currentStatus === 'watching'
+                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600 border border-purple-400/50 shadow-purple-900/40'
+                      : currentStatus === 'finished'
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 border border-emerald-400/50 shadow-emerald-900/40'
+                      : 'opacity-0 scale-0'
+                  }`}
+                  style={{
+                    width: 'calc((100% - 12px) / 3)',
+                    height: 'calc(100% - 12px)',
+                    top: '6px',
+                    left: '6px',
+                    transform:
+                      currentStatus === 'watchlist'
+                        ? 'translate3d(0%, 0, 0)'
+                        : currentStatus === 'watching'
+                        ? 'translate3d(100%, 0, 0)'
+                        : currentStatus === 'finished'
+                        ? 'translate3d(200%, 0, 0)'
+                        : 'scale(0)',
+                    opacity: currentStatus ? 1 : 0,
+                  }}
+                />
+
                 <button
                   type="button"
                   onClick={() => handleStatusToggle('watchlist')}
-                  className={`relative rounded-full py-2.5 px-2 text-center transition-all duration-150 cursor-pointer touch-manipulation active:scale-[0.98] border ${
+                  className={`relative z-10 rounded-full py-2.5 px-2 text-center transition-all duration-150 cursor-pointer touch-manipulation active:scale-[0.98] border-0 outline-none ${
                     currentStatus === 'watchlist'
-                      ? 'bg-gradient-to-r from-sky-500 to-blue-600 border-sky-400/50 shadow-md shadow-sky-900/30 text-white font-bold'
-                      : 'bg-white/[0.04] border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08]'
+                      ? 'max-md:bg-gradient-to-r max-md:from-sky-500 max-md:to-blue-600 max-md:shadow-md max-md:shadow-sky-900/30 text-white font-bold'
+                      : 'bg-transparent text-white/70 hover:text-white'
                   }`}
                 >
                   <span className="relative z-10 inline-flex items-center justify-center gap-1.5 text-xs sm:text-sm leading-none text-white">
@@ -371,10 +399,10 @@ export default function DramaDetailSheet({
                 <button
                   type="button"
                   onClick={() => handleStatusToggle('watching')}
-                  className={`relative rounded-full py-2.5 px-2 text-center transition-all duration-150 cursor-pointer touch-manipulation active:scale-[0.98] border ${
+                  className={`relative z-10 rounded-full py-2.5 px-2 text-center transition-all duration-150 cursor-pointer touch-manipulation active:scale-[0.98] border-0 outline-none ${
                     currentStatus === 'watching'
-                      ? 'bg-gradient-to-r from-purple-500 to-indigo-600 border-purple-400/50 shadow-md shadow-purple-900/30 text-white font-bold'
-                      : 'bg-white/[0.04] border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08]'
+                      ? 'max-md:bg-gradient-to-r max-md:from-purple-500 max-md:to-indigo-600 max-md:shadow-md max-md:shadow-purple-900/30 text-white font-bold'
+                      : 'bg-transparent text-white/70 hover:text-white'
                   }`}
                 >
                   <span className="relative z-10 inline-flex items-center justify-center gap-1.5 text-xs sm:text-sm leading-none text-white">
@@ -386,10 +414,10 @@ export default function DramaDetailSheet({
                 <button
                   type="button"
                   onClick={() => handleStatusToggle('finished')}
-                  className={`relative rounded-full py-2.5 px-2 text-center transition-all duration-150 cursor-pointer touch-manipulation active:scale-[0.98] border ${
+                  className={`relative z-10 rounded-full py-2.5 px-2 text-center transition-all duration-150 cursor-pointer touch-manipulation active:scale-[0.98] border-0 outline-none ${
                     currentStatus === 'finished'
-                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500 border-emerald-400/50 shadow-md shadow-emerald-900/30 text-white font-bold'
-                      : 'bg-white/[0.04] border-white/[0.08] text-white/70 hover:text-white hover:bg-white/[0.08]'
+                      ? 'max-md:bg-gradient-to-r max-md:from-emerald-500 max-md:to-teal-500 max-md:shadow-md max-md:shadow-emerald-900/30 text-white font-bold'
+                      : 'bg-transparent text-white/70 hover:text-white'
                   }`}
                 >
                   <span className="relative z-10 inline-flex items-center justify-center gap-1.5 text-xs sm:text-sm leading-none text-white">

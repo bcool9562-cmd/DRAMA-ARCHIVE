@@ -60,7 +60,7 @@ export default function BottomNav({
           pointer-events-auto relative flex items-center gap-1
           rounded-full border border-white/[0.12]
           bg-[#050507]/68 px-2.5 py-1.5 shadow-[0_20px_50px_rgba(0,0,0,0.85)]
-          backdrop-blur-md transform-gpu translate-z-0 touch-manipulation select-none overflow-hidden
+          max-md:backdrop-blur-md md:backdrop-blur-xl transform-gpu translate-z-0 touch-manipulation select-none overflow-hidden
         "
       >
         {/* Skiper UI Liquid Sliding Active Pill Indicator */}
