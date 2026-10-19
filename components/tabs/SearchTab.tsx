@@ -304,7 +304,7 @@ export default function SearchTab({
                         alt={drama.title}
                         fill
                         sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 20vw"
-                        loading="lazy"
+                        loading={idx < 4 ? 'eager' : 'lazy'}
                         className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                         fallbackText="No Poster"
                       />

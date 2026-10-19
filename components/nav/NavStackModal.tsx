@@ -484,47 +484,32 @@ function DramaPage({
       className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.22] bg-[#08080c] max-md:backdrop-blur-none md:bg-[#0c0c12]/85 md:backdrop-blur-2xl md:border md:border-white/[0.18] md:rounded-[36px] md:my-auto md:max-h-[92dvh] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)]"
       onClick={e => e.stopPropagation()}
     >
-      {/* Clear Cinematic Hero Backdrop (Full Top Hero Area) */}
-      {(drama?.backdropUrl || drama?.posterUrl) && (
-        <div className="absolute inset-x-0 top-0 h-64 sm:h-80 overflow-hidden pointer-events-none z-0">
-          <SafeImage
-            src={drama.backdropUrl || drama.posterUrl}
-            size="w780"
-            alt=""
-            fill
-            priority
-            className="w-full h-full object-cover object-center opacity-65 pointer-events-none transform-gpu animate-ken-burns-settle"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#08080c]/75 to-[#08080c] pointer-events-none" />
+      {/* Pinned Top Bar (Drag handle + Navigation buttons) */}
+      <div className="relative z-20 flex flex-col flex-shrink-0 pointer-events-none">
+        <div className="flex justify-center pt-3 pb-0">
+          <div className="h-1.5 w-12 rounded-full bg-white/25" />
         </div>
-      )}
-
-      {/* Drag handle */}
-      <div className="relative z-10 flex justify-center pt-3 pb-0">
-        <div className="h-1.5 w-12 rounded-full bg-white/25" />
-      </div>
-
-      {/* Nav bar */}
-      <div className="relative z-10 flex items-center justify-between px-4 pt-2 pb-0 min-h-[44px]">
-        {canGoBack ? (
+        <div className="flex items-center justify-between px-4 pt-2 pb-1 min-h-[44px]">
+          {canGoBack ? (
+            <button
+              onClick={onBack}
+              className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-white/[0.14] bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl px-3 py-1.5 text-xs font-semibold text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] active:scale-95 transition cursor-pointer touch-manipulation select-none"
+            >
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-white">
+                <ChevronLeft size={13} strokeWidth={2.5} />
+              </span>
+              <span className="max-w-[130px] truncate">{backLabel}</span>
+            </button>
+          ) : (
+            <div />
+          )}
           <button
-            onClick={onBack}
-            className="flex items-center gap-1.5 rounded-full border border-white/[0.14] bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl px-3 py-1.5 text-xs font-semibold text-white/90 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] active:scale-95 transition cursor-pointer touch-manipulation select-none"
+            onClick={canGoBack ? onBack : onClose}
+            className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.14] bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl text-white/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] hover:text-white active:scale-90 transition cursor-pointer touch-manipulation"
           >
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-white">
-              <ChevronLeft size={13} strokeWidth={2.5} />
-            </span>
-            <span className="max-w-[130px] truncate">{backLabel}</span>
+            <X size={17} strokeWidth={2.2} />
           </button>
-        ) : (
-          <div />
-        )}
-        <button
-          onClick={canGoBack ? onBack : onClose}
-          className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.14] bg-[#14141e] max-md:backdrop-blur-none md:backdrop-blur-xl text-white/80 shadow-[inset_0_1px_1px_rgba(255,255,255,0.22)] hover:bg-white/[0.14] hover:text-white active:scale-90 transition cursor-pointer touch-manipulation"
-        >
-          <X size={17} strokeWidth={2.2} />
-        </button>
+        </div>
       </div>
 
       {/* Scrollable body */}
@@ -538,9 +523,24 @@ function DramaPage({
         <div className="relative z-10 flex flex-1 items-center justify-center text-white/40">Failed to load drama.</div>
       ) : (
         <div
-          className="relative z-10 flex-1 overflow-y-auto px-6 pb-36 pt-2 scrollbar-hide overscroll-y-contain"
+          className="relative z-10 flex-1 overflow-y-auto px-6 pb-36 pt-16 -mt-16 scrollbar-hide overscroll-y-contain"
           style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
         >
+          {/* Natural-Scrolling Cinematic Hero Backdrop */}
+          {(drama?.backdropUrl || drama?.posterUrl) && (
+            <div className="absolute inset-x-0 top-0 h-80 sm:h-96 overflow-hidden pointer-events-none z-0">
+              <SafeImage
+                src={drama.backdropUrl || drama.posterUrl}
+                size="w780"
+                alt=""
+                fill
+                priority
+                className="w-full h-full object-cover object-center opacity-65 pointer-events-none transform-gpu animate-ken-burns-settle"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#08080c]/80 to-[#08080c] pointer-events-none" />
+            </div>
+          )}
+
           {/* Poster + Title */}
           <div className="flex gap-5 items-end mb-6 mt-4 relative z-10">
             <div className="relative h-44 w-30 flex-shrink-0 overflow-hidden rounded-[22px] border border-white/[0.22] shadow-[0_16px_36px_-6px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.3)] bg-black/60 animate-modal-section-1">

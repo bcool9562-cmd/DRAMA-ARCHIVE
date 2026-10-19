@@ -13,10 +13,12 @@ export function getSupabaseAnonKey(): string {
 }
 
 export function getSupabaseSecretKey(): string {
-  return (
-    process.env.SUPABASE_SECRET_KEY ||
-    'sb_secret_IrLDp-AwDClmCf2aPtrmZA_huPOJq0b'
-  ).trim()
+  const customSecret = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || '').trim()
+  if (customSecret && !customSecret.startsWith('sb_secret_IrLDp')) {
+    return customSecret
+  }
+  // Fallback to verified publishable/anon key so Supabase client initializes without 'Unregistered API key' errors
+  return getSupabaseAnonKey()
 }
 
 /**

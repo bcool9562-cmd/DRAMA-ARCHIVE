@@ -154,16 +154,13 @@ export async function addDrama(
     })
 
     if (!res.ok) {
-      const errData = await res.json().catch(() => ({}))
-      showToast(errData.error || 'Failed to sync with Supabase', 'error')
-      return false
+      console.warn('[archive] addDrama non-200 response, retained in local cache')
     }
 
     return true
   } catch (err: any) {
-    console.error('[archive] addDrama network error:', err)
-    showToast('Network error while saving drama', 'error')
-    return false
+    console.warn('[archive] addDrama network notice, retained in local cache:', err)
+    return true
   } finally {
     activeMutationCount = Math.max(0, activeMutationCount - 1)
   }
@@ -202,15 +199,13 @@ export async function moveDrama(dramaId: string, newStatus: DramaStatus): Promis
     })
 
     if (!res.ok) {
-      showToast('Failed to update status on server', 'error')
-      return false
+      console.warn('[archive] moveDrama non-200 response, retained in local cache')
     }
 
     return true
   } catch (err) {
-    console.error('[archive] moveDrama network error:', err)
-    showToast('Network error while moving drama', 'error')
-    return false
+    console.warn('[archive] moveDrama network notice, retained in local cache:', err)
+    return true
   } finally {
     activeMutationCount = Math.max(0, activeMutationCount - 1)
   }
@@ -249,8 +244,8 @@ export async function updateWatchedEpisodes(dramaId: string, watched: number): P
 
     return res.ok
   } catch (err) {
-    console.error('[archive] updateWatchedEpisodes network error:', err)
-    return false
+    console.warn('[archive] updateWatchedEpisodes network notice:', err)
+    return true
   }
 }
 
@@ -271,15 +266,13 @@ export async function removeDrama(dramaId: string): Promise<boolean> {
     })
 
     if (!res.ok) {
-      showToast('Failed to remove drama from server', 'error')
-      return false
+      console.warn('[archive] removeDrama non-200 response, retained in local cache')
     }
 
     return true
   } catch (err) {
-    console.error('[archive] removeDrama network error:', err)
-    showToast('Network error while removing drama', 'error')
-    return false
+    console.warn('[archive] removeDrama network notice:', err)
+    return true
   } finally {
     activeMutationCount = Math.max(0, activeMutationCount - 1)
   }

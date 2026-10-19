@@ -228,30 +228,15 @@ export default function DramaDetailSheet({
         className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#08080c] max-md:backdrop-blur-none md:bg-[#0c0c12]/85 md:backdrop-blur-2xl md:border md:border-white/[0.18] md:rounded-[36px] md:my-auto md:max-h-[92dvh] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] touch-manipulation"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Clear Cinematic Hero Backdrop (Full Top Hero Area) */}
-        {(drama?.backdropUrl || drama?.posterUrl) && (
-          <div className="absolute inset-x-0 top-0 h-64 sm:h-80 overflow-hidden pointer-events-none z-0">
-            <SafeImage
-              src={drama.backdropUrl || drama.posterUrl}
-              size="w780"
-              alt=""
-              fill
-              priority
-              className="w-full h-full object-cover object-center opacity-65 pointer-events-none transform-gpu animate-ken-burns-settle"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#08080c]/75 to-[#08080c] pointer-events-none" />
-          </div>
-        )}
-
         {/* Drag handle */}
-        <div className="relative z-10 flex justify-center pt-3 pb-1">
+        <div className="relative z-20 flex justify-center pt-3 pb-1 pointer-events-none">
           <div className="h-1.5 w-12 rounded-full bg-white/25" />
         </div>
 
         {/* iOS Close button */}
         <button
           onClick={onClose}
-          className="absolute right-5 top-4 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.16] bg-black/40 text-white/70 backdrop-blur-md transition hover:bg-white/20 hover:text-white active:scale-90 cursor-pointer touch-manipulation"
+          className="absolute right-5 top-4 z-30 flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.16] bg-[#14141e] text-white/80 max-md:backdrop-blur-none md:backdrop-blur-md transition hover:bg-white/20 hover:text-white active:scale-90 cursor-pointer touch-manipulation"
         >
           <X size={17} />
         </button>
@@ -267,8 +252,22 @@ export default function DramaDetailSheet({
             Failed to load drama details.
           </div>
         ) : (
-          <div className="relative z-10 flex-1 overflow-y-auto px-6 pb-36 pt-2 scrollbar-hide">
-            
+          <div className="relative z-10 flex-1 overflow-y-auto px-6 pb-36 pt-16 -mt-16 scrollbar-hide">
+            {/* Natural-Scrolling Cinematic Hero Backdrop */}
+            {(drama?.backdropUrl || drama?.posterUrl) && (
+              <div className="absolute inset-x-0 top-0 h-80 sm:h-96 overflow-hidden pointer-events-none z-0">
+                <SafeImage
+                  src={drama.backdropUrl || drama.posterUrl}
+                  size="w780"
+                  alt=""
+                  fill
+                  priority
+                  className="w-full h-full object-cover object-center opacity-65 pointer-events-none transform-gpu animate-ken-burns-settle"
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-[#08080c]/80 to-[#08080c] pointer-events-none" />
+              </div>
+            )}
+
             {/* Poster + Title Section */}
             <div className="flex gap-5 items-end mb-6 mt-4 relative z-10">
               <div className="relative h-44 w-30 flex-shrink-0 overflow-hidden rounded-[22px] border border-white/[0.22] shadow-[0_16px_36px_-6px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.3)] bg-black/60">

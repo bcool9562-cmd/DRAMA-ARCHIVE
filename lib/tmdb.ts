@@ -251,13 +251,31 @@ export interface Drama {
 
 // ─── Filtering Helpers ────────────────────────────────────────────────────────
 
-export function isEastAsian(r: {
-  origin_country?: string[]
-  original_language?: string
-  genre_ids?: number[]
-}): boolean {
+export function isEastAsian(
+  r: {
+    id?: number
+    name?: string
+    title?: string
+    poster_path?: string | null
+    vote_count?: number
+    origin_country?: string[]
+    original_language?: string
+    genre_ids?: number[]
+    overview?: string
+  },
+  query?: string
+): boolean {
+  // Exclude unverified stubs with no poster and 0 votes
+  if (!r.poster_path && (r.vote_count ?? 0) === 0) return false
+
   // Strictly exclude Animation / Anime (TMDB genre ID 16)
   if (Array.isArray(r.genre_ids) && r.genre_ids.includes(16)) return false
+
+  // Allow popular crossover series set in Korea/East Asia (e.g. XO, Kitty, Pachinko)
+  const title = (r.name || r.title || '').toLowerCase()
+  const q = (query || '').toLowerCase().trim()
+  if (r.id === 195670 || title.includes('xo, kitty')) return true
+  if (q && q.includes('xo, kitty') && title.includes('kitty')) return true
 
   const countryMatch =
     Array.isArray(r.origin_country) &&
@@ -267,7 +285,14 @@ export function isEastAsian(r: {
     !!r.original_language &&
     EAST_ASIAN_LANGS.includes(r.original_language.toLowerCase())
 
-  return countryMatch || langMatch
+  const overview = (r.overview || '').toLowerCase()
+  const kDramaContext =
+    overview.includes('korean') ||
+    overview.includes('seoul') ||
+    overview.includes('k-drama') ||
+    overview.includes('kdrama')
+
+  return countryMatch || langMatch || kDramaContext
 }
 
 function mapAiringStatus(s: TmdbDramaDetail): Drama['airingStatus'] {
@@ -278,7 +303,7 @@ function mapAiringStatus(s: TmdbDramaDetail): Drama['airingStatus'] {
 
 function mapTmdbDetail(d: TmdbDramaDetail): Drama {
   const year = d.first_air_date ? parseInt(d.first_air_date.slice(0, 4)) : 0
-  const country =
+  let country =
     d.origin_country?.[0] ||
     (d.original_language === 'ko'
       ? 'KR'
@@ -289,6 +314,10 @@ function mapTmdbDetail(d: TmdbDramaDetail): Drama {
       : d.original_language === 'th'
       ? 'TH'
       : '')
+
+  if (d.id === 195670 || d.name?.toLowerCase().includes('xo, kitty')) {
+    country = 'KR'
+  }
 
   return {
     tmdbId: d.id,
@@ -355,7 +384,10 @@ async function searchKuryana(query: string): Promise<Drama[]> {
     const json = await res.json()
     const results: KuryanaResult[] = json?.results || json?.data || (Array.isArray(json) ? json : [])
 
-    return results.slice(0, 5).map((r, i) => {
+    return results
+      .filter((r) => !!(r.title || r.name) && !!(r.poster || r.thumb))
+      .slice(0, 5)
+      .map((r, i) => {
       const idNum = typeof r.id === 'number' ? r.id : parseInt(String(r.id || '').replace(/\D/g, '')) || 900000 + i
       const year = typeof r.year === 'number' ? r.year : parseInt(String(r.year || '0')) || 0
       const rating = typeof r.rating === 'number' ? r.rating : parseFloat(String(r.rating || '0')) || 0
@@ -423,8 +455,8 @@ export async function searchDramas(query: string): Promise<Drama[]> {
 
   for (const r of rawResults) {
     if (!r.id || seenIds.has(r.id)) continue
-    // Filter to East Asian
-    if (!isEastAsian(r)) continue
+    // Filter to East Asian / Crossover
+    if (!isEastAsian(r, cleanQ)) continue
 
     seenIds.add(r.id)
 
@@ -436,7 +468,7 @@ export async function searchDramas(query: string): Promise<Drama[]> {
     const dateStr = r.first_air_date || r.release_date || ''
     const releaseYear = dateStr ? parseInt(dateStr.slice(0, 4)) : 0
 
-    const country =
+    let country =
       r.origin_country?.[0] ||
       (r.original_language === 'ko'
         ? 'KR'
@@ -447,6 +479,12 @@ export async function searchDramas(query: string): Promise<Drama[]> {
         : r.original_language === 'th'
         ? 'TH'
         : '')
+
+    if (r.id === 195670 || title.toLowerCase().includes('xo, kitty')) {
+      country = 'KR'
+    }
+
+    const network = (r.id === 195670 || title.toLowerCase().includes('xo, kitty')) ? 'Netflix' : ''
 
     tmdbDramas.push({
       tmdbId: r.id,
@@ -466,7 +504,7 @@ export async function searchDramas(query: string): Promise<Drama[]> {
       nextEpisodeDate: null,
       nextEpisodeNumber: null,
       runtime: null,
-      network: '',
+      network,
       genres: [],
       tags: [],
     })

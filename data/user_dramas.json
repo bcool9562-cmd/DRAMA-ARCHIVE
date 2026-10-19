@@ -1,6 +1,25 @@
 [
   {
     "user_id": "00000000-0000-0000-0000-000000000001",
+    "drama_id": "tmdb-195670",
+    "tmdb_id": 195670,
+    "title": "XO, Kitty",
+    "native_title": "",
+    "poster_url": "https://image.tmdb.org/t/p/w342/hxvTdKAwv27PUfpXOQp6AwWr6V.jpg",
+    "country": "KR",
+    "release_year": 2023,
+    "total_episodes": 26,
+    "rating": 8.1,
+    "status": "finished",
+    "airing_status": "ongoing",
+    "first_air_date": "2023-05-18",
+    "next_episode_date": null,
+    "next_episode_number": 0,
+    "watched_episodes": 0,
+    "updated_at": "2026-10-19T15:26:57.246Z"
+  },
+  {
+    "user_id": "00000000-0000-0000-0000-000000000001",
     "drama_id": "tmdb-314939",
     "tmdb_id": 314939,
     "title": "A Love Other Than Yours",
