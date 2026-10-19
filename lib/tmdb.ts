@@ -12,11 +12,14 @@ import https from 'https'
 import dns from 'dns'
 
 // Set DNS servers to Cloudflare & Google to bypass any local ISP DNS blocks/poisoning
+const resolver = new dns.Resolver()
 try {
-  dns.setServers(['1.1.1.1', '8.8.8.8'])
+  resolver.setServers(['1.1.1.1', '8.8.8.8', '1.0.0.1', '8.8.4.4'])
 } catch {
   // Ignore in environments where setServers is restricted
 }
+
+const TMDB_STATIC_IPS = ['13.224.245.44', '13.224.245.47', '13.224.245.63', '13.224.245.92', '13.227.173.106']
 
 const TMDB_BASE = 'https://api.themoviedb.org/3'
 const IMG_BASE = 'https://image.tmdb.org/t/p/original'
@@ -28,8 +31,8 @@ function getApiKey(): string {
   return key
 }
 
-import { tmdbImg, tmdbThumb, tmdbCard, tmdbOriginal } from './image-utils'
-export { tmdbImg, tmdbThumb, tmdbCard, tmdbOriginal }
+import { tmdbImg, tmdbThumb, tmdbCard, tmdbOriginal, resolveImageUrl, getProxyImageUrl } from './image-utils'
+export { tmdbImg, tmdbThumb, tmdbCard, tmdbOriginal, resolveImageUrl, getProxyImageUrl }
 
 /**
  * Robust HTTPS fetch for TMDB that resolves directly via Cloudflare/Google DNS
@@ -52,19 +55,21 @@ export function tmdbFetch<T>(endpoint: string, params: Record<string, string> = 
           Accept: 'application/json',
           'User-Agent': 'DramaArchive/1.0 (Windows NT 10.0; Win64; x64)',
         },
-        lookup: async (hostname: string, opts: any, cb: any) => {
-          try {
-            const ips = await dns.promises.resolve4(hostname)
-            if (ips && ips.length > 0) {
-              if (opts && opts.all) {
-                return cb(null, ips.map((ip) => ({ address: ip, family: 4 })))
-              }
-              return cb(null, ips[0], 4)
-            }
-          } catch {
-            // Fallback to default system DNS resolution (e.g. in cloud/Vercel Lambda)
+        lookup: (hostname: string, opts: any, cb: any) => {
+          if (typeof opts === 'function') {
+            cb = opts
+            opts = {}
           }
-          dns.lookup(hostname, opts, cb)
+          resolver.resolve4(hostname, (err, ips) => {
+            const list = (!err && ips && ips.length > 0) ? ips : (hostname.includes('themoviedb.org') ? TMDB_STATIC_IPS : null)
+            if (list && list.length > 0) {
+              if (opts && opts.all) {
+                return cb(null, list.map((ip) => ({ address: ip, family: 4 })))
+              }
+              return cb(null, list[0], 4)
+            }
+            dns.lookup(hostname, opts, cb)
+          })
         },
       }
 
@@ -90,7 +95,7 @@ export function tmdbFetch<T>(endpoint: string, params: Record<string, string> = 
         console.error('[tmdbFetch req error]:', err)
         resolve(null)
       })
-      req.setTimeout(9000, () => {
+      req.setTimeout(12000, () => {
         console.error('[tmdbFetch timeout on endpoint]:', endpoint)
         req.destroy()
         resolve(null)

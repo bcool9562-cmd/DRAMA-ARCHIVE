@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
+import SafeImage from '@/components/ui/SafeImage'
 import type { Drama } from '@/lib/tmdb'
 
 interface PosterItem {
@@ -195,10 +196,6 @@ function PosterCard({
   item: PosterItem
   onClick?: () => void
 }) {
-  const [hasError, setHasError] = useState(false)
-
-  if (hasError) return null
-
   return (
     <div
       onClick={onClick}
@@ -210,15 +207,16 @@ function PosterCard({
           : 'pointer-events-none select-none'
       }`}
     >
-      <Image
+      <SafeImage
         src={item.posterUrl}
+        size="w342"
         alt={item.title}
         fill
         sizes="(max-width: 640px) 30vw, (max-width: 1024px) 25vw, 240px"
         loading="lazy"
         decoding="async"
-        onError={() => setHasError(true)}
         className="object-cover"
+        fallbackText="No Poster"
       />
     </div>
   )

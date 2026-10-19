@@ -15,6 +15,8 @@
 import { useEffect, useRef, useCallback, useState, useReducer, startTransition } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
+import SafeImage from '@/components/ui/SafeImage'
+import { resolveImageUrl, getProxyImageUrl } from '@/lib/image-utils'
 import {
   X, ChevronLeft, Bookmark, Play, CheckCircle, Star,
   Maximize2, Loader2, Calendar, Images, Users, ChevronRight,
@@ -439,28 +441,23 @@ function DramaPage({
   const allImages = [...(drama?.images ?? []), ...(drama?.backdrops ?? [])]
   const visibleImages = allImages.slice(0, 12)
   const visibleCast = (drama?.cast ?? []).slice(0, 15)
-  const tinyPoster = drama?.posterUrl
-    ? drama.posterUrl.replace(/\/w\d+\//, '/w92/').replace('/original/', '/w92/')
-    : null
-
   return (
     <div
-      className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.22] bg-[#07070b] max-md:backdrop-blur-none md:bg-[#0c0c12]/95 md:backdrop-blur-2xl shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)]"
+      className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.22] bg-[#08080c] max-md:backdrop-blur-none md:bg-[#0c0c12]/95 md:backdrop-blur-2xl shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)]"
       onClick={e => e.stopPropagation()}
     >
-      {/* Creamy Gaussian-blurred ambient backdrop using tiny 92px thumbnail (Zero GPU lag on Vivo V20 SE / Adreno 610) */}
-      {tinyPoster && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-96 z-0 overflow-hidden transform-gpu">
-          <Image
-            src={tinyPoster}
+      {/* Ambient Blurred Hero Backdrop (Full Top Hero Area) */}
+      {(drama?.backdropUrl || drama?.posterUrl) && (
+        <div className="absolute inset-x-0 top-0 h-72 sm:h-88 overflow-hidden pointer-events-none z-0 transform-gpu">
+          <SafeImage
+            src={drama.backdropUrl || drama.posterUrl}
+            size="w780"
             alt=""
             fill
-            sizes="92px"
-            unoptimized
-            className="scale-110 blur-xl opacity-35 object-cover pointer-events-none transform-gpu"
             priority
+            className="w-full h-full object-cover scale-110 blur-xl opacity-45 pointer-events-none transform-gpu"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#07070b]/75 to-[#07070b]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[#08080c]/75 to-[#08080c]" />
         </div>
       )}
 
@@ -504,30 +501,21 @@ function DramaPage({
           className="relative z-10 flex-1 overflow-y-auto px-6 pb-36 pt-2 scrollbar-hide overscroll-y-contain"
           style={{ WebkitOverflowScrolling: 'touch', overscrollBehaviorY: 'contain' }}
         >
-          {/* Hero Backdrop */}
-          {drama.backdropUrl && (
-            <div className="relative -mx-6 -mt-2 mb-6 h-56 w-[calc(100%+3rem)] overflow-hidden bg-[#07070b]">
-              <Image
-                src={drama.backdropUrl}
-                alt={drama.title}
-                fill
-                sizes="(max-width: 672px) 100vw, 672px"
-                decoding="async"
-                priority
-                onLoad={() => setBackdropLoaded(true)}
-                className={`object-cover transition-opacity duration-300 ${backdropLoaded ? 'opacity-100' : 'opacity-0'}`}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#07070b] via-[#07070b]/80 to-transparent" />
-            </div>
-          )}
-
           {/* Poster + Title */}
-          <div className={`flex gap-5 items-end mb-6 ${drama.backdropUrl ? '-mt-24 relative z-10' : 'mt-2'}`}>
+          <div className="flex gap-5 items-end mb-6 mt-4 relative z-10">
             <div className="relative h-44 w-30 flex-shrink-0 overflow-hidden rounded-[22px] border border-white/[0.22] shadow-[0_16px_36px_-6px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.3)] bg-black/60">
               {drama.posterUrl ? (
-                <Image src={drama.posterUrl} alt={drama.title} fill sizes="120px" priority className="object-cover" />
+                <SafeImage
+                  src={drama.posterUrl}
+                  size="w342"
+                  alt={drama.title}
+                  fill
+                  sizes="120px"
+                  priority
+                  className="object-cover"
+                />
               ) : (
-                <div className="flex h-full w-full items-center justify-center text-white/20 text-xs">No Poster</div>
+                <div className="flex h-full w-full items-center justify-center text-white/20 text-xs font-medium">No Poster</div>
               )}
             </div>
             <div className="flex flex-col justify-end flex-1 min-w-0 pb-1">
@@ -692,11 +680,12 @@ function DramaPage({
                 {visibleImages.map((img, i) => (
                   <button
                     key={i}
-                    onClick={() => setLightboxSrc(`https://image.tmdb.org/t/p/original${img.file_path}`, `https://image.tmdb.org/t/p/w780${img.file_path}`)}
+                    onClick={() => setLightboxSrc(resolveImageUrl(img.file_path, 'original'), resolveImageUrl(img.file_path, 'w780'))}
                     className="group relative h-36 w-26 flex-shrink-0 overflow-hidden rounded-[20px] border border-white/[0.18] bg-[#161620] shadow-lg hover:-translate-y-1 hover:scale-[1.04] active:scale-95 transition-all duration-250 ease-out cursor-pointer touch-manipulation"
                   >
-                    <Image
-                      src={`https://image.tmdb.org/t/p/w500${img.file_path}`}
+                    <SafeImage
+                      src={resolveImageUrl(img.file_path, 'w500')}
+                      size="w500"
                       alt="Drama Still"
                       fill
                       loading="lazy"
@@ -713,8 +702,9 @@ function DramaPage({
                     className="relative h-36 w-26 flex-shrink-0 overflow-hidden rounded-[20px] border border-white/25 bg-[#161620] shadow-lg active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation group"
                   >
                     {allImages[12]?.file_path && (
-                      <Image
-                        src={`https://image.tmdb.org/t/p/w500${allImages[12].file_path}`}
+                      <SafeImage
+                        src={resolveImageUrl(allImages[12].file_path, 'w500')}
+                        size="w500"
                         alt="Next still"
                         fill
                         className="object-cover scale-110 blur-sm"
@@ -743,7 +733,15 @@ function DramaPage({
                   >
                     {d.profile_path ? (
                       <div className="relative h-6 w-6 overflow-hidden rounded-full border border-white/25">
-                        <Image src={`https://image.tmdb.org/t/p/w185${d.profile_path}`} alt={d.name} fill loading="lazy" className="object-cover" />
+                        <SafeImage
+                          src={resolveImageUrl(d.profile_path, 'w185')}
+                          size="w185"
+                          alt={d.name}
+                          fill
+                          loading="lazy"
+                          className="object-cover"
+                          fallbackText="?"
+                        />
                       </div>
                     ) : (
                       <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-[10px] text-white/50">?</div>
@@ -779,15 +777,17 @@ function DramaPage({
                   >
                     <div className="relative h-22 w-22 overflow-hidden rounded-[22px] border border-white/[0.18] bg-[#161620] shadow-lg transition duration-200 group-hover:border-white/40">
                       {c.profile_path ? (
-                        <Image
-                          src={`https://image.tmdb.org/t/p/w185${c.profile_path}`}
+                        <SafeImage
+                          src={resolveImageUrl(c.profile_path, 'w185')}
+                          size="w185"
                           alt={c.name}
                           fill
                           loading="lazy"
                           className="object-cover"
+                          fallbackText="?"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-white/20 text-xs">?</div>
+                        <div className="flex h-full w-full items-center justify-center text-white/20 text-xs font-medium">?</div>
                       )}
                     </div>
                     <div className="w-full">
@@ -804,8 +804,9 @@ function DramaPage({
                     className="relative h-22 w-22 flex-shrink-0 overflow-hidden rounded-[22px] border border-white/25 bg-[#161620] shadow-lg active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation group"
                   >
                     {drama.cast[15]?.profile_path && (
-                      <Image
-                        src={`https://image.tmdb.org/t/p/w185${drama.cast[15].profile_path}`}
+                      <SafeImage
+                        src={resolveImageUrl(drama.cast[15].profile_path, 'w185')}
+                        size="w185"
                         alt="Next cast"
                         fill
                         className="object-cover scale-110 blur-sm"
@@ -924,15 +925,17 @@ function PersonPage({ personId, personCache, backLabel, canGoBack, onBack, onClo
         >
           {/* Header */}
           <div className="flex gap-4 mb-5">
-            <div className="relative h-28 w-20 flex-shrink-0 overflow-hidden rounded-2xl bg-white/[0.05] shadow-lg">
+            <div className="relative h-28 w-20 flex-shrink-0 overflow-hidden rounded-2xl bg-white/[0.05] shadow-lg border border-white/[0.12]">
               {person.profile_path ? (
-                <Image
-                  src={`https://image.tmdb.org/t/p/w185${person.profile_path}`}
+                <SafeImage
+                  src={resolveImageUrl(person.profile_path, 'w185')}
+                  size="w185"
                   alt={person.name}
                   fill
                   className="object-cover"
                   sizes="80px"
                   loading="lazy"
+                  fallbackText="?"
                 />
               ) : (
                 <div className="h-full bg-white/[0.05] flex items-center justify-center text-white/20 text-xs">?</div>
@@ -995,7 +998,7 @@ function PersonPage({ personId, personCache, backLabel, canGoBack, onBack, onClo
 function PersonWorkCard({ work, onClick }: { work: TmdbPersonCredit; onClick: () => void }) {
   const title = work.name ?? work.title ?? ''
   const year = (work.first_air_date ?? work.release_date ?? '').slice(0, 4)
-  const posterSrc = work.poster_path ? `https://image.tmdb.org/t/p/w342${work.poster_path}` : ''
+  const posterSrc = work.poster_path ? resolveImageUrl(work.poster_path, 'w342') : ''
 
   return (
     <button
@@ -1004,7 +1007,16 @@ function PersonWorkCard({ work, onClick }: { work: TmdbPersonCredit; onClick: ()
     >
       <div className="relative aspect-[2/3] w-full bg-white/[0.05]">
         {posterSrc ? (
-          <Image src={posterSrc} alt={title} fill className="object-cover" sizes="(max-width: 640px) 30vw, 120px" loading="lazy" />
+          <SafeImage
+            src={posterSrc}
+            size="w342"
+            alt={title}
+            fill
+            className="object-cover"
+            sizes="(max-width: 640px) 30vw, 120px"
+            loading="lazy"
+            fallbackText="No img"
+          />
         ) : (
           <div className="h-full w-full flex items-center justify-center text-white/15 text-[10px]">No img</div>
         )}
@@ -1073,11 +1085,12 @@ function PhotosGridPage({
           {photos.map((img, i) => (
             <button
               key={i}
-              onClick={() => setLightboxSrc(`https://image.tmdb.org/t/p/original${img.file_path}`, `https://image.tmdb.org/t/p/w780${img.file_path}`)}
+              onClick={() => setLightboxSrc(resolveImageUrl(img.file_path, 'original'), resolveImageUrl(img.file_path, 'w780'))}
               className="relative aspect-[2/3] overflow-hidden rounded-2xl bg-[#161620] border border-white/[0.10] active:scale-95 transition-transform duration-150 cursor-pointer touch-manipulation"
             >
-              <Image
-                src={`https://image.tmdb.org/t/p/w780${img.file_path}`}
+              <SafeImage
+                src={resolveImageUrl(img.file_path, 'w780')}
+                size="w780"
                 alt="Still"
                 fill
                 loading="lazy"
@@ -1147,7 +1160,15 @@ function CastGridPage({
                 >
                   {d.profile_path ? (
                     <div className="relative h-6 w-6 overflow-hidden rounded-full border border-white/20">
-                      <Image src={`https://image.tmdb.org/t/p/w185${d.profile_path}`} alt={d.name} fill loading="lazy" className="object-cover" />
+                      <SafeImage
+                        src={resolveImageUrl(d.profile_path, 'w185')}
+                        size="w185"
+                        alt={d.name}
+                        fill
+                        loading="lazy"
+                        className="object-cover"
+                        fallbackText="?"
+                      />
                     </div>
                   ) : <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white/10 text-[10px] text-white/50">?</div>}
                   <span className="text-xs font-semibold text-white/90">{d.name}</span>
@@ -1166,7 +1187,15 @@ function CastGridPage({
             >
               <div className="relative h-24 w-full overflow-hidden rounded-[18px] border border-white/[0.12] bg-[#161620]">
                 {c.profile_path ? (
-                  <Image src={`https://image.tmdb.org/t/p/w185${c.profile_path}`} alt={c.name} fill loading="lazy" className="object-cover" />
+                  <SafeImage
+                    src={resolveImageUrl(c.profile_path, 'w185')}
+                    size="w185"
+                    alt={c.name}
+                    fill
+                    loading="lazy"
+                    className="object-cover"
+                    fallbackText="?"
+                  />
                 ) : <div className="flex h-full w-full items-center justify-center text-white/20 text-xs">?</div>}
               </div>
               <div className="w-full px-0.5">

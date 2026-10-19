@@ -2,6 +2,7 @@
 
 import { UserDrama } from '@/lib/supabase/archive'
 import Image from 'next/image'
+import SafeImage from '@/components/ui/SafeImage'
 import { Star } from 'lucide-react'
 import { REGION_NAMES } from './DramaDetailSheet'
 import { tmdbCard } from '@/lib/image-utils'
@@ -78,8 +79,9 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
       />
       {/* 1. Full-Bleed 100% Poster Image */}
       {posterSrc ? (
-        <Image
+        <SafeImage
           src={posterSrc}
+          size="w342"
           alt={drama.title}
           fill
           sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 22vw"
@@ -87,6 +89,7 @@ export default function DramaCard({ drama, actions, onOpen }: DramaCardProps) {
           decoding="async"
           className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           priority={false}
+          fallbackText="No Poster"
         />
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-black/70 text-white/25 text-xs font-medium">

@@ -157,6 +157,13 @@ export default function AppShell() {
     setNavStack([{ type: 'person', id, name }])
   }
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      ;(window as any).__openDrama = openDrama
+      ;(window as any).__openPerson = openPerson
+    }
+  }, [])
+
   // 1. While determining lock state, render solid black screen (NO BLINK)
   if (!isLockChecked) {
     return <div className="fixed inset-0 bg-[#050507] z-[9999]" />

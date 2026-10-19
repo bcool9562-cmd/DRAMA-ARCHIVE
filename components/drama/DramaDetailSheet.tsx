@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef, startTransition } from 'react'
 import Image from 'next/image'
+import SafeImage from '@/components/ui/SafeImage'
+import { resolveImageUrl } from '@/lib/image-utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   X, Bookmark, Play, CheckCircle, Star, Maximize2
@@ -223,22 +225,21 @@ export default function DramaDetailSheet({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 24, scale: 0.98 }}
         transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-        className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#07070b] max-md:backdrop-blur-none md:bg-[#0c0c12] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] touch-manipulation"
+        className="relative flex h-[94dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-[36px] border-t border-white/[0.18] bg-[#08080c] max-md:backdrop-blur-none md:bg-[#0c0c12] shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.9)] touch-manipulation"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Creamy Gaussian-blurred ambient backdrop using tiny 92px thumbnail (Zero GPU lag on Vivo V20 SE / Adreno 610) */}
-        {drama?.posterUrl && (
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-96 z-0 overflow-hidden transform-gpu">
-            <Image
-              src={drama.posterUrl.replace(/\/w\d+\//, '/w92/').replace('/original/', '/w92/')}
+        {/* Ambient Blurred Hero Backdrop (Full Top Hero Area) */}
+        {(drama?.backdropUrl || drama?.posterUrl) && (
+          <div className="absolute inset-x-0 top-0 h-72 sm:h-88 overflow-hidden pointer-events-none z-0 transform-gpu">
+            <SafeImage
+              src={drama.backdropUrl || drama.posterUrl}
+              size="w780"
               alt=""
               fill
-              sizes="92px"
-              unoptimized
-              className="scale-110 blur-xl opacity-35 object-cover pointer-events-none transform-gpu"
               priority
+              className="w-full h-full object-cover scale-110 blur-xl opacity-45 pointer-events-none transform-gpu"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#07070b]/75 to-[#07070b]" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-[#08080c]/75 to-[#08080c]" />
           </div>
         )}
 
@@ -266,31 +267,13 @@ export default function DramaDetailSheet({
         ) : (
           <div className="relative z-10 flex-1 overflow-y-auto px-6 pb-36 pt-2 scrollbar-hide">
             
-            {/* Hero Backdrop with Smooth Fade-In */}
-            {drama.backdropUrl && (
-              <div className="relative -mx-6 -mt-2 mb-6 h-60 w-[calc(100%+3rem)] overflow-hidden bg-black/60">
-                <Image
-                  src={drama.backdropUrl}
-                  alt={drama.title}
-                  fill
-                  sizes="(max-width: 672px) 100vw, 672px"
-                  decoding="async"
-                  priority
-                  onLoad={() => setBackdropLoaded(true)}
-                  className={`object-cover transition-opacity duration-300 ${
-                    backdropLoaded ? 'opacity-100' : 'opacity-0'
-                  }`}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0c0c12] via-[#0c0c12]/40 to-transparent" />
-              </div>
-            )}
-
             {/* Poster + Title Section */}
-            <div className={`flex gap-5 items-end mb-6 ${drama.backdropUrl ? '-mt-24 relative z-10' : 'mt-2'}`}>
+            <div className="flex gap-5 items-end mb-6 mt-4 relative z-10">
               <div className="relative h-44 w-30 flex-shrink-0 overflow-hidden rounded-[22px] border border-white/[0.22] shadow-[0_16px_36px_-6px_rgba(0,0,0,0.8),inset_0_1px_1px_rgba(255,255,255,0.3)] bg-black/60">
                 {drama.posterUrl ? (
-                  <Image
+                  <SafeImage
                     src={drama.posterUrl}
+                    size="w342"
                     alt={drama.title}
                     fill
                     sizes="120px"
@@ -298,7 +281,7 @@ export default function DramaDetailSheet({
                     className="object-cover"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-white/20 text-xs">
+                  <div className="flex h-full w-full items-center justify-center text-white/20 text-xs font-medium">
                     No Poster
                   </div>
                 )}
@@ -483,11 +466,12 @@ export default function DramaDetailSheet({
                   {allImages.slice(0, 24).map((img, i) => (
                     <button
                       key={i}
-                      onClick={() => setLightboxSrc(`https://image.tmdb.org/t/p/original${img.file_path}`)}
+                      onClick={() => setLightboxSrc(resolveImageUrl(img.file_path, 'original'))}
                       className="group relative h-36 w-26 flex-shrink-0 overflow-hidden rounded-[20px] border border-white/[0.14] bg-[#161620] shadow-lg hover:-translate-y-1 hover:scale-[1.04] active:scale-95 transition-all duration-250 ease-out cursor-pointer touch-manipulation"
                     >
-                      <Image
-                        src={`https://image.tmdb.org/t/p/w780${img.file_path}`}
+                      <SafeImage
+                        src={resolveImageUrl(img.file_path, 'w500')}
+                        size="w500"
                         alt="Drama Still"
                         fill
                         loading="lazy"
@@ -520,12 +504,14 @@ export default function DramaDetailSheet({
                     >
                       {d.profile_path ? (
                         <div className="relative h-6 w-6 overflow-hidden rounded-full border border-white/20">
-                          <Image
-                            src={`https://image.tmdb.org/t/p/w342${d.profile_path}`}
+                          <SafeImage
+                            src={resolveImageUrl(d.profile_path, 'w185')}
+                            size="w185"
                             alt={d.name}
                             fill
                             loading="lazy"
                             className="object-cover"
+                            fallbackText="?"
                           />
                         </div>
                       ) : (
@@ -555,15 +541,17 @@ export default function DramaDetailSheet({
                     >
                       <div className="relative h-22 w-22 overflow-hidden rounded-[22px] border border-white/[0.16] bg-[#161620] shadow-lg transition duration-200 group-hover:border-white/40 group-hover:scale-[1.03]">
                         {c.profile_path ? (
-                          <Image
-                            src={`https://image.tmdb.org/t/p/w342${c.profile_path}`}
+                          <SafeImage
+                            src={resolveImageUrl(c.profile_path, 'w185')}
+                            size="w185"
                             alt={c.name}
                             fill
                             loading="lazy"
                             className="object-cover"
+                            fallbackText="?"
                           />
                         ) : (
-                          <div className="flex h-full w-full items-center justify-center text-white/20 text-xs">
+                          <div className="flex h-full w-full items-center justify-center text-white/20 text-xs font-medium">
                             ?
                           </div>
                         )}

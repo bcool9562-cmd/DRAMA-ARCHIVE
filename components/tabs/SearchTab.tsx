@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import Image from 'next/image'
+import SafeImage from '@/components/ui/SafeImage'
 import {
   Search, X, Loader2, Compass, Bookmark, Play,
 } from 'lucide-react'
@@ -297,14 +298,15 @@ export default function SearchTab({
                       }}
                     />
                     {posterSrc ? (
-                      <Image
+                      <SafeImage
                         src={posterSrc}
+                        size="w342"
                         alt={drama.title}
                         fill
                         sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 20vw"
                         loading="lazy"
-                        onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none' }}
                         className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                        fallbackText="No Poster"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-black/70 text-white/25 text-xs font-medium">No Poster</div>
@@ -425,14 +427,15 @@ export default function SearchTab({
                         }}
                       />
                       {posterSrc ? (
-                        <Image
+                        <SafeImage
                           src={posterSrc}
+                          size="w342"
                           alt={drama.title}
                           fill
                           sizes="(max-width: 640px) 48vw, (max-width: 1024px) 32vw, 20vw"
                           loading="lazy"
-                          onError={(e) => { (e.currentTarget as HTMLElement).style.display = 'none' }}
                           className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                          fallbackText="No Poster"
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-black/60 text-white/25 text-xs font-medium">No Poster</div>
