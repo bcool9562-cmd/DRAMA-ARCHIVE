@@ -10,39 +10,92 @@ export interface AuthScreenProps {
   onAuthenticated: () => void
 }
 
-// 6 Curated High-Resolution East Asian Drama Posters from the user's archive
-const POSTER_COL_1 = [
+// 18 Iconic K-Dramas (Strictly East Asian Masterpieces with 100% verified TMDB posters)
+const ICONIC_KDRAMAS_COL_1 = [
   {
     title: 'Vincenzo',
-    posterUrl: 'https://image.tmdb.org/t/p/w780/qbkSS1cTjT4DzIwD44bdhTuYgdT.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/qbkSS1cTjT4DzIwD44bdhTuYgdT.jpg',
   },
-  {
-    title: 'The Remarried Empress',
-    posterUrl: 'https://image.tmdb.org/t/p/w780/3x6c9ybt0762idyzIifUZeTD5MZ.jpg',
-  },
-]
-
-const POSTER_COL_2 = [
   {
     title: 'Crash Landing on You',
-    posterUrl: 'https://image.tmdb.org/t/p/w780/fgBNLPr6mC8pxuR79ENAJY4nBmj.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/fgBNLPr6mC8pxuR79ENAJY4nBmj.jpg',
+  },
+  {
+    title: 'Guardian: The Lonely and Great God',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/sPkxHNw5BFvuCFGWw825TS7n6X3.jpg',
+  },
+  {
+    title: 'Lovely Runner',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/adcdNzLJ8LOjWJjNFrapXGzFco3.jpg',
   },
   {
     title: 'The Glory',
-    posterUrl: 'https://image.tmdb.org/t/p/w780/uUM4LVlPgIrww07OoEKrGWlS1Ej.jpg',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/uUM4LVlPgIrww07OoEKrGWlS1Ej.jpg',
+  },
+  {
+    title: 'Descendants of the Sun',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/xxGomfml0x9iyPBS4StBjbRRu65.jpg',
   },
 ]
 
-const POSTER_COL_3 = [
+const ICONIC_KDRAMAS_COL_2 = [
   {
-    title: 'Guardian: The Lonely and Great God',
-    posterUrl: 'https://image.tmdb.org/t/p/w780/sPkxHNw5BFvuCFGWw825TS7n6X3.jpg',
+    title: 'Mr. Queen',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/ozuyMnOO5pekDklyPpUL1Htkuzy.jpg',
   },
   {
-    title: 'Hidden Love',
-    posterUrl: 'https://image.tmdb.org/t/p/w780/riGzESa9N9toumP9OhMmg0QvFPD.jpg',
+    title: 'Business Proposal',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/iLh7L8ZuvgdxFaM9sImyv2iKYLe.jpg',
+  },
+  {
+    title: "It's Okay to Not Be Okay",
+    posterUrl: 'https://image.tmdb.org/t/p/w500/8XSJfLeImX8NszDUFnK1lbseCi8.jpg',
+  },
+  {
+    title: 'Hotel Del Luna',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/8bizZsXoAsOTbhyFKfBogC8mgG2.jpg',
+  },
+  {
+    title: 'Twinkling Watermelon',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/bwTzW1wTgUxUOQruhT8DvinUYgR.jpg',
+  },
+  {
+    title: 'My Demon',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/xBnscv5BrJREKVSvh0le61y4KDk.jpg',
   },
 ]
+
+const ICONIC_KDRAMAS_COL_3 = [
+  {
+    title: 'Flower of Evil',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/ozPDfBmsrJDFF9ZhwQNxcGLXvzm.jpg',
+  },
+  {
+    title: 'While You Were Sleeping',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/wFp7pVJbB5aD5y0A0AEBP4vmzCg.jpg',
+  },
+  {
+    title: 'Healer',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/too4Zig9bDJOfvnFfU1SaxKmGlR.jpg',
+  },
+  {
+    title: 'Strong Girl Bong-soon',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/sPdS6oUdXfBNGKROE5RY5s5laqx.jpg',
+  },
+  {
+    title: 'My Love from the Star',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/o5EYVYCVtDUdajP4rWfv6q0BTmm.jpg',
+  },
+  {
+    title: 'The King: Eternal Monarch',
+    posterUrl: 'https://image.tmdb.org/t/p/w500/7SLlbkzOJb8v9wXVYIcqozx2hxe.jpg',
+  },
+]
+
+// Duplicated for gapless, 100% seamless infinite scroll loops
+const DUPLICATED_COL_1 = [...ICONIC_KDRAMAS_COL_1, ...ICONIC_KDRAMAS_COL_1]
+const DUPLICATED_COL_2 = [...ICONIC_KDRAMAS_COL_2, ...ICONIC_KDRAMAS_COL_2]
+const DUPLICATED_COL_3 = [...ICONIC_KDRAMAS_COL_3, ...ICONIC_KDRAMAS_COL_3]
 
 export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
   const [password, setPassword] = useState('')
@@ -111,62 +164,73 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
   return (
     <div className="relative min-h-screen w-full bg-[#050507] text-white flex items-center justify-center overflow-hidden selection:bg-rose-500/30 selection:text-white">
       {/* ── AMBIENT CANVAS GLOWS ── */}
-      {/* Signature top crimson/indigo ambient radial glow matching Explore header */}
       <div className="pointer-events-none absolute -top-32 inset-x-0 h-[480px] bg-[radial-gradient(ellipse_at_top,rgba(225,29,72,0.16),rgba(124,58,237,0.09)_45%,transparent_72%)] z-0" />
       <div className="pointer-events-none absolute -bottom-32 right-1/4 h-[420px] w-[420px] rounded-full bg-purple-600/[0.08] blur-[140px] z-0" />
 
-      {/* ── MOBILE BACKGROUND POSTER GRID (< 1024px) ── */}
-      {/* Subtle, darkly masked 3-column drama poster grid in upper background (opacity-20 fading into solid #050507, 60 FPS) */}
-      <div className="lg:hidden pointer-events-none absolute inset-x-0 top-0 h-[65vh] overflow-hidden opacity-20 select-none z-0">
-        <div className="grid grid-cols-3 gap-3.5 px-3 pt-3 -translate-y-4 scale-105">
-          {/* Column 1 */}
-          <div className="flex flex-col gap-3.5">
-            {POSTER_COL_1.map((drama) => (
+      {/* ── MOBILE FULL-SCREEN MOVING ICONIC K-DRAMA BACKGROUND (< 1024px) ── */}
+      {/* Fully visible background behind the centered Lock Card on mobile web and APK (60 FPS, GPU translate3d) */}
+      <div className="lg:hidden fixed inset-0 z-0 overflow-hidden pointer-events-none select-none">
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-3 px-2 h-full w-full">
+          {/* Column 1: Gliding slowly upward (38s) */}
+          <div
+            className="flex flex-col gap-2.5 sm:gap-3 animate-scroll-up will-change-transform transform-gpu"
+            style={{ animationDuration: '38s' }}
+          >
+            {DUPLICATED_COL_1.map((drama, idx) => (
               <div
-                key={`mob-col1-${drama.title}`}
-                className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-[#0c0c14] border border-white/[0.06]"
+                key={`mob-col1-${drama.title}-${idx}`}
+                className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-[#0c0c14] border border-white/[0.08] flex-shrink-0 shadow-lg"
               >
                 <SafeImage
                   src={drama.posterUrl}
                   alt={drama.title}
                   size="w342"
                   fill
+                  sizes="33vw"
                   className="object-cover"
                 />
               </div>
             ))}
           </div>
 
-          {/* Column 2 (shifted -translate-y-6) */}
-          <div className="flex flex-col gap-3.5 -translate-y-6">
-            {POSTER_COL_2.map((drama) => (
+          {/* Column 2: Staggered & gliding slowly downward (44s) */}
+          <div
+            className="flex flex-col gap-2.5 sm:gap-3 animate-scroll-down will-change-transform transform-gpu"
+            style={{ animationDuration: '44s' }}
+          >
+            {DUPLICATED_COL_2.map((drama, idx) => (
               <div
-                key={`mob-col2-${drama.title}`}
-                className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-[#0c0c14] border border-white/[0.06]"
+                key={`mob-col2-${drama.title}-${idx}`}
+                className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-[#0c0c14] border border-white/[0.08] flex-shrink-0 shadow-lg"
               >
                 <SafeImage
                   src={drama.posterUrl}
                   alt={drama.title}
                   size="w342"
                   fill
+                  sizes="33vw"
                   className="object-cover"
                 />
               </div>
             ))}
           </div>
 
-          {/* Column 3 */}
-          <div className="flex flex-col gap-3.5">
-            {POSTER_COL_3.map((drama) => (
+          {/* Column 3: Gliding slowly upward (40s) */}
+          <div
+            className="flex flex-col gap-2.5 sm:gap-3 animate-scroll-up will-change-transform transform-gpu"
+            style={{ animationDuration: '40s' }}
+          >
+            {DUPLICATED_COL_3.map((drama, idx) => (
               <div
-                key={`mob-col3-${drama.title}`}
-                className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-[#0c0c14] border border-white/[0.06]"
+                key={`mob-col3-${drama.title}-${idx}`}
+                className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-[#0c0c14] border border-white/[0.08] flex-shrink-0 shadow-lg"
               >
                 <SafeImage
                   src={drama.posterUrl}
                   alt={drama.title}
                   size="w342"
                   fill
+                  sizes="33vw"
                   className="object-cover"
                 />
               </div>
@@ -174,89 +238,98 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
           </div>
         </div>
 
-        {/* Mobile Vignette Masks: Smooth top & bottom fade into solid #050507 */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#050507]/40 via-[#050507]/75 to-[#050507] z-10" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,#050507_88%)] z-10" />
+        {/* Mobile Cinema Vignette Overlay & Ambient Radial Glow */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#050507]/75 via-[#050507]/55 to-[#050507]/95 z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(225,29,72,0.18),rgba(124,58,237,0.12)_45%,transparent_75%)] z-10 pointer-events-none" />
       </div>
 
       {/* ── MAIN 12-COLUMN SPLIT CONTAINER ── */}
       <div className="relative z-10 w-full min-h-screen grid grid-cols-1 lg:grid-cols-12 items-center max-w-[1440px] mx-auto px-5 sm:px-8 lg:px-12 py-8 lg:py-12 gap-8 lg:gap-14">
         
         {/* ── LEFT COLUMN (7 COLS / ~55% WIDTH on PC >= 1024px) ── */}
-        {/* 3-Column Staggered Drama Poster Showcase (Like Photo 1) */}
-        <div className="hidden lg:flex lg:col-span-7 flex-col justify-center relative select-none">
-          {/* Subtle ambient radial glow behind poster grid */}
+        {/* 3-Column Staggered Moving Iconic K-Drama Poster Showcase with Deep Bottom Vignette */}
+        <div className="hidden lg:flex lg:col-span-7 flex-col justify-center relative select-none h-[88vh] max-h-[920px] overflow-hidden rounded-3xl">
+          {/* Subtle ambient radial glow behind poster showcase */}
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(225,29,72,0.12),rgba(147,51,234,0.07)_50%,transparent_70%)]" />
 
-          {/* 3-Column Staggered Masonry Grid (grid-cols-3 gap-5 px-10) */}
-          <div className="relative grid grid-cols-3 gap-5 px-8 xl:px-10 py-10">
-            {/* Column 1 (2 posters) */}
-            <div className="flex flex-col gap-5">
-              {POSTER_COL_1.map((drama) => (
+          {/* 3 Continuously Gliding Poster Columns */}
+          <div className="relative grid grid-cols-3 gap-5 px-6 xl:px-8 h-full w-full overflow-hidden">
+            {/* Column 1: Gliding upward 38s linear infinite */}
+            <div
+              className="flex flex-col gap-5 animate-scroll-up will-change-transform transform-gpu"
+              style={{ animationDuration: '38s' }}
+            >
+              {DUPLICATED_COL_1.map((drama, idx) => (
                 <div
-                  key={`pc-col1-${drama.title}`}
-                  className="group relative aspect-[2/3] w-full rounded-2xl overflow-hidden border border-white/[0.08] shadow-2xl bg-[#0b0b12] transform-gpu transition-all duration-500 hover:scale-[1.02] hover:border-white/20"
+                  key={`pc-col1-${drama.title}-${idx}`}
+                  className="group relative aspect-[2/3] w-full rounded-2xl overflow-hidden border border-white/[0.08] shadow-2xl bg-[#0b0b12] transform-gpu transition-all duration-500 hover:scale-[1.02] hover:border-white/20 flex-shrink-0"
                 >
                   <SafeImage
                     src={drama.posterUrl}
                     alt={drama.title}
-                    size="w780"
+                    size="w500"
                     fill
-                    sizes="(max-width: 1440px) 20vw, 280px"
+                    sizes="20vw"
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                    priority
+                    priority={idx < 2}
                   />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050507]/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050507]/60 via-transparent to-transparent opacity-50 group-hover:opacity-30 transition-opacity" />
                 </div>
               ))}
             </div>
 
-            {/* Column 2 (Middle - shifted vertically -translate-y-8 just like Photo 1) */}
-            <div className="flex flex-col gap-5 -translate-y-8">
-              {POSTER_COL_2.map((drama) => (
+            {/* Column 2: Staggered & gliding downward 44s linear infinite */}
+            <div
+              className="flex flex-col gap-5 animate-scroll-down will-change-transform transform-gpu"
+              style={{ animationDuration: '44s' }}
+            >
+              {DUPLICATED_COL_2.map((drama, idx) => (
                 <div
-                  key={`pc-col2-${drama.title}`}
-                  className="group relative aspect-[2/3] w-full rounded-2xl overflow-hidden border border-white/[0.08] shadow-2xl bg-[#0b0b12] transform-gpu transition-all duration-500 hover:scale-[1.02] hover:border-white/20"
+                  key={`pc-col2-${drama.title}-${idx}`}
+                  className="group relative aspect-[2/3] w-full rounded-2xl overflow-hidden border border-white/[0.08] shadow-2xl bg-[#0b0b12] transform-gpu transition-all duration-500 hover:scale-[1.02] hover:border-white/20 flex-shrink-0"
                 >
                   <SafeImage
                     src={drama.posterUrl}
                     alt={drama.title}
-                    size="w780"
+                    size="w500"
                     fill
-                    sizes="(max-width: 1440px) 20vw, 280px"
+                    sizes="20vw"
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                    priority
+                    priority={idx < 2}
                   />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050507]/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050507]/60 via-transparent to-transparent opacity-50 group-hover:opacity-30 transition-opacity" />
                 </div>
               ))}
             </div>
 
-            {/* Column 3 (2 posters) */}
-            <div className="flex flex-col gap-5">
-              {POSTER_COL_3.map((drama) => (
+            {/* Column 3: Gliding upward 40s linear infinite */}
+            <div
+              className="flex flex-col gap-5 animate-scroll-up will-change-transform transform-gpu"
+              style={{ animationDuration: '40s' }}
+            >
+              {DUPLICATED_COL_3.map((drama, idx) => (
                 <div
-                  key={`pc-col3-${drama.title}`}
-                  className="group relative aspect-[2/3] w-full rounded-2xl overflow-hidden border border-white/[0.08] shadow-2xl bg-[#0b0b12] transform-gpu transition-all duration-500 hover:scale-[1.02] hover:border-white/20"
+                  key={`pc-col3-${drama.title}-${idx}`}
+                  className="group relative aspect-[2/3] w-full rounded-2xl overflow-hidden border border-white/[0.08] shadow-2xl bg-[#0b0b12] transform-gpu transition-all duration-500 hover:scale-[1.02] hover:border-white/20 flex-shrink-0"
                 >
                   <SafeImage
                     src={drama.posterUrl}
                     alt={drama.title}
-                    size="w780"
+                    size="w500"
                     fill
-                    sizes="(max-width: 1440px) 20vw, 280px"
+                    sizes="20vw"
                     className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                    priority
+                    priority={idx < 2}
                   />
-                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050507]/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#050507]/60 via-transparent to-transparent opacity-50 group-hover:opacity-30 transition-opacity" />
                 </div>
               ))}
             </div>
 
-            {/* Top Vignette Mask */}
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#050507] via-[#050507]/80 to-transparent z-10" />
-            {/* Bottom Vignette Mask */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#050507] via-[#050507]/80 to-transparent z-10" />
+            {/* Top Vignette Overlay (Like Photo 1) */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#050507] via-[#050507]/50 to-transparent z-10" />
+            {/* Deep Bottom Vignette Overlay (Fading deeply into pitch black, Like Photo 1) */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-[#050507] via-[#050507]/80 to-transparent z-10" />
             {/* Right Edge Fade towards Login Column */}
             <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#050507] to-transparent z-10" />
           </div>
