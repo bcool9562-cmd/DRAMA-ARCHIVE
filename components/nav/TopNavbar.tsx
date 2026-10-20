@@ -2,7 +2,7 @@
 
 import { Bell } from 'lucide-react'
 import { useState, useEffect } from 'react'
-import { getNotifiableDramas } from '@/lib/supabase/archive'
+import { getNotifiableDramas, onArchiveSync, getSavedDramasSync, type UserDrama } from '@/lib/supabase/archive'
 import ScenovaLogo from '@/components/brand/ScenovaLogo'
 import { haptic } from '@/lib/haptics'
 
@@ -10,19 +10,39 @@ interface TopNavbarProps {
   onLogoClick?: () => void
   onNotificationsClick: () => void
   onLockClick: () => void
+  savedDramas?: UserDrama[]
 }
 
 export default function TopNavbar({
   onLogoClick,
   onNotificationsClick,
   onLockClick,
+  savedDramas,
 }: TopNavbarProps) {
   const [notifCount, setNotifCount] = useState(0)
   const [isScrolled, setIsScrolled] = useState(false)
 
   useEffect(() => {
-    getNotifiableDramas().then((dramas) => setNotifCount(dramas.length))
-  }, [])
+    const current: UserDrama[] = savedDramas || getSavedDramasSync()
+    const hasWatching = current.some((d: UserDrama) => d.status === 'watching')
+    const hasWatchlist = current.some((d: UserDrama) => d.status === 'watchlist')
+    if (!hasWatching && !hasWatchlist) {
+      setNotifCount(0)
+    } else {
+      getNotifiableDramas(current).then((dramas) => setNotifCount(dramas.length))
+    }
+
+    const unsub = onArchiveSync((updated: UserDrama[]) => {
+      const watching = updated.some((d: UserDrama) => d.status === 'watching')
+      const watchlist = updated.some((d: UserDrama) => d.status === 'watchlist')
+      if (!watching && !watchlist) {
+        setNotifCount(0)
+      } else {
+        getNotifiableDramas(updated).then((dramas) => setNotifCount(dramas.length))
+      }
+    })
+    return () => unsub()
+  }, [savedDramas])
 
   useEffect(() => {
     function handleScroll() {

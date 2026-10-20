@@ -297,13 +297,31 @@ export async function removeDrama(dramaId: string): Promise<boolean> {
   }
 }
 
-/** Fetch dramas that need airing notifications */
-export async function getNotifiableDramas(): Promise<UserDrama[]> {
+/** Fetch dramas that need airing notifications strictly for current Watchlist & Watching */
+export async function getNotifiableDramas(currentDramas?: UserDrama[]): Promise<UserDrama[]> {
   try {
+    const active = currentDramas || getStoredCache()
+    const activeWatchingIds = new Set(
+      active.filter((d) => d.status === 'watching').map((d) => String(d.tmdb_id || d.drama_id))
+    )
+    const activeWatchlistIds = new Set(
+      active.filter((d) => d.status === 'watchlist').map((d) => String(d.tmdb_id || d.drama_id))
+    )
+
+    if (activeWatchingIds.size === 0 && activeWatchlistIds.size === 0) {
+      return []
+    }
+
     const res = await fetch('/api/airing', { cache: 'no-store' })
     if (!res.ok) return []
     const data = await res.json()
-    return Array.isArray(data) ? (data as UserDrama[]) : []
+    if (!Array.isArray(data)) return []
+
+    return data.filter(
+      (d) =>
+        (d.status === 'watching' && activeWatchingIds.has(String(d.tmdb_id || d.drama_id))) ||
+        (d.status === 'watchlist' && activeWatchlistIds.has(String(d.tmdb_id || d.drama_id)))
+    )
   } catch (err) {
     console.error('[archive] getNotifiableDramas error:', err)
     return []

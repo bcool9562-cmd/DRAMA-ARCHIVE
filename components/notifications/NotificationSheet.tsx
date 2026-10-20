@@ -1,16 +1,15 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import Image from 'next/image'
+import { useEffect, useState, useMemo } from 'react'
 import SafeImage from '@/components/ui/SafeImage'
 import { X, Sparkles, ChevronRight } from 'lucide-react'
-import type { UserDrama } from '@/lib/supabase/archive'
+import { onArchiveSync, getSavedDramasSync, type UserDrama } from '@/lib/supabase/archive'
 import { haptic } from '@/lib/haptics'
-import seedAiring from '@/data/seed_airing.json'
 
 interface NotificationSheetProps {
   onClose: () => void
   onDramaClick: (tmdbId: number) => void
+  savedDramas?: UserDrama[]
 }
 
 function formatAiringCountdown(dateStr?: string | null): { text: string; isHot: boolean } {
@@ -27,7 +26,7 @@ function formatAiringCountdown(dateStr?: string | null): { text: string; isHot: 
   if (diffDays === 1) return { text: 'Tomorrow', isHot: true }
   if (diffDays > 1 && diffDays <= 7) return { text: `In ${diffDays} Days`, isHot: true }
   if (diffDays > 7 && diffDays <= 30) return { text: `In ${diffDays} Days`, isHot: false }
-  // Never show "Xd Ago" or past badges in airing alerts
+  // Never show past badges in airing alerts
   if (diffDays < 0) return { text: 'Today', isHot: true }
 
   return {
@@ -36,29 +35,80 @@ function formatAiringCountdown(dateStr?: string | null): { text: string; isHot: 
   }
 }
 
-function getInitialAiringCache(): UserDrama[] {
+function getInitialAiringCache(currentSaved: UserDrama[]): UserDrama[] {
   if (typeof window !== 'undefined') {
     try {
       const saved = localStorage.getItem('scenova_airing_cache')
       if (saved) {
         const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Strictly filter cached alerts against current watchlist & watching dramas
+          const watchlistIds = new Set(
+            currentSaved.filter((s) => s.status === 'watchlist').map((s) => String(s.tmdb_id || s.drama_id))
+          )
+          const watchingIds = new Set(
+            currentSaved.filter((s) => s.status === 'watching').map((s) => String(s.tmdb_id || s.drama_id))
+          )
+          return parsed.filter(
+            (p) =>
+              (p.status === 'watchlist' && watchlistIds.has(String(p.tmdb_id || p.drama_id))) ||
+              (p.status === 'watching' && watchingIds.has(String(p.tmdb_id || p.drama_id)))
+          )
+        }
       }
     } catch { /* ignore */ }
   }
-  return (seedAiring as any as UserDrama[]) || []
+  return []
 }
 
-export default function NotificationSheet({ onClose, onDramaClick }: NotificationSheetProps) {
-  const [dramas, setDramas] = useState<UserDrama[]>(() => getInitialAiringCache())
-  const [loading, setLoading] = useState(dramas.length === 0)
+export default function NotificationSheet({
+  onClose,
+  onDramaClick,
+  savedDramas: propSavedDramas,
+}: NotificationSheetProps) {
+  const [liveSavedDramas, setLiveSavedDramas] = useState<UserDrama[]>(
+    () => propSavedDramas || getSavedDramasSync()
+  )
+  const [rawAlerts, setRawAlerts] = useState<UserDrama[]>(() =>
+    getInitialAiringCache(liveSavedDramas)
+  )
+  const [loading, setLoading] = useState(
+    rawAlerts.length === 0 &&
+      liveSavedDramas.some((d) => d.status === 'watchlist' || d.status === 'watching')
+  )
 
+  // Keep liveSavedDramas strictly in sync with archive mutations across all tabs
   useEffect(() => {
+    if (propSavedDramas) {
+      setLiveSavedDramas(propSavedDramas)
+    }
+    const unsub = onArchiveSync((updated) => {
+      setLiveSavedDramas(updated)
+    })
+    return () => unsub()
+  }, [propSavedDramas])
+
+  // Fetch or re-sync alerts whenever watchlist or watching list changes
+  useEffect(() => {
+    const activeWatching = liveSavedDramas.filter((d) => d.status === 'watching')
+    const activeWatchlist = liveSavedDramas.filter((d) => d.status === 'watchlist')
+
+    // If user has NO dramas in watching and NO dramas in watchlist, immediately show 0 alerts
+    if (activeWatching.length === 0 && activeWatchlist.length === 0) {
+      setRawAlerts([])
+      setLoading(false)
+      try {
+        localStorage.removeItem('scenova_airing_cache')
+      } catch { /* ignore */ }
+      return
+    }
+
+    setLoading(true)
     fetch('/api/airing')
       .then((res) => (res.ok ? res.json() : []))
       .then((data) => {
-        if (Array.isArray(data) && data.length > 0) {
-          setDramas(data)
+        if (Array.isArray(data)) {
+          setRawAlerts(data)
           try {
             localStorage.setItem('scenova_airing_cache', JSON.stringify(data))
           } catch { /* ignore */ }
@@ -66,27 +116,54 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [])
+  }, [liveSavedDramas.length])
 
-  const upcomingPremieres = dramas.filter((d) => d.status === 'watchlist')
-  const newEpisodes = dramas.filter((d) => d.status === 'watching')
+  // STRICT RULE: Only show alerts for dramas currently in Watchlist or Watching
+  const { newEpisodes, upcomingPremieres, totalAlertsCount } = useMemo(() => {
+    const activeWatchlistIds = new Set(
+      liveSavedDramas
+        .filter((d) => d.status === 'watchlist')
+        .map((d) => String(d.tmdb_id || d.drama_id))
+    )
+    const activeWatchingIds = new Set(
+      liveSavedDramas
+        .filter((d) => d.status === 'watching')
+        .map((d) => String(d.tmdb_id || d.drama_id))
+    )
+
+    const nextEps = rawAlerts.filter(
+      (d) => d.status === 'watching' && activeWatchingIds.has(String(d.tmdb_id || d.drama_id))
+    )
+    const premieres = rawAlerts.filter(
+      (d) => d.status === 'watchlist' && activeWatchlistIds.has(String(d.tmdb_id || d.drama_id))
+    )
+
+    return {
+      newEpisodes: nextEps,
+      upcomingPremieres: premieres,
+      totalAlertsCount: nextEps.length + premieres.length,
+    }
+  }, [rawAlerts, liveSavedDramas])
+
+  // Cascade stagger counter shared across sections
+  let staggerIndex = 0
 
   return (
     <div
-      className="fixed inset-0 z-[120] bg-black/75 max-md:backdrop-blur-none md:backdrop-blur-md touch-manipulation"
+      className="fixed inset-0 z-[120] bg-black/75 max-md:backdrop-blur-none md:backdrop-blur-md touch-manipulation transition-opacity duration-300"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose()
       }}
     >
-      {/* Floating 4-Corner Rounded Glass Card */}
+      {/* Floating 4-Corner Rounded Glass Card with Smooth Entrance Animation (400ms cubic-bezier(0.16, 1, 0.3, 1)) */}
       <div
-        className="fixed top-20 left-1/2 -translate-x-1/2 sm:left-auto sm:right-8 sm:translate-x-0 w-[calc(100vw-24px)] max-w-[420px] max-h-[80vh] flex flex-col overflow-hidden rounded-[28px] bg-[#101018]/90 max-md:backdrop-blur-none md:backdrop-blur-3xl border border-white/[0.18] shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_24px_60px_rgba(0,0,0,0.85)] z-[125]"
+        className="fixed top-20 left-1/2 -translate-x-1/2 sm:left-auto sm:right-8 sm:translate-x-0 w-[calc(100vw-24px)] max-w-[420px] max-h-[80vh] flex flex-col overflow-hidden rounded-[28px] bg-[#101018]/90 max-md:backdrop-blur-none md:backdrop-blur-3xl border border-white/[0.18] shadow-[inset_0_1px_1px_rgba(255,255,255,0.35),0_24px_60px_rgba(0,0,0,0.85)] z-[125] animate-alerts-entrance max-sm:origin-top sm:origin-top-right"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Living Flow ambient light header glow */}
         <div className="pointer-events-none absolute -top-20 inset-x-0 h-48 bg-[radial-gradient(ellipse_at_top,rgba(168,85,247,0.35),rgba(244,63,94,0.18)_50%,transparent_80%)]" />
 
-        {/* Clean Header Row: Title + Close Button (No Toggle / No Test Buttons) */}
+        {/* Clean Header Row: Title + Close Button */}
         <div className="relative z-10 px-5 pt-4 pb-4 border-b border-white/[0.10] flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <h2 className="text-[18px] sm:text-[20px] font-bold tracking-tight text-white flex items-baseline">
@@ -97,6 +174,7 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
 
           {/* Close button */}
           <button
+            type="button"
             onClick={() => {
               haptic.light()
               onClose()
@@ -111,7 +189,7 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
         {/* Subtitle Bar */}
         <div className="relative z-10 px-5 py-2 bg-white/[0.02] border-b border-white/[0.06] flex items-center justify-between text-[11px] text-white/45">
           <span>Track upcoming episodes & series premieres</span>
-          <span className="font-semibold text-white/60">{dramas.length} alerts</span>
+          <span className="font-semibold text-white/60">{totalAlertsCount} alerts</span>
         </div>
 
         {/* Content list */}
@@ -125,7 +203,7 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                 />
               ))}
             </div>
-          ) : dramas.length === 0 ? (
+          ) : totalAlertsCount === 0 ? (
             <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3.5 text-center px-4">
               <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-white/[0.06] border border-white/[0.12] shadow-lg shadow-purple-900/20">
                 <Sparkles size={26} className="text-purple-300" />
@@ -139,7 +217,7 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
             </div>
           ) : (
             <div className="space-y-6">
-              {/* 1. Next Episodes (Ongoing Dramas) */}
+              {/* 1. Next Episodes (Ongoing Watching Dramas) */}
               {newEpisodes.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
@@ -151,24 +229,26 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                   <div className="space-y-2.5">
                     {newEpisodes.map((d) => {
                       const countdown = formatAiringCountdown(d.next_episode_date)
+                      const itemDelay = `${staggerIndex++ * 35}ms`
                       return (
                         <div
-                          key={d.drama_id}
+                          key={`watching-${d.drama_id}`}
                           onClick={() => {
                             haptic.light()
                             onDramaClick(d.tmdb_id)
                           }}
+                          style={{ animationDelay: itemDelay }}
                           className="
-                            relative overflow-hidden rounded-[22px] bg-white/[0.06] hover:bg-white/[0.10]
+                            animate-alert-row relative overflow-hidden rounded-[22px] bg-white/[0.06] hover:bg-white/[0.10]
                             max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/[0.14] p-3 flex items-center justify-between gap-3.5
                             shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.35)]
                             transition-all duration-250 active:scale-[0.98] cursor-pointer group
                           "
                         >
                           {/* Directional Living Flow edge glow */}
-                          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_50%,rgba(139,92,246,0.28),transparent_65%)]" />
+                          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_50%,rgba(168,85,247,0.28),transparent_65%)]" />
 
-                          {/* Left: Poster + Title + Episode label */}
+                          {/* Left: Poster + Title + Episode badge */}
                           <div className="relative z-10 flex items-center gap-3 min-w-0">
                             <div className="relative h-16 w-12 flex-shrink-0 overflow-hidden rounded-[12px] bg-[#14141e] shadow-md border border-white/[0.12]">
                               <SafeImage
@@ -193,7 +273,7 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                               )}
                               <div className="mt-1 flex items-center gap-2">
                                 <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/20 border border-purple-400/30 px-2 py-0.5 text-[10px] font-bold text-purple-200">
-                                  Ep {d.next_episode_number || 'Next'}
+                                  Episode {d.next_episode_number || d.watched_episodes || 1}
                                 </span>
                               </div>
                             </div>
@@ -213,7 +293,10 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                             >
                               {countdown.text}
                             </span>
-                            <ChevronRight size={15} className="text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition" />
+                            <ChevronRight
+                              size={15}
+                              className="text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition"
+                            />
                           </div>
                         </div>
                       )
@@ -222,7 +305,7 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                 </div>
               )}
 
-              {/* 2. Upcoming Premieres (Watchlist) */}
+              {/* 2. Upcoming Premieres (Watchlist Dramas) */}
               {upcomingPremieres.length > 0 && (
                 <div>
                   <div className="flex items-center gap-2 mb-3">
@@ -234,15 +317,17 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                   <div className="space-y-2.5">
                     {upcomingPremieres.map((d) => {
                       const countdown = formatAiringCountdown(d.first_air_date)
+                      const itemDelay = `${staggerIndex++ * 35}ms`
                       return (
                         <div
-                          key={d.drama_id}
+                          key={`watchlist-${d.drama_id}`}
                           onClick={() => {
                             haptic.light()
                             onDramaClick(d.tmdb_id)
                           }}
+                          style={{ animationDelay: itemDelay }}
                           className="
-                            relative overflow-hidden rounded-[22px] bg-white/[0.06] hover:bg-white/[0.10]
+                            animate-alert-row relative overflow-hidden rounded-[22px] bg-white/[0.06] hover:bg-white/[0.10]
                             max-md:backdrop-blur-none md:backdrop-blur-xl border border-white/[0.14] p-3 flex items-center justify-between gap-3.5
                             shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_8px_20px_rgba(0,0,0,0.35)]
                             transition-all duration-250 active:scale-[0.98] cursor-pointer group
@@ -296,7 +381,10 @@ export default function NotificationSheet({ onClose, onDramaClick }: Notificatio
                             >
                               {countdown.text}
                             </span>
-                            <ChevronRight size={15} className="text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition" />
+                            <ChevronRight
+                              size={15}
+                              className="text-white/40 group-hover:text-white group-hover:translate-x-0.5 transition"
+                            />
                           </div>
                         </div>
                       )

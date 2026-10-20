@@ -326,6 +326,7 @@ export default function AppShell() {
         }}
         onNotificationsClick={() => setShowNotifications(true)}
         onLockClick={handleLock}
+        savedDramas={savedDramas}
       />
 
       {/* Main content — paused/hidden only on mobile when modal is open so phone GPU does NOT render background elements, but visible on PC for genuine Gaussian blur */}
@@ -381,6 +382,7 @@ export default function AppShell() {
             setShowNotifications(false)
             openDrama(tmdbId)
           }}
+          savedDramas={savedDramas}
         />
       )}
 
