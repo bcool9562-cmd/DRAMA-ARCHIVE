@@ -190,6 +190,9 @@ export async function addDrama(
       body: JSON.stringify(fullDrama),
       cache: 'no-store',
     })
+    if (res.ok) {
+      getUserDramas().catch(() => {})
+    }
     return res.ok
   } catch (err: any) {
     console.warn('[archive] addDrama network notice, retained in local cache:', err)
@@ -231,6 +234,9 @@ export async function moveDrama(dramaId: string, newStatus: DramaStatus): Promis
       body: JSON.stringify({ drama_id: dramaId, status: newStatus }),
       cache: 'no-store',
     })
+    if (res.ok) {
+      getUserDramas().catch(() => {})
+    }
     return res.ok
   } catch (err) {
     console.warn('[archive] moveDrama network notice, retained in local cache:', err)
@@ -290,6 +296,9 @@ export async function removeDrama(dramaId: string): Promise<boolean> {
       method: 'DELETE',
       cache: 'no-store',
     })
+    if (res.ok) {
+      getUserDramas().catch(() => {})
+    }
     return res.ok
   } catch (err) {
     console.warn('[archive] removeDrama network notice:', err)
