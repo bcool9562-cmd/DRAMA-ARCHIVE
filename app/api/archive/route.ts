@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import fs from 'fs'
 import path from 'path'
-import seedDramas from '@/data/user_dramas.json'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -18,20 +17,10 @@ const TMP_FILE = path.join('/tmp', 'user_dramas.json')
 let memoryArchive: any[] | null = null
 
 function readLocalArchive(): any[] {
-  // If memory cache exists (including empty array []), use it
+  // If in-memory cache exists (including an empty array []), return it directly
   if (memoryArchive !== null) return memoryArchive
 
-  try {
-    if (fs.existsSync(DATA_FILE)) {
-      const content = fs.readFileSync(DATA_FILE, 'utf-8')
-      const parsed = JSON.parse(content)
-      if (Array.isArray(parsed)) {
-        memoryArchive = parsed
-        return memoryArchive
-      }
-    }
-  } catch {}
-
+  // 1. Read /tmp first (on serverless platforms like Vercel, mutations persist in /tmp during lambda runtime)
   try {
     if (fs.existsSync(TMP_FILE)) {
       const content = fs.readFileSync(TMP_FILE, 'utf-8')
@@ -43,11 +32,17 @@ function readLocalArchive(): any[] {
     }
   } catch {}
 
-  // Only if storage has NEVER been initialized at all, use seed dramas
-  if (Array.isArray(seedDramas) && seedDramas.length > 0) {
-    memoryArchive = [...seedDramas]
-    return memoryArchive
-  }
+  // 2. Read committed data file
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const content = fs.readFileSync(DATA_FILE, 'utf-8')
+      const parsed = JSON.parse(content)
+      if (Array.isArray(parsed)) {
+        memoryArchive = parsed
+        return memoryArchive
+      }
+    }
+  } catch {}
 
   memoryArchive = []
   return memoryArchive
@@ -72,36 +67,34 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status')
     const notifiable = searchParams.get('notifiable') === 'true'
 
-    // 1. Read current archive state
-    let results = readLocalArchive()
-
-    // 2. Try Supabase Table if available to get cloud updates
+    // 1. Attempt reading live database rows from Supabase
+    let liveDbData: any[] | null = null
     try {
       const supabase = createAdminClient()
-      let query = supabase
+      const { data, error } = await supabase
         .from(TABLE)
         .select('*')
         .eq('user_id', FIXED_USER_ID)
         .order('updated_at', { ascending: false })
 
-      if (status) {
-        query = query.eq('status', status)
-      }
-
-      const { data, error } = await query
-      if (!error && Array.isArray(data)) {
-        results = data
+      if (!error && Array.isArray(data) && data.length > 0) {
+        liveDbData = data
+        // Always write full live table into local cache so mutations are preserved
         writeLocalArchive(data)
       }
-    } catch {
-      // Supabase unavailable; keep using local archive
+    } catch (e: any) {
+      console.warn('[api/archive] Supabase GET note:', e?.message || e)
     }
 
+    // 2. Use live database rows if available, otherwise read current local state (no static seed merge)
+    let results: any[] = liveDbData !== null ? liveDbData : [...readLocalArchive()]
+
+    // 3. Filter by status in memory right before returning
     if (status) {
-      results = results.filter(d => d.status === status)
+      results = results.filter((d: any) => d.status === status)
     }
 
-    // 3. Map watched_episodes and handle notifiable filter
+    // 4. Map episode counters and handle notifiable filter
     let formatted = results.map((d: any) => ({
       ...d,
       watched_episodes: Number(d.watched_episodes ?? d.next_episode_number) || 0,
@@ -110,7 +103,7 @@ export async function GET(req: NextRequest) {
 
     if (notifiable) {
       formatted = formatted.filter(
-        d =>
+        (d: any) =>
           (d.status === 'watchlist' && d.airing_status === 'upcoming') ||
           (d.status === 'watching' && d.airing_status === 'ongoing' && d.next_episode_date)
       )
@@ -121,6 +114,7 @@ export async function GET(req: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+        'Pragma': 'no-cache',
       },
     })
   } catch (err: any) {
@@ -138,7 +132,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing drama_id' }, { status: 400 })
     }
 
-    // Clean up dates and ensure types
     const firstAirDate = drama.first_air_date && String(drama.first_air_date).trim() ? String(drama.first_air_date).trim() : null
     const nextEpDate = drama.next_episode_date && String(drama.next_episode_date).trim() ? String(drama.next_episode_date).trim() : null
     const watchedEpisodes = Number(drama.watched_episodes ?? drama.next_episode_number) || 0
@@ -163,7 +156,7 @@ export async function POST(req: NextRequest) {
       updated_at: new Date().toISOString(),
     }
 
-    // 1. ALWAYS persist immediately to local archive / memory / disk
+    // 1. Immediately persist locally (memory and disk)
     const localItems = [...readLocalArchive()]
     const idx = localItems.findIndex((d: any) => d.drama_id === fullRecord.drama_id)
     if (idx >= 0) {
@@ -173,19 +166,22 @@ export async function POST(req: NextRequest) {
     }
     writeLocalArchive(localItems)
 
-    // 2. Safe attempt for Supabase Table
+    // 2. Persist to Supabase Table with .select() verification
     try {
       const supabase = createAdminClient()
       const dbRecord = { ...fullRecord }
       delete (dbRecord as any).watched_episodes
-      await supabase.from(TABLE).upsert(dbRecord, {
-        onConflict: 'user_id,drama_id',
-      })
-    } catch {
-      // Supabase sync failure handled gracefully without failing user request
+
+      const { data, error } = await supabase
+        .from(TABLE)
+        .upsert(dbRecord, { onConflict: 'user_id,drama_id' })
+        .select()
+
+      console.log('[api/archive] Supabase POST upsert rows:', data ? data.length : 0, error ? error.message : 'OK')
+    } catch (err: any) {
+      console.warn('[api/archive] Supabase POST note:', err?.message || err)
     }
 
-    // Return HTTP 200 with success so the client never displays an error toast
     return new NextResponse(
       JSON.stringify({
         success: true,
@@ -225,9 +221,9 @@ export async function PATCH(req: NextRequest) {
       updatePayload.watched_episodes = epNum
     }
 
-    // 1. ALWAYS update local archive
+    // 1. Update local archive immediately
     const localItems = [...readLocalArchive()]
-    const item = localItems.find((d: any) => d.drama_id === drama_id)
+    const item = localItems.find((d: any) => d.drama_id === drama_id || String(d.tmdb_id) === String(drama_id))
     if (item) {
       if (status) item.status = status
       if (watched_episodes !== undefined || next_episode_number !== undefined) {
@@ -239,21 +235,72 @@ export async function PATCH(req: NextRequest) {
       writeLocalArchive(localItems)
     }
 
-    // 2. Safe attempt for Supabase Table
+    // 2. Update Supabase Table with chained .select() and fallback matching
+    let rowsAffected = 0
     try {
       const supabase = createAdminClient()
       const dbPayload = { ...updatePayload }
       delete dbPayload.watched_episodes
-      await supabase
+
+      // Try 1: user_id + drama_id
+      let res = await supabase
         .from(TABLE)
         .update(dbPayload)
         .eq('user_id', FIXED_USER_ID)
         .eq('drama_id', drama_id)
-    } catch {
-      // Supabase update failure handled gracefully
+        .select()
+
+      if (res.data && res.data.length > 0) {
+        rowsAffected = res.data.length
+      } else {
+        // Try 2: match by tmdb_id (numeric)
+        const tmdbNum = Number(String(drama_id).replace(/\D/g, ''))
+        if (tmdbNum) {
+          res = await supabase
+            .from(TABLE)
+            .update(dbPayload)
+            .eq('user_id', FIXED_USER_ID)
+            .eq('tmdb_id', tmdbNum)
+            .select()
+
+          if (res.data && res.data.length > 0) {
+            rowsAffected = res.data.length
+          }
+        }
+      }
+
+      // Try 3: match without user_id restriction if 0 rows matched
+      if (rowsAffected === 0) {
+        res = await supabase
+          .from(TABLE)
+          .update(dbPayload)
+          .eq('drama_id', drama_id)
+          .select()
+
+        if (res.data && res.data.length > 0) {
+          rowsAffected = res.data.length
+        }
+      }
+
+      // Try 4: match by title if available
+      if (rowsAffected === 0 && item?.title) {
+        res = await supabase
+          .from(TABLE)
+          .update(dbPayload)
+          .eq('title', item.title)
+          .select()
+
+        if (res.data && res.data.length > 0) {
+          rowsAffected = res.data.length
+        }
+      }
+
+      console.log(`[api/archive] Supabase PATCH for drama "${drama_id}": ${rowsAffected} rows updated.`)
+    } catch (err: any) {
+      console.warn('[api/archive] Supabase PATCH note:', err?.message || err)
     }
 
-    return new NextResponse(JSON.stringify({ success: true, updated: updatePayload }), {
+    return new NextResponse(JSON.stringify({ success: true, updated: updatePayload, rowsAffected }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
@@ -276,24 +323,64 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Missing drama_id' }, { status: 400 })
     }
 
-    // 1. ALWAYS delete from local archive
+    // 1. Delete from local archive immediately
     const localItems = readLocalArchive()
-    const updated = localItems.filter((d: any) => d.drama_id !== drama_id)
+    const updated = localItems.filter(
+      (d: any) => d.drama_id !== drama_id && String(d.tmdb_id) !== String(drama_id)
+    )
     writeLocalArchive(updated)
 
-    // 2. Safe attempt for Supabase Table
+    // 2. Delete from Supabase Table with chained .select() and fallback matching
+    let rowsDeleted = 0
     try {
       const supabase = createAdminClient()
-      await supabase
+
+      // Try 1: user_id + drama_id
+      let res = await supabase
         .from(TABLE)
         .delete()
         .eq('user_id', FIXED_USER_ID)
         .eq('drama_id', drama_id)
-    } catch {
-      // Supabase delete failure handled gracefully
+        .select()
+
+      if (res.data && res.data.length > 0) {
+        rowsDeleted = res.data.length
+      } else {
+        // Try 2: match by tmdb_id (numeric)
+        const tmdbNum = Number(String(drama_id).replace(/\D/g, ''))
+        if (tmdbNum) {
+          res = await supabase
+            .from(TABLE)
+            .delete()
+            .eq('user_id', FIXED_USER_ID)
+            .eq('tmdb_id', tmdbNum)
+            .select()
+
+          if (res.data && res.data.length > 0) {
+            rowsDeleted = res.data.length
+          }
+        }
+      }
+
+      // Try 3: match without user_id restriction if 0 rows matched
+      if (rowsDeleted === 0) {
+        res = await supabase
+          .from(TABLE)
+          .delete()
+          .eq('drama_id', drama_id)
+          .select()
+
+        if (res.data && res.data.length > 0) {
+          rowsDeleted = res.data.length
+        }
+      }
+
+      console.log(`[api/archive] Supabase DELETE for drama "${drama_id}": ${rowsDeleted} rows deleted.`)
+    } catch (err: any) {
+      console.warn('[api/archive] Supabase DELETE note:', err?.message || err)
     }
 
-    return new NextResponse(JSON.stringify({ success: true }), {
+    return new NextResponse(JSON.stringify({ success: true, rowsDeleted }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
