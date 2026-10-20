@@ -9,8 +9,6 @@ export const revalidate = 0
 
 export const FIXED_USER_ID = '00000000-0000-0000-0000-000000000001'
 const TABLE = 'user_dramas_v2'
-const STORAGE_BUCKET = 'drama_archive'
-const STORAGE_FILE = 'user_dramas.json'
 
 // Local persistent & in-memory store
 const DATA_DIR = path.join(process.cwd(), 'data')
@@ -20,32 +18,39 @@ const TMP_FILE = path.join('/tmp', 'user_dramas.json')
 let memoryArchive: any[] | null = null
 
 function readLocalArchive(): any[] {
-  if (memoryArchive && memoryArchive.length > 0) return memoryArchive
+  // If memory cache exists (including empty array []), use it
+  if (memoryArchive !== null) return memoryArchive
+
   try {
     if (fs.existsSync(DATA_FILE)) {
       const content = fs.readFileSync(DATA_FILE, 'utf-8')
       const parsed = JSON.parse(content)
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         memoryArchive = parsed
-        return parsed
+        return memoryArchive
       }
     }
   } catch {}
+
   try {
     if (fs.existsSync(TMP_FILE)) {
       const content = fs.readFileSync(TMP_FILE, 'utf-8')
       const parsed = JSON.parse(content)
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         memoryArchive = parsed
-        return parsed
+        return memoryArchive
       }
     }
   } catch {}
+
+  // Only if storage has NEVER been initialized at all, use seed dramas
   if (Array.isArray(seedDramas) && seedDramas.length > 0) {
     memoryArchive = [...seedDramas]
     return memoryArchive
   }
-  return memoryArchive || []
+
+  memoryArchive = []
+  return memoryArchive
 }
 
 function writeLocalArchive(items: any[]) {
@@ -59,35 +64,6 @@ function writeLocalArchive(items: any[]) {
   } catch {}
 }
 
-// ── Supabase Storage Cloud Sync Helpers ─────────────────────────────────────
-
-async function readFromStorage(supabase: ReturnType<typeof createAdminClient>): Promise<any[]> {
-  try {
-    const { data, error } = await supabase.storage.from(STORAGE_BUCKET).download(STORAGE_FILE)
-    if (!error && data) {
-      const text = await data.text()
-      const parsed = JSON.parse(text)
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed
-    }
-  } catch (e) {
-    // Cloud storage read fallback
-  }
-  return readLocalArchive()
-}
-
-async function writeToStorage(supabase: ReturnType<typeof createAdminClient>, items: any[]): Promise<boolean> {
-  try {
-    const content = JSON.stringify(items, null, 2)
-    const { error } = await supabase.storage.from(STORAGE_BUCKET).upload(STORAGE_FILE, content, {
-      contentType: 'application/json',
-      upsert: true,
-    })
-    return !error
-  } catch {
-    return false
-  }
-}
-
 // ── GET: Read all dramas for the single profile ─────────────────────────────
 
 export async function GET(req: NextRequest) {
@@ -96,10 +72,10 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status')
     const notifiable = searchParams.get('notifiable') === 'true'
 
-    // 1. Try local archive first for instant response
+    // 1. Read current archive state
     let results = readLocalArchive()
 
-    // 2. Try Supabase Table if available to get any server-synced updates
+    // 2. Try Supabase Table if available to get cloud updates
     try {
       const supabase = createAdminClient()
       let query = supabase
@@ -113,16 +89,9 @@ export async function GET(req: NextRequest) {
       }
 
       const { data, error } = await query
-      if (!error && data && data.length > 0) {
+      if (!error && Array.isArray(data)) {
         results = data
         writeLocalArchive(data)
-      } else if (results.length === 0) {
-        // Fallback to storage
-        const storageData = await readFromStorage(supabase)
-        if (storageData && storageData.length > 0) {
-          results = storageData
-          writeLocalArchive(storageData)
-        }
       }
     } catch {
       // Supabase unavailable; keep using local archive
@@ -195,7 +164,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. ALWAYS persist immediately to local archive / memory / disk
-    const localItems = readLocalArchive()
+    const localItems = [...readLocalArchive()]
     const idx = localItems.findIndex((d: any) => d.drama_id === fullRecord.drama_id)
     if (idx >= 0) {
       localItems[idx] = fullRecord
@@ -204,19 +173,14 @@ export async function POST(req: NextRequest) {
     }
     writeLocalArchive(localItems)
 
-    // 2. Safe background attempt for Supabase Table & Cloud Storage
-    let tableSaved = false
+    // 2. Safe attempt for Supabase Table
     try {
       const supabase = createAdminClient()
       const dbRecord = { ...fullRecord }
       delete (dbRecord as any).watched_episodes
-      const { error: fullErr } = await supabase.from(TABLE).upsert(dbRecord, {
+      await supabase.from(TABLE).upsert(dbRecord, {
         onConflict: 'user_id,drama_id',
       })
-      if (!fullErr) {
-        tableSaved = true
-      }
-      await writeToStorage(supabase, localItems)
     } catch {
       // Supabase sync failure handled gracefully without failing user request
     }
@@ -226,7 +190,6 @@ export async function POST(req: NextRequest) {
       JSON.stringify({
         success: true,
         drama: fullRecord,
-        storage: tableSaved ? 'table+local' : 'local',
       }),
       {
         status: 200,
@@ -263,7 +226,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     // 1. ALWAYS update local archive
-    const localItems = readLocalArchive()
+    const localItems = [...readLocalArchive()]
     const item = localItems.find((d: any) => d.drama_id === drama_id)
     if (item) {
       if (status) item.status = status
@@ -276,7 +239,7 @@ export async function PATCH(req: NextRequest) {
       writeLocalArchive(localItems)
     }
 
-    // 2. Safe background attempt for Supabase Table and Storage sync
+    // 2. Safe attempt for Supabase Table
     try {
       const supabase = createAdminClient()
       const dbPayload = { ...updatePayload }
@@ -286,8 +249,6 @@ export async function PATCH(req: NextRequest) {
         .update(dbPayload)
         .eq('user_id', FIXED_USER_ID)
         .eq('drama_id', drama_id)
-
-      await writeToStorage(supabase, localItems)
     } catch {
       // Supabase update failure handled gracefully
     }
@@ -320,7 +281,7 @@ export async function DELETE(req: NextRequest) {
     const updated = localItems.filter((d: any) => d.drama_id !== drama_id)
     writeLocalArchive(updated)
 
-    // 2. Safe background attempt for Supabase Table and Storage
+    // 2. Safe attempt for Supabase Table
     try {
       const supabase = createAdminClient()
       await supabase
@@ -328,8 +289,6 @@ export async function DELETE(req: NextRequest) {
         .delete()
         .eq('user_id', FIXED_USER_ID)
         .eq('drama_id', drama_id)
-
-      await writeToStorage(supabase, updated)
     } catch {
       // Supabase delete failure handled gracefully
     }

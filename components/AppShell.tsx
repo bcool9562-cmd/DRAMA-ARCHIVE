@@ -12,7 +12,7 @@ import FinishedTab from '@/components/tabs/FinishedTab'
 import NotificationSheet from '@/components/notifications/NotificationSheet'
 import NavStackModal, { type StackItem } from '@/components/nav/NavStackModal'
 import ToastContainer from '@/components/Toast'
-import { getSavedDramasSync, onArchiveSync, type UserDrama } from '@/lib/supabase/archive'
+import { getSavedDramasSync, onArchiveSync, fetchArchive, type UserDrama } from '@/lib/supabase/archive'
 
 const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect
 
@@ -45,12 +45,22 @@ export default function AppShell() {
   useIsomorphicLayoutEffect(() => {
     try {
       const pin = localStorage.getItem('scenova_pin')
+      const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
+      const isSessionUnlocked =
+        typeof window !== 'undefined' &&
+        sessionStorage.getItem('scenova_unlocked_session') === 'true'
+
       if (pin) {
-        // If a pin is configured, fresh app launch or reload MUST start locked
-        setIsLocked(true)
-        try {
-          sessionStorage.removeItem('scenova_unlocked_session')
-        } catch { /* ignore */ }
+        if (isDesktop && isSessionUnlocked) {
+          // On PC, keep unlocked during the active browser session across tab switching & reloads!
+          setIsLocked(false)
+        } else {
+          // Fresh browser session without unlocked token or locked mobile: start locked
+          setIsLocked(true)
+          try {
+            sessionStorage.removeItem('scenova_unlocked_session')
+          } catch { /* ignore */ }
+        }
       } else {
         // No pin configured yet
         setIsLocked(false)
@@ -61,21 +71,29 @@ export default function AppShell() {
     setIsLockChecked(true)
   }, [])
 
-  // Auto-lock whenever app is backgrounded, closed, or visibility changes
+  // Auto-lock whenever app is backgrounded on mobile, or user explicitly locks
   useEffect(() => {
     function handleLockOnBackground() {
-      if (typeof window !== 'undefined' && localStorage.getItem('scenova_pin')) {
-        if (document.visibilityState === 'hidden') {
-          setIsLocked(true)
-          try {
-            sessionStorage.removeItem('scenova_unlocked_session')
-          } catch { /* ignore */ }
-        }
+      if (typeof window === 'undefined') return
+      const isDesktop = window.innerWidth >= 768
+      // On desktop PC (>= 768px), NEVER auto-lock when switching browser tabs (e.g. YouTube)!
+      if (isDesktop) return
+
+      if (localStorage.getItem('scenova_pin') && document.visibilityState === 'hidden') {
+        setIsLocked(true)
+        try {
+          sessionStorage.removeItem('scenova_unlocked_session')
+        } catch { /* ignore */ }
       }
     }
 
     function handlePageHide() {
-      if (typeof window !== 'undefined' && localStorage.getItem('scenova_pin')) {
+      if (typeof window === 'undefined') return
+      const isDesktop = window.innerWidth >= 768
+      // On desktop PC, preserve session so reload/intra-session tab remains unlocked
+      if (isDesktop) return
+
+      if (localStorage.getItem('scenova_pin')) {
         setIsLocked(true)
         try {
           sessionStorage.removeItem('scenova_unlocked_session')
@@ -85,11 +103,32 @@ export default function AppShell() {
 
     document.addEventListener('visibilitychange', handleLockOnBackground)
     window.addEventListener('pagehide', handlePageHide)
-    window.addEventListener('beforeunload', handlePageHide)
     return () => {
       document.removeEventListener('visibilitychange', handleLockOnBackground)
       window.removeEventListener('pagehide', handlePageHide)
-      window.removeEventListener('beforeunload', handlePageHide)
+    }
+  }, [])
+
+  // 100% Real-Time Cloud Sync: Re-fetch cloud archive whenever window gains focus or becomes visible
+  useEffect(() => {
+    // Initial fetch on mount to sync with cloud immediately
+    fetchArchive().catch(() => {})
+
+    function handleCloudSync() {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        fetchArchive().catch(() => {})
+      }
+    }
+
+    function handleFocusSync() {
+      fetchArchive().catch(() => {})
+    }
+
+    window.addEventListener('focus', handleFocusSync)
+    document.addEventListener('visibilitychange', handleCloudSync)
+    return () => {
+      window.removeEventListener('focus', handleFocusSync)
+      document.removeEventListener('visibilitychange', handleCloudSync)
     }
   }, [])
 
