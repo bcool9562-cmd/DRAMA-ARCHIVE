@@ -244,17 +244,17 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
       </div>
 
       {/* ── PC LEFT-SIDE ICONIC K-DRAMA POSTER SHOWCASE (lg: / >= 1024px) ── */}
-      {/* Exact left-half container: w-[47%] max-w-[680px] h-screen pl-6 pr-2, top edge bleed, bottom-only vignette */}
-      <div className="hidden lg:block w-[47%] max-w-[680px] h-screen overflow-hidden pl-6 pr-2 relative select-none flex-shrink-0">
+      {/* Shifted inward lg:pl-12 xl:pl-16 pr-4, w-[50%] max-w-[780px], gap-6, larger posters like Photo 1 */}
+      <div className="hidden lg:block w-[50%] max-w-[780px] h-screen overflow-hidden lg:pl-12 xl:pl-16 pr-4 relative select-none flex-shrink-0">
         {/* Subtle ambient radial glow behind poster showcase */}
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(225,29,72,0.10),rgba(147,51,234,0.06)_50%,transparent_70%)]" />
 
-        {/* 3 Equal Columns with 20px Gap (grid grid-cols-3 gap-5) */}
-        <div className="grid grid-cols-3 gap-5 h-full w-full">
-          {/* Column 1 (Left): Scrolls upward at 45s linear infinite */}
+        {/* 3 Equal Columns with 24px Gap (grid grid-cols-3 gap-6) */}
+        <div className="grid grid-cols-3 gap-6 h-full w-full">
+          {/* Column 1 (Left): Scrolls UP at 42s linear infinite */}
           <div
-            className="flex flex-col gap-5 animate-scroll-up will-change-transform transform-gpu"
-            style={{ animationDuration: '45s' }}
+            className="flex flex-col gap-6 animate-scroll-up will-change-transform transform-gpu"
+            style={{ animationDuration: '42s' }}
           >
             {DUPLICATED_COL_1.map((drama, idx) => (
               <div
@@ -266,7 +266,7 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
                   alt={drama.title}
                   size="w500"
                   fill
-                  sizes="(max-width: 1440px) 220px, 250px"
+                  sizes="(max-width: 1440px) 240px, 260px"
                   className="object-cover"
                   priority={idx < 3}
                 />
@@ -274,10 +274,10 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
             ))}
           </div>
 
-          {/* Column 2 (Middle): Offset vertically by half a poster height (-mt-36), scrolls upward at 45s linear infinite */}
+          {/* Column 2 (Middle): Scrolls DOWN at 42s linear infinite (alternating direction like Explore wall) */}
           <div
-            className="flex flex-col gap-5 -mt-36 animate-scroll-up will-change-transform transform-gpu"
-            style={{ animationDuration: '45s' }}
+            className="flex flex-col gap-6 animate-scroll-down will-change-transform transform-gpu"
+            style={{ animationDuration: '42s' }}
           >
             {DUPLICATED_COL_2.map((drama, idx) => (
               <div
@@ -289,7 +289,7 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
                   alt={drama.title}
                   size="w500"
                   fill
-                  sizes="(max-width: 1440px) 220px, 250px"
+                  sizes="(max-width: 1440px) 240px, 260px"
                   className="object-cover"
                   priority={idx < 3}
                 />
@@ -297,10 +297,10 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
             ))}
           </div>
 
-          {/* Column 3 (Right): Aligned with Column 1 at exact same vertical phase, scrolls upward at 45s linear infinite */}
+          {/* Column 3 (Right): Scrolls UP at 42s linear infinite */}
           <div
-            className="flex flex-col gap-5 animate-scroll-up will-change-transform transform-gpu"
-            style={{ animationDuration: '45s' }}
+            className="flex flex-col gap-6 animate-scroll-up will-change-transform transform-gpu"
+            style={{ animationDuration: '42s' }}
           >
             {DUPLICATED_COL_3.map((drama, idx) => (
               <div
@@ -312,7 +312,7 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
                   alt={drama.title}
                   size="w500"
                   fill
-                  sizes="(max-width: 1440px) 220px, 250px"
+                  sizes="(max-width: 1440px) 240px, 260px"
                   className="object-cover"
                   priority={idx < 3}
                 />
@@ -326,8 +326,8 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
       </div>
 
       {/* ── RIGHT COLUMN (LOGIN AREA) ── */}
-      {/* Kept in exact current design, size, and position on the right half of the screen */}
-      <div className="w-full lg:flex-1 flex flex-col items-center justify-center relative z-20 min-h-screen px-4 py-8 lg:py-0">
+      {/* Kept in exact current design, size, and shifted slightly upward on PC via lg:-translate-y-8 */}
+      <div className="w-full lg:flex-1 flex flex-col items-center justify-center relative z-20 min-h-screen px-4 py-8 lg:py-0 lg:-translate-y-8">
         
         {/* Top Brand Header (Cleanly above the card on PC, like Photo 1) */}
         <div className="hidden lg:flex items-center gap-3.5 mb-7 select-none">
