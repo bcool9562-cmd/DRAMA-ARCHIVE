@@ -10,92 +10,112 @@ export interface AuthScreenProps {
   onAuthenticated: () => void
 }
 
-// 18 Iconic K-Dramas (Strictly East Asian Masterpieces with 100% verified TMDB posters)
-const ICONIC_KDRAMAS_COL_1 = [
-  {
-    title: 'Vincenzo',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/qbkSS1cTjT4DzIwD44bdhTuYgdT.jpg',
-  },
-  {
-    title: 'Crash Landing on You',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/fgBNLPr6mC8pxuR79ENAJY4nBmj.jpg',
-  },
-  {
-    title: 'Guardian: The Lonely and Great God',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/sPkxHNw5BFvuCFGWw825TS7n6X3.jpg',
-  },
-  {
-    title: 'Lovely Runner',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/adcdNzLJ8LOjWJjNFrapXGzFco3.jpg',
-  },
-  {
-    title: 'The Glory',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/uUM4LVlPgIrww07OoEKrGWlS1Ej.jpg',
-  },
-  {
-    title: 'Descendants of the Sun',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/xxGomfml0x9iyPBS4StBjbRRu65.jpg',
-  },
+// 32 curated East Asian drama posters — strictly K-Drama / C-Drama / J-Drama
+// All at w342 for fast loading; split across 3 columns for the scrolling wall.
+const POSTERS_COL_1 = [
+  { title: 'Vincenzo', posterUrl: 'https://image.tmdb.org/t/p/w342/qbkSS1cTjT4DzIwD44bdhTuYgdT.jpg' },
+  { title: 'Crash Landing on You', posterUrl: 'https://image.tmdb.org/t/p/w342/fgBNLPr6mC8pxuR79ENAJY4nBmj.jpg' },
+  { title: 'Guardian: The Lonely and Great God', posterUrl: 'https://image.tmdb.org/t/p/w342/sPkxHNw5BFvuCFGWw825TS7n6X3.jpg' },
+  { title: 'Lovely Runner', posterUrl: 'https://image.tmdb.org/t/p/w342/adcdNzLJ8LOjWJjNFrapXGzFco3.jpg' },
+  { title: 'The Glory', posterUrl: 'https://image.tmdb.org/t/p/w342/uUM4LVlPgIrww07OoEKrGWlS1Ej.jpg' },
+  { title: 'Descendants of the Sun', posterUrl: 'https://image.tmdb.org/t/p/w342/xxGomfml0x9iyPBS4StBjbRRu65.jpg' },
+  { title: 'Nirvana in Fire', posterUrl: 'https://image.tmdb.org/t/p/w342/daxCfREJHbpDlCF7cAWLAiWDlSK.jpg' },
+  { title: 'Signal', posterUrl: 'https://image.tmdb.org/t/p/w342/5yoqUCgcQBUDWCMTqd5kFqWNPm6.jpg' },
+  { title: 'Missing: The Other Side', posterUrl: 'https://image.tmdb.org/t/p/w342/fH5uZ4xFmBh5rBVXhqJvGS0BXdX.jpg' },
+  { title: 'Twenty Five Twenty One', posterUrl: 'https://image.tmdb.org/t/p/w342/k52HVLBFUB2dZPxY3sTMp12dvvQ.jpg' },
+  { title: 'Reborn Rich', posterUrl: 'https://image.tmdb.org/t/p/w342/6Ux3T3HlbmJi2iFDXX7Bt5kGBF4.jpg' },
 ]
 
-const ICONIC_KDRAMAS_COL_2 = [
-  {
-    title: 'Mr. Queen',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/ozuyMnOO5pekDklyPpUL1Htkuzy.jpg',
-  },
-  {
-    title: 'Business Proposal',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/iLh7L8ZuvgdxFaM9sImyv2iKYLe.jpg',
-  },
-  {
-    title: "It's Okay to Not Be Okay",
-    posterUrl: 'https://image.tmdb.org/t/p/w500/8XSJfLeImX8NszDUFnK1lbseCi8.jpg',
-  },
-  {
-    title: 'Hotel Del Luna',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/8bizZsXoAsOTbhyFKfBogC8mgG2.jpg',
-  },
-  {
-    title: 'Twinkling Watermelon',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/bwTzW1wTgUxUOQruhT8DvinUYgR.jpg',
-  },
-  {
-    title: 'My Demon',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/xBnscv5BrJREKVSvh0le61y4KDk.jpg',
-  },
+const POSTERS_COL_2 = [
+  { title: 'Mr. Queen', posterUrl: 'https://image.tmdb.org/t/p/w342/ozuyMnOO5pekDklyPpUL1Htkuzy.jpg' },
+  { title: 'Business Proposal', posterUrl: 'https://image.tmdb.org/t/p/w342/iLh7L8ZuvgdxFaM9sImyv2iKYLe.jpg' },
+  { title: "It's Okay to Not Be Okay", posterUrl: 'https://image.tmdb.org/t/p/w342/8XSJfLeImX8NszDUFnK1lbseCi8.jpg' },
+  { title: 'Hotel Del Luna', posterUrl: 'https://image.tmdb.org/t/p/w342/8bizZsXoAsOTbhyFKfBogC8mgG2.jpg' },
+  { title: 'Twinkling Watermelon', posterUrl: 'https://image.tmdb.org/t/p/w342/bwTzW1wTgUxUOQruhT8DvinUYgR.jpg' },
+  { title: 'My Demon', posterUrl: 'https://image.tmdb.org/t/p/w342/xBnscv5BrJREKVSvh0le61y4KDk.jpg' },
+  { title: 'The Untamed', posterUrl: 'https://image.tmdb.org/t/p/w342/7RtKmrNLMFGJSVuA1w0rDKxL3ue.jpg' },
+  { title: 'Rookie Historian Goo Hae-ryung', posterUrl: 'https://image.tmdb.org/t/p/w342/rz65hWKRUMcwJDi5tU8TmKSXMmI.jpg' },
+  { title: 'My Mister', posterUrl: 'https://image.tmdb.org/t/p/w342/2o0MaGX1j2mBiGsQiD4MSMK7T7W.jpg' },
+  { title: 'Alchemy of Souls', posterUrl: 'https://image.tmdb.org/t/p/w342/pE6dPqmsiYz2cP1rU1y7r6bejwS.jpg' },
+  { title: 'Moon Lovers: Scarlet Heart Ryeo', posterUrl: 'https://image.tmdb.org/t/p/w342/5LjAWZm8nNPLiXGvnXjMq0BvIQP.jpg' },
 ]
 
-const ICONIC_KDRAMAS_COL_3 = [
-  {
-    title: 'Flower of Evil',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/ozPDfBmsrJDFF9ZhwQNxcGLXvzm.jpg',
-  },
-  {
-    title: 'While You Were Sleeping',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/wFp7pVJbB5aD5y0A0AEBP4vmzCg.jpg',
-  },
-  {
-    title: 'Healer',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/too4Zig9bDJOfvnFfU1SaxKmGlR.jpg',
-  },
-  {
-    title: 'Strong Girl Bong-soon',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/sPdS6oUdXfBNGKROE5RY5s5laqx.jpg',
-  },
-  {
-    title: 'My Love from the Star',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/o5EYVYCVtDUdajP4rWfv6q0BTmm.jpg',
-  },
-  {
-    title: 'The King: Eternal Monarch',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/7SLlbkzOJb8v9wXVYIcqozx2hxe.jpg',
-  },
+const POSTERS_COL_3 = [
+  { title: 'Flower of Evil', posterUrl: 'https://image.tmdb.org/t/p/w342/ozPDfBmsrJDFF9ZhwQNxcGLXvzm.jpg' },
+  { title: 'While You Were Sleeping', posterUrl: 'https://image.tmdb.org/t/p/w342/wFp7pVJbB5aD5y0A0AEBP4vmzCg.jpg' },
+  { title: 'Healer', posterUrl: 'https://image.tmdb.org/t/p/w342/too4Zig9bDJOfvnFfU1SaxKmGlR.jpg' },
+  { title: 'Strong Girl Bong-soon', posterUrl: 'https://image.tmdb.org/t/p/w342/sPdS6oUdXfBNGKROE5RY5s5laqx.jpg' },
+  { title: 'My Love from the Star', posterUrl: 'https://image.tmdb.org/t/p/w342/o5EYVYCVtDUdajP4rWfv6q0BTmm.jpg' },
+  { title: 'The King: Eternal Monarch', posterUrl: 'https://image.tmdb.org/t/p/w342/7SLlbkzOJb8v9wXVYIcqozx2hxe.jpg' },
+  { title: 'Weightlifting Fairy Kim Bok-joo', posterUrl: 'https://image.tmdb.org/t/p/w342/pQfDaVMREBzfWVnWXRG0D2Zl7lx.jpg' },
+  { title: 'Reply 1988', posterUrl: 'https://image.tmdb.org/t/p/w342/mQSVrJkTgXeqyFmGAnN7E5zJD3P.jpg' },
+  { title: 'Kingdom', posterUrl: 'https://image.tmdb.org/t/p/w342/qhttJ9HSDPCdMoH9SJKGY0HQKUD.jpg' },
+  { title: 'Hometown Cha-Cha-Cha', posterUrl: 'https://image.tmdb.org/t/p/w342/5LFVqNOmcz2YFfJF8iyFZBFfJGu.jpg' },
 ]
 
 // Duplicated for gapless, 100% seamless infinite scroll loops
-const DUPLICATED_COL_1 = [...ICONIC_KDRAMAS_COL_1, ...ICONIC_KDRAMAS_COL_1]
-const DUPLICATED_COL_2 = [...ICONIC_KDRAMAS_COL_2, ...ICONIC_KDRAMAS_COL_2]
-const DUPLICATED_COL_3 = [...ICONIC_KDRAMAS_COL_3, ...ICONIC_KDRAMAS_COL_3]
+const DUPLICATED_COL_1 = [...POSTERS_COL_1, ...POSTERS_COL_1]
+const DUPLICATED_COL_2 = [...POSTERS_COL_2, ...POSTERS_COL_2]
+const DUPLICATED_COL_3 = [...POSTERS_COL_3, ...POSTERS_COL_3]
+
+// Poster card with animated shimmer placeholder while loading
+function PosterCard({
+  drama,
+  idx,
+  sizes,
+}: {
+  drama: { title: string; posterUrl: string }
+  idx: number
+  sizes: string
+}) {
+  const [loaded, setLoaded] = useState(false)
+  return (
+    <div className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-[#0c0c14] border border-white/[0.08] flex-shrink-0 shadow-lg">
+      {/* Shimmer placeholder — hidden once image loads */}
+      {!loaded && (
+        <div className="absolute inset-0 animate-shimmer-pulse bg-[#111118] rounded-xl" />
+      )}
+      <SafeImage
+        src={drama.posterUrl}
+        alt={drama.title}
+        size="w342"
+        fill
+        sizes={sizes}
+        className="object-cover"
+        priority={idx < 4}
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
+  )
+}
+
+// PC poster card — no border, dark bg, larger sizes
+function PCPosterCard({
+  drama,
+  idx,
+}: {
+  drama: { title: string; posterUrl: string }
+  idx: number
+}) {
+  const [loaded, setLoaded] = useState(false)
+  return (
+    <div className="relative aspect-[2/3] w-full rounded-xl overflow-hidden border-0 bg-[#0b0b12] transform-gpu flex-shrink-0">
+      {!loaded && (
+        <div className="absolute inset-0 animate-shimmer-pulse bg-[#111118] rounded-xl" />
+      )}
+      <SafeImage
+        src={drama.posterUrl}
+        alt={drama.title}
+        size="w342"
+        fill
+        sizes="(max-width: 1440px) 240px, 260px"
+        className="object-cover"
+        priority={idx < 4}
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
+  )
+}
 
 export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
   const [password, setPassword] = useState('')
@@ -177,19 +197,7 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
             style={{ animationDuration: '38s' }}
           >
             {DUPLICATED_COL_1.map((drama, idx) => (
-              <div
-                key={`mob-col1-${drama.title}-${idx}`}
-                className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-[#0c0c14] border border-white/[0.08] flex-shrink-0 shadow-lg"
-              >
-                <SafeImage
-                  src={drama.posterUrl}
-                  alt={drama.title}
-                  size="w342"
-                  fill
-                  sizes="33vw"
-                  className="object-cover"
-                />
-              </div>
+              <PosterCard key={`mob-col1-${drama.title}-${idx}`} drama={drama} idx={idx} sizes="33vw" />
             ))}
           </div>
 
@@ -199,19 +207,7 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
             style={{ animationDuration: '44s' }}
           >
             {DUPLICATED_COL_2.map((drama, idx) => (
-              <div
-                key={`mob-col2-${drama.title}-${idx}`}
-                className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-[#0c0c14] border border-white/[0.08] flex-shrink-0 shadow-lg"
-              >
-                <SafeImage
-                  src={drama.posterUrl}
-                  alt={drama.title}
-                  size="w342"
-                  fill
-                  sizes="33vw"
-                  className="object-cover"
-                />
-              </div>
+              <PosterCard key={`mob-col2-${drama.title}-${idx}`} drama={drama} idx={idx} sizes="33vw" />
             ))}
           </div>
 
@@ -221,19 +217,7 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
             style={{ animationDuration: '40s' }}
           >
             {DUPLICATED_COL_3.map((drama, idx) => (
-              <div
-                key={`mob-col3-${drama.title}-${idx}`}
-                className="relative aspect-[2/3] w-full rounded-xl overflow-hidden bg-[#0c0c14] border border-white/[0.08] flex-shrink-0 shadow-lg"
-              >
-                <SafeImage
-                  src={drama.posterUrl}
-                  alt={drama.title}
-                  size="w342"
-                  fill
-                  sizes="33vw"
-                  className="object-cover"
-                />
-              </div>
+              <PosterCard key={`mob-col3-${drama.title}-${idx}`} drama={drama} idx={idx} sizes="33vw" />
             ))}
           </div>
         </div>
@@ -257,43 +241,17 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
             style={{ animationDuration: '42s' }}
           >
             {DUPLICATED_COL_1.map((drama, idx) => (
-              <div
-                key={`pc-col1-${drama.title}-${idx}`}
-                className="relative aspect-[2/3] w-full rounded-xl overflow-hidden border-0 bg-[#0b0b12] transform-gpu flex-shrink-0"
-              >
-                <SafeImage
-                  src={drama.posterUrl}
-                  alt={drama.title}
-                  size="w500"
-                  fill
-                  sizes="(max-width: 1440px) 240px, 260px"
-                  className="object-cover"
-                  priority={idx < 3}
-                />
-              </div>
+              <PCPosterCard key={`pc-col1-${drama.title}-${idx}`} drama={drama} idx={idx} />
             ))}
           </div>
 
-          {/* Column 2 (Middle): Scrolls DOWN at 42s linear infinite (alternating direction like Explore wall) */}
+          {/* Column 2 (Middle): Scrolls DOWN at 42s linear infinite (alternating direction) */}
           <div
             className="flex flex-col gap-6 animate-scroll-down will-change-transform transform-gpu"
             style={{ animationDuration: '42s' }}
           >
             {DUPLICATED_COL_2.map((drama, idx) => (
-              <div
-                key={`pc-col2-${drama.title}-${idx}`}
-                className="relative aspect-[2/3] w-full rounded-xl overflow-hidden border-0 bg-[#0b0b12] transform-gpu flex-shrink-0"
-              >
-                <SafeImage
-                  src={drama.posterUrl}
-                  alt={drama.title}
-                  size="w500"
-                  fill
-                  sizes="(max-width: 1440px) 240px, 260px"
-                  className="object-cover"
-                  priority={idx < 3}
-                />
-              </div>
+              <PCPosterCard key={`pc-col2-${drama.title}-${idx}`} drama={drama} idx={idx} />
             ))}
           </div>
 
@@ -303,46 +261,35 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
             style={{ animationDuration: '42s' }}
           >
             {DUPLICATED_COL_3.map((drama, idx) => (
-              <div
-                key={`pc-col3-${drama.title}-${idx}`}
-                className="relative aspect-[2/3] w-full rounded-xl overflow-hidden border-0 bg-[#0b0b12] transform-gpu flex-shrink-0"
-              >
-                <SafeImage
-                  src={drama.posterUrl}
-                  alt={drama.title}
-                  size="w500"
-                  fill
-                  sizes="(max-width: 1440px) 240px, 260px"
-                  className="object-cover"
-                  priority={idx < 3}
-                />
-              </div>
+              <PCPosterCard key={`pc-col3-${drama.title}-${idx}`} drama={drama} idx={idx} />
             ))}
           </div>
         </div>
 
-        {/* Deep Bottom-Only Vignette Overlay (NO TOP VIGNETTE - Bleeds cleanly to pixel 0 at the top edge!) */}
+        {/* Deep Bottom-Only Vignette Overlay */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#050507] via-[#050507]/80 to-transparent z-10" />
       </div>
 
       {/* ── RIGHT COLUMN (LOGIN AREA) ── */}
       {/* Kept in exact current design, size, and shifted slightly upward on PC via lg:-translate-y-8 */}
       <div className="w-full lg:flex-1 flex flex-col items-center justify-center relative z-20 min-h-screen px-4 py-8 lg:py-0 lg:-translate-y-8">
-        
-        {/* Top Brand Header (Cleanly above the card on PC, like Photo 1) */}
-        <div className="hidden lg:flex items-center gap-3.5 mb-7 select-none">
+
+        {/* Top Brand Header — PC only, with fadeBlurIn entrance */}
+        <div className="hidden lg:flex items-center gap-3.5 mb-7 select-none lg:animate-fade-blur-in" style={{ animationDelay: '0.05s' }}>
           <ScenovaLogo className="w-9 h-9 shadow-md shadow-rose-950/40" />
           <span className="font-[family-name:var(--font-unbounded)] text-[26px] xl:text-[28px] font-black tracking-tight leading-none text-white">
             SCEN<span className="text-[#F472B6]">OVA</span>
           </span>
         </div>
 
-        {/* Login / Lock Card */}
-        <div className="w-full max-w-[390px] lg:max-w-[400px] bg-[#0b0b11]/95 lg:bg-[#0b0b12]/90 backdrop-blur-2xl border border-white/[0.08] rounded-[28px] p-7 sm:p-8 shadow-[0_24px_80px_rgba(0,0,0,0.85)] relative overflow-hidden text-center">
-          {/* Subtle top crimson-purple radial ambient glow matching Airing Alerts & Vibe Chart */}
+        {/* Login / Lock Card — cinema curtain exit on unlock */}
+        <div
+          className={`w-full max-w-[390px] lg:max-w-[400px] bg-[#0b0b11]/95 lg:bg-[#0b0b12]/90 backdrop-blur-2xl border border-white/[0.08] rounded-[28px] p-7 sm:p-8 shadow-[0_24px_80px_rgba(0,0,0,0.85)] relative overflow-hidden text-center transition-all duration-500${loading ? ' lg:opacity-0 lg:blur-sm lg:scale-[1.03] pointer-events-none' : ''}`}
+        >
+          {/* Subtle top crimson-purple radial ambient glow */}
           <div className="pointer-events-none absolute -top-12 inset-x-0 h-36 bg-[radial-gradient(ellipse_at_top,rgba(190,24,93,0.18),transparent_65%)]" />
 
-          {/* Mobile Top Brand & Badge Row (Cleanly inside card on < lg, matching SCENOVA pill design) */}
+          {/* Mobile Top Brand & Badge Row (< lg, inside card) */}
           <div className="flex lg:hidden items-center justify-between gap-3 mb-6 relative z-10 select-none">
             <div className="flex items-center gap-2.5">
               <ScenovaLogo className="w-7 h-7 shadow-sm" />
@@ -356,16 +303,38 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
             </div>
           </div>
 
-          {/* Desktop Centered Archive Locked Pill Badge (Cleanly inside card on lg+, like Photo 1) */}
-          <div className="hidden lg:flex justify-center mb-6 relative z-10 select-none">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/15 px-3.5 py-1 text-xs font-medium text-purple-200 shadow-sm">
+          {/* Desktop Centered Archive Locked Pill Badge — with pulse glow animation */}
+          <div
+            className="hidden lg:flex justify-center mb-6 relative z-10 select-none lg:animate-fade-blur-in"
+            style={{ animationDelay: '0.18s' }}
+          >
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/15 px-3.5 py-1 text-xs font-medium text-purple-200 shadow-sm animate-badge-pulse">
               <Lock size={12} className="text-purple-300" />
-              <span>Archive Locked</span>
+              <span className="relative flex items-center gap-1.5">
+                Archive Locked
+                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_6px_#a78bfa] animate-pulse" />
+              </span>
             </div>
           </div>
 
-          {/* User Avatar Circle with subtle rose-violet ring */}
-          <div className="relative mx-auto mb-4 flex justify-center z-10 select-none">
+          {/* User Avatar Circle — with orbiting gradient ring on PC */}
+          <div
+            className="relative mx-auto mb-4 flex justify-center z-10 select-none lg:animate-fade-blur-in"
+            style={{ animationDelay: '0.28s' }}
+          >
+            {/* Orbiting ring (PC only) */}
+            <div className="hidden lg:block absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div
+                className="absolute w-[88px] h-[88px] rounded-full animate-orbit-ring"
+                style={{
+                  background: 'conic-gradient(from 0deg, rgba(225,29,72,0) 0%, rgba(168,85,247,0.7) 40%, rgba(225,29,72,0.6) 70%, rgba(225,29,72,0) 100%)',
+                  padding: '2px',
+                  mask: 'radial-gradient(circle at center, transparent 36px, black 38px)',
+                  WebkitMask: 'radial-gradient(circle at center, transparent 36px, black 38px)',
+                }}
+              />
+            </div>
+
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr from-rose-600/70 via-purple-600/60 to-indigo-600/50 p-[2px] shadow-xl shadow-purple-950/40">
               <div className="flex h-full w-full items-center justify-center rounded-full bg-[#12121c] border border-white/10 shadow-inner">
                 <span className="text-2xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-br from-white via-white to-white/75">
@@ -373,13 +342,22 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
                 </span>
               </div>
             </div>
-            <div className="absolute -bottom-0.5 right-[calc(50%-36px)] flex h-6 w-6 items-center justify-center rounded-full border border-white/20 bg-gradient-to-tr from-rose-500 to-purple-600 text-white shadow-md">
+
+            {/* Floating sparkles icon (PC only) */}
+            <div className="hidden lg:flex absolute -bottom-0.5 right-[calc(50%-36px)] h-6 w-6 items-center justify-center rounded-full border border-white/20 bg-gradient-to-tr from-rose-500 to-purple-600 text-white shadow-md animate-float-sparkle">
+              <Sparkles size={11} />
+            </div>
+            {/* Mobile sparkle (no animation) */}
+            <div className="lg:hidden absolute -bottom-0.5 right-[calc(50%-36px)] flex h-6 w-6 items-center justify-center rounded-full border border-white/20 bg-gradient-to-tr from-rose-500 to-purple-600 text-white shadow-md">
               <Sparkles size={11} />
             </div>
           </div>
 
-          {/* User Name & Subtitle */}
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-1.5 z-10 relative">
+          {/* User Name — blur-to-crisp entrance on PC */}
+          <h1
+            className="text-2xl font-bold tracking-tight text-white mb-1.5 z-10 relative lg:animate-fade-blur-in"
+            style={{ animationDelay: '0.38s' }}
+          >
             Subho !!
           </h1>
           <p className="text-xs text-zinc-400 mb-6 font-normal z-10 relative">
@@ -396,7 +374,7 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter Passcode"
-                className="w-full h-12 rounded-full border border-white/[0.09] bg-[#111118] px-5 pr-12 text-center text-sm tracking-widest text-white placeholder-zinc-500 outline-none transition-all focus:border-rose-500/50 focus:bg-[#151520] focus:ring-1 focus:ring-rose-500/30 shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)]"
+                className="w-full h-12 rounded-full border border-white/[0.09] bg-[#111118] px-5 pr-12 text-center text-sm tracking-widest text-white placeholder-zinc-500 outline-none transition-all focus:border-rose-500/50 focus:bg-[#151520] focus:ring-1 focus:ring-rose-500/30 shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)] lg:focus:ring-2 lg:focus:ring-rose-500/40 lg:focus:shadow-[0_0_20px_rgba(225,29,72,0.22)]"
               />
               <button
                 type="button"
@@ -418,7 +396,7 @@ export default function AuthScreen({ onAuthenticated }: AuthScreenProps) {
             <button
               type="submit"
               disabled={loading}
-              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-600 via-pink-600 to-purple-600 font-semibold text-sm text-white border border-white/15 shadow-[0_8px_24px_rgba(225,29,72,0.28)] hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-60 cursor-pointer"
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-rose-600 via-pink-600 to-purple-600 font-semibold text-sm text-white border border-white/15 shadow-[0_8px_24px_rgba(225,29,72,0.28)] hover:brightness-110 lg:hover:shadow-[0_8px_32px_rgba(225,29,72,0.45)] active:scale-[0.98] lg:active:scale-[0.97] transition-all disabled:opacity-60 cursor-pointer"
             >
               {loading ? (
                 <>

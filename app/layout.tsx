@@ -59,6 +59,9 @@ export default function RootLayout({
         <link rel="icon" type="image/svg+xml" href="/icon.svg?v=pink3" />
         <link rel="icon" sizes="512x512" type="image/png" href="/icon?v=pink3" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon?v=pink3" />
+        {/* Preconnect for instant poster loading on any device */}
+        <link rel="preconnect" href="https://image.tmdb.org" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://image.tmdb.org" />
       </head>
       <body
         suppressHydrationWarning

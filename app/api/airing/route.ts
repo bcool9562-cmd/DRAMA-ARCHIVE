@@ -90,11 +90,24 @@ async function computeAiringAlerts(rawDramas: any[]) {
           const detail = await getDramaDetail(tmdbId)
           if (detail) {
             fetchedPosterUrl = detail.posterUrl || null
+
+            // CRITICAL FIX: If TMDB says drama is completed/ended/canceled,
+            // NEVER generate fake future dates — skip it entirely
+            const tmdbStatus = (detail as any).status || ''
+            if (
+              detail.airingStatus === 'completed' ||
+              tmdbStatus === 'Ended' ||
+              tmdbStatus === 'Canceled' ||
+              tmdbStatus === 'Cancelled'
+            ) {
+              return null
+            }
+
             if (detail.nextEpisodeDate && detail.nextEpisodeDate >= todayStr) {
               nextDate = detail.nextEpisodeDate
-              nextEpNum = detail.nextEpisodeNumber || nextEpNum
-            } else {
-              // Fetch full season episodes to inspect actual schedule
+              nextEpNum = (detail as any).nextEpisodeNumber || nextEpNum
+            } else if (detail.airingStatus === 'ongoing') {
+              // Only project forward for genuinely ongoing shows
               const season = await getDramaSeason(tmdbId, 1)
               if (season && season.episodes && season.episodes.length > 0) {
                 const upcoming = season.episodes.find(
@@ -104,7 +117,8 @@ async function computeAiringAlerts(rawDramas: any[]) {
                   nextDate = upcoming.air_date
                   nextEpNum = upcoming.episode_number
                 } else {
-                  // Fallback for currently airing shows where TMDB only dated past episodes
+                  // Fallback: only project next week for ongoing shows
+                  // where TMDB only dated past episodes (weekly airing cadence)
                   const pastEpisodes = season.episodes
                     .filter(
                       (e: TmdbSeasonEpisode) => !!e.air_date && e.air_date < todayStr
@@ -116,16 +130,25 @@ async function computeAiringAlerts(rawDramas: any[]) {
                   const lastDated = pastEpisodes[pastEpisodes.length - 1]
                   if (lastDated && lastDated.air_date) {
                     const daysSinceLast = diffInDays(todayStr, lastDated.air_date)
-                    if (daysSinceLast >= 1 && daysSinceLast <= 6) {
+                    const totalEps = drama.total_episodes || detail.totalEpisodes || 99
+                    // CRITICAL FIX: Only project if episode count is NOT exhausted
+                    if (
+                      daysSinceLast >= 1 &&
+                      daysSinceLast <= 6 &&
+                      lastDated.episode_number < totalEps
+                    ) {
                       nextDate = addDays(lastDated.air_date, 7)
-                      nextEpNum = Math.min(
-                        drama.total_episodes || detail.totalEpisodes || 99,
-                        lastDated.episode_number + 2
-                      )
+                      nextEpNum = Math.min(totalEps, lastDated.episode_number + 2)
+                    } else {
+                      // All episodes aired — drama ended
+                      nextDate = null
                     }
                   }
                 }
               }
+            } else {
+              // Not ongoing and no upcoming TMDB episode — skip
+              return null
             }
           }
         } catch (err) {
@@ -133,16 +156,25 @@ async function computeAiringAlerts(rawDramas: any[]) {
         }
       }
 
-      // If stored nextDate was in the past 1-6 days and still hasn't advanced, project next week
+      // Fallback projection using stored data (when no TMDB call was possible)
+      // ONLY project forward if the local data marks drama as ongoing, AND episode count not exhausted
       if (nextDate && nextDate < todayStr) {
+        const dramaAiringStatus = String(drama.airing_status || '').toLowerCase()
+        const isKnownOngoing =
+          dramaAiringStatus === 'ongoing' || dramaAiringStatus === 'returning'
+        const totalEps = Number(drama.total_episodes) || 99
         const daysAgo = diffInDays(todayStr, nextDate)
-        if (daysAgo >= 1 && daysAgo <= 6) {
+
+        if (isKnownOngoing && daysAgo >= 1 && daysAgo <= 6 && nextEpNum < totalEps) {
           nextDate = addDays(nextDate, 7)
-          nextEpNum = Math.min(drama.total_episodes || 99, nextEpNum + 2)
+          nextEpNum = Math.min(totalEps, nextEpNum + 2)
+        } else {
+          // Past date + not known ongoing, OR episode count exhausted — exclude
+          nextDate = null
         }
       }
 
-      // Crucial: Next Episodes must NEVER display past dates
+      // Only include if there is a real future next episode date
       if (nextDate && nextDate >= todayStr) {
         return {
           ...drama,
@@ -170,8 +202,8 @@ async function computeAiringAlerts(rawDramas: any[]) {
     if ((!airDate || airDate < todayStr) && tmdbIdNum) {
       try {
         const detail = await getDramaDetail(tmdbIdNum)
-        if (detail && detail.firstAirDate) {
-          airDate = detail.firstAirDate
+        if (detail && (detail as any).firstAirDate) {
+          airDate = (detail as any).firstAirDate
           fetchedPoster = fetchedPoster || detail.posterUrl
         }
       } catch {}
